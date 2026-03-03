@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FTC Driver Practice Simulator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: #12121f;
+      color: #dde;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      height: 100vh;
+      overflow: hidden
+    }
+
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 10px;
+      padding: 10px
+    }
+
+    #field-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0
+    }
+
+    canvas {
+      border: 2px solid #334;
+      display: block;
+      image-rendering: pixelated
+    }
+
+    #ctrl-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .btn {
+      background: #1e2040;
+      color: #ccd;
+      border: 1px solid #445;
+      padding: 5px 11px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 4px;
+      transition: background .15s, border-color .15s
+    }
+
+    .btn:hover {
+      background: #2a2e5a;
+      border-color: #667
+    }
+
+    .btn.active {
+      background: #1a5aaa;
+      color: #fff;
+      border-color: #4a9eff
+    }
+
+    #sidebar {
+      width: 270px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    #sidebar::-webkit-scrollbar-track {
+      background: #12121f
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+      background: #334;
+      border-radius: 2px
+    }
+
+    .panel {
+      background: #161830;
+      border: 1px solid #2a3060;
+      border-radius: 7px;
+      padding: 9px
+    }
+
+    .ptitle {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #4a9eff;
+      margin-bottom: 7px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #222a50
+    }
+
+    /* Timer */
+    #timer-display {
+      font-size: 38px;
+      text-align: center;
+      letter-spacing: 3px;
+      font-weight: bold;
+      color: #dde;
+      line-height: 1
+    }
+
+    #period-label {
+      text-align: center;
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+      min-height: 16px
+    }
+
+    .tctrls {
+      display: flex;
+      gap: 5px;
+      margin-top: 7px;
+      justify-content: center
+    }
+
+    /* Telemetry */
+    .trow {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 2px 0;
+      border-bottom: 1px solid #1a1d38
+    }
+
+    .trow:last-child {
+      border-bottom: none
+    }
+
+    .tlbl {
+      color: #778
+    }
+
+    .tval {
+      color: #4aff88;
+      font-weight: bold;
+      font-size: 12px
+    }
+
+    /* Sticks */
+    .sticks-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center
+    }
+
+    .stkwrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px
+    }
+
+    .stk {
+      position: relative;
+      width: 85px;
+      height: 85px;
+      border: 2px solid #2a3060;
+      border-radius: 50%;
+      background: radial-gradient(circle, #0d1220 60%, #0a0e1a 100%)
+    }
+
+    .stk::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: #1e2440;
+      transform: translateX(-50%)
+    }
+
+    .stk::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: #1e2440;
+      transform: translateY(-50%)
+    }
+
+    .sdot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #4a9eff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      left: 50%;
+      top: 50%;
+      box-shadow: 0 0 6px #4a9eff88;
+      z-index: 1
+    }
+
+    .slbl {
+      font-size: 10px;
+      color: #556;
+      letter-spacing: .5px
+    }
+
+    /* Motors */
+    .mrow {
+      margin-bottom: 5px
+    }
+
+    .mlbl {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #778;
+      margin-bottom: 2px
+    }
+
+    .mval {
+      color: #4a9eff
+    }
+
+    .mbg {
+      width: 100%;
+      height: 14px;
+      background: #0d1220;
+      border: 1px solid #2a3060;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .mbar {
+      height: 100%;
+      position: absolute;
+      transition: all .04s
+    }
+
+    .mctr {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: #33405a;
+      pointer-events: none
+    }
+
+    /* Config */
+    .srow {
+      margin-bottom: 7px
+    }
+
+    .srow:last-child {
+      margin-bottom: 0
+    }
+
+    .slrow {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #778;
+      margin-bottom: 3px
+    }
+
+    .sval {
+      color: #4a9eff
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 3px;
+      accent-color: #4a9eff;
+      cursor: pointer;
+      outline: none
+    }
+
+    /* Help */
+    .hlp {
+      font-size: 11px;
+      color: #556;
+      line-height: 1.9
+    }
+
+    .hlp b {
+      color: #778
+    }
+
+    /* Gamepad status */
+    #gpstatus {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      letter-spacing: .3px
+    }
+
+    .gpok {
+      background: #0e2a0e;
+      color: #4aff88;
+      border: 1px solid #1a5a1a
+    }
+
+    .gpoff {
+      background: #2a0e0e;
+      color: #ff5555;
+      border: 1px solid #5a1a1a
+    }
+
+    /* Period colors */
+    .auto-period {
+      color: #ffdd44
+    }
+
+    .teleop-period {
+      color: #44ffaa
+    }
+
+    .over-period {
+      color: #ff4455
+    }
+
+    .ready-period {
+      color: #778
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="field-container">
+      <canvas id="c"></canvas>
+      <div id="ctrl-bar">
+        <button class="btn active" id="btn-mec" onclick="setDrive('mecanum')">Mecanum</button>
+        <button class="btn" id="btn-tank" onclick="setDrive('tank')">Tank</button>
+        <span style="color:#334;font-size:16px">│</span>
+        <button class="btn active" id="btn-fc" onclick="setMode('field')">Field-Centric</button>
+        <button class="btn" id="btn-rc" onclick="setMode('robot')">Robot-Centric</button>
+        <span style="color:#334;font-size:16px">│</span>
+        <button class="btn" onclick="resetRobot()">Reset [R]</button>
+        <div id="gpstatus" class="gpoff">No Gamepad</div>
+      </div>
+    </div>
+    <div id="sidebar">
+      <div class="panel">
+        <div class="ptitle">Match Timer</div>
+        <div id="timer-display">2:30</div>
+        <div id="period-label" class="ready-period">READY — PRESS START</div>
+        <div class="tctrls">
+          <button class="btn" onclick="timerStart()">▶ Start</button>
+          <button class="btn" onclick="timerPause()">⏸ Pause</button>
+          <button class="btn" onclick="timerReset()">↺ Reset</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Telemetry</div>
+        <div class="trow"><span class="tlbl">X</span><span class="tval" id="t-x">0.00 ft</span></div>
+        <div class="trow"><span class="tlbl">Y</span><span class="tval" id="t-y">0.00 ft</span></div>
+        <div class="trow"><span class="tlbl">Heading</span><span class="tval" id="t-h">0.0°</span></div>
+        <div class="trow"><span class="tlbl">Speed</span><span class="tval" id="t-s">0.00 ft/s</span></div>
+        <div class="trow"><span class="tlbl">Drivetrain</span><span class="tval" id="t-dt">Mecanum</span></div>
+        <div class="trow"><span class="tlbl">Drive Mode</span><span class="tval" id="t-dm">Field-Centric</span></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Joysticks</div>
+        <div class="sticks-row">
+          <div class="stkwrap">
+            <div class="stk">
+              <div class="sdot" id="dl"></div>
+            </div>
+            <div class="slbl">LEFT</div>
+          </div>
+          <div class="stkwrap">
+            <div class="stk">
+              <div class="sdot" id="dr"></div>
+            </div>
+            <div class="slbl">RIGHT</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Motor Powers</div>
+        <div class="mrow">
+          <div class="mlbl"><span>Front Left</span><span class="mval" id="v-fl">0.00</span></div>
+          <div class="mbg">
+            <div class="mbar" id="b-fl"></div>
+            <div class="mctr"></div>
+          </div>
+        </div>
+        <div class="mrow">
+          <div class="mlbl"><span>Front Right</span><span class="mval" id="v-fr">0.00</span></div>
+          <div class="mbg">
+            <div class="mbar" id="b-fr"></div>
+            <div class="mctr"></div>
+          </div>
+        </div>
+        <div class="mrow">
+          <div class="mlbl"><span>Back Left</span><span class="mval" id="v-bl">0.00</span></div>
+          <div class="mbg">
+            <div class="mbar" id="b-bl"></div>
+            <div class="mctr"></div>
+          </div>
+        </div>
+        <div class="mrow">
+          <div class="mlbl"><span>Back Right</span><span class="mval" id="v-br">0.00</span></div>
+          <div class="mbg">
+            <div class="mbar" id="b-br"></div>
+            <div class="mctr"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Configuration</div>
+        <div class="srow">
+          <div class="slrow"><span>Max Speed</span><span class="sval" id="s-ms-v">8.0 ft/s</span></div>
+          <input type="range" id="s-ms" min="1" max="15" step="0.5" value="8" oninput="cfgUpdate()">
+        </div>
+        <div class="srow">
+          <div class="slrow"><span>Turn Rate</span><span class="sval" id="s-tr-v">180 °/s</span></div>
+          <input type="range" id="s-tr" min="30" max="400" step="10" value="180" oninput="cfgUpdate()">
+        </div>
+        <div class="srow">
+          <div class="slrow"><span>Robot Size</span><span class="sval" id="s-rs-v">18 in</span></div>
+          <input type="range" id="s-rs" min="12" max="24" step="1" value="18" oninput="cfgUpdate()">
+        </div>
+        <div class="srow">
+          <div class="slrow"><span>Deadzone</span><span class="sval" id="s-dz-v">0.10</span></div>
+          <input type="range" id="s-dz" min="0.00" max="0.40" step="0.01" value="0.10" oninput="cfgUpdate()">
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Keyboard Controls</div>
+        <div class="hlp">
+          <div><b>W / S</b> — Forward / Back</div>
+          <div><b>A / D</b> — Strafe L / R</div>
+          <div><b>← →</b> — Rotate CW / CCW</div>
+          <div><b>R</b> — Reset robot position</div>
+          <div><b>F</b> — Toggle drive mode</div>
+          <div><b>T</b> — Toggle drivetrain</div>
+          <div><b>Space</b> — Start / pause timer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // ─── Constants ────────────────────────────────────────────────
+    const FIELD_FT = 12;
+    const TILES = 6;
+    const TOTAL_MS = 150000; // 2:30
+    const AUTO_MS = 30000;  // 0:30
+    const fieldImg = new Image(); fieldImg.src = 'decode.webp';
+
+    // ─── State ────────────────────────────────────────────────────
+    let cfg = { maxSpd: 8, turnRate: 180, robotSz: 18, deadzone: 0.10 };
+    let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0 }; // x,y in ft; hdg degrees CW from +Y
+    let inp = { lx: 0, ly: 0, rx: 0 };
+    let mtr = { fl: 0, fr: 0, bl: 0, br: 0 };
+    let drivetrain = 'mecanum'; // 'mecanum' | 'tank'
+    let driveMode = 'field';   // 'field' | 'robot'
+    let keys = {};
+    let gpIdx = null;
+    let tmr = { running: false, elapsed: 0, lastTs: 0 };
+
+    // ─── Canvas ───────────────────────────────────────────────────
+    const cvs = document.getElementById('c');
+    const ctx = cvs.getContext('2d');
+
+    function resize() {
+      const sb = document.getElementById('sidebar');
+      const avW = window.innerWidth - sb.offsetWidth - 28;
+      const avH = window.innerHeight - 20;
+      const sz = Math.min(avW, avH - 50); // leave room for ctrl bar
+      cvs.width = cvs.height = Math.max(300, sz);
+    }
+
+    // ─── Field Drawing — FTC 2024-2025 INTO THE DEEP ──────────────
+    function drawField() {
+      ctx.drawImage(fieldImg, 0, 0, cvs.width, cvs.height);
+    }
+
+    // Lighten a hex color by amt (0-255)
+    function lighten(hex, amt) {
+      const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amt);
+      const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amt);
+      const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amt);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    // ─── Robot Drawing ────────────────────────────────────────────
+    function fieldToCvs(fx, fy) {
+      const s = cvs.width / FIELD_FT;
+      return { x: (fx + FIELD_FT / 2) * s, y: (-fy + FIELD_FT / 2) * s };
+    }
+
+    function drawRobot() {
+      const pos = fieldToCvs(bot.x, bot.y);
+      const s = cvs.width / FIELD_FT;
+      const r = (cfg.robotSz / 24) * s; // half-size in px
+
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(bot.hdg * Math.PI / 180);
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(-r + 3, -r + 3, r * 2, r * 2);
+
+      // Body
+      ctx.fillStyle = '#b0b8c8';
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+
+      // Front face (top = heading 0)
+      ctx.fillStyle = '#4a9eff';
+      ctx.fillRect(-r, -r, r * 2, r * 0.28);
+
+      // Team number (cosmetic)
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = `bold ${r * 0.6}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.fillText('FTC', 0, r * 0.35);
+
+      // Wheels
+      const wW = r * 0.25, wH = r * 0.55;
+      const wx = r * 0.82, wy = r * 0.55;
+      const wColor = '#222';
+      const wHighlight = drivetrain === 'mecanum' ? '#6a6a8a' : '#4a4a6a';
+
+      ctx.fillStyle = wColor;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+        ctx.save();
+        ctx.translate(sx * wx, sy * wy);
+        if (drivetrain === 'mecanum') ctx.rotate(Math.PI / 4 * sx); // angled rollers
+        ctx.fillStyle = wColor;
+        ctx.fillRect(-wW / 2, -wH / 2, wW, wH);
+        ctx.fillStyle = wHighlight;
+        ctx.fillRect(-wW / 2 + 1, -wH / 2 + 2, wW - 2, 3); // roller stripe
+        ctx.restore();
+      });
+
+      // Outline
+      ctx.strokeStyle = '#778899';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-r, -r, r * 2, r * 2);
+
+      // Heading arrow
+      ctx.beginPath();
+      ctx.moveTo(0, -r + r * 0.28);
+      ctx.lineTo(-r * 0.18, -r + r * 0.50);
+      ctx.lineTo(r * 0.18, -r + r * 0.50);
+      ctx.closePath();
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ─── Drive Physics ────────────────────────────────────────────
+    function dz(v) {
+      const d = cfg.deadzone;
+      return Math.abs(v) < d ? 0 : Math.sign(v) * (Math.abs(v) - d) / (1 - d);
+    }
+
+    function updateBot(dt) {
+      // Gather gamepad
+      let lx = 0, ly = 0, rx = 0;
+      if (gpIdx !== null) {
+        const gp = navigator.getGamepads()[gpIdx];
+        if (gp) { lx = dz(gp.axes[0]); ly = dz(gp.axes[1]); rx = dz(gp.axes[2]); }
+      }
+
+      // Keyboard (overrides / combines with gamepad)
+      let kx = 0, ky = 0, krx = 0;
+      if (keys['KeyA']) kx -= 1;
+      if (keys['KeyD']) kx += 1;
+      if (keys['KeyW']) ky -= 1;
+      if (keys['KeyS']) ky += 1;
+      if (keys['ArrowLeft']) krx -= 1;
+      if (keys['ArrowRight']) krx += 1;
+      const km = Math.hypot(kx, ky);
+      if (km > 1) { kx /= km; ky /= km; }
+      if (kx !== 0 || ky !== 0) { lx = kx; ly = ky; }
+      if (krx !== 0) rx = krx;
+
+      inp.lx = lx; inp.ly = ly; inp.rx = rx;
+
+      const h = bot.hdg * Math.PI / 180;
+      const fwd = -ly, str = lx;
+
+      // Field velocity
+      let fvx, fvy;
+      if (drivetrain === 'tank') {
+        fvx = fwd * Math.sin(h);
+        fvy = fwd * Math.cos(h);
+      } else if (driveMode === 'field') {
+        fvx = str;
+        fvy = fwd;
+      } else {
+        // Robot-centric: rotate joystick by heading into field frame
+        fvx = fwd * Math.sin(h) + str * Math.cos(h);
+        fvy = fwd * Math.cos(h) - str * Math.sin(h);
+      }
+
+      bot.vx = fvx * cfg.maxSpd;
+      bot.vy = fvy * cfg.maxSpd;
+      bot.x += bot.vx * dt;
+      bot.y += bot.vy * dt;
+      bot.hdg += rx * cfg.turnRate * dt;
+      bot.hdg = ((bot.hdg + 180) % 360 + 360) % 360 - 180;
+
+      // Clamp to field (half robot size clearance)
+      const hf = FIELD_FT / 2 - cfg.robotSz / 24;
+      bot.x = Math.max(-hf, Math.min(hf, bot.x));
+      bot.y = Math.max(-hf, Math.min(hf, bot.y));
+
+      // Motor powers (robot-relative mixing)
+      let mFwd = fwd, mStr = str;
+      if (driveMode === 'field' && drivetrain === 'mecanum') {
+        // Rotate field joystick to robot frame for motor display
+        mFwd = fwd * Math.cos(h) + str * Math.sin(h);
+        mStr = -fwd * Math.sin(h) + str * Math.cos(h);
+      }
+      const rot = rx;
+      if (drivetrain === 'mecanum') {
+        let fl = mFwd + mStr + rot, fr = mFwd - mStr - rot;
+        let bl = mFwd - mStr + rot, br = mFwd + mStr - rot;
+        const mx = Math.max(1, Math.abs(fl), Math.abs(fr), Math.abs(bl), Math.abs(br));
+        mtr.fl = fl / mx; mtr.fr = fr / mx; mtr.bl = bl / mx; mtr.br = br / mx;
+      } else {
+        let L = fwd + rot, R = fwd - rot;
+        const mx = Math.max(1, Math.abs(L), Math.abs(R));
+        mtr.fl = mtr.bl = L / mx;
+        mtr.fr = mtr.br = R / mx;
+      }
+    }
+
+    // ─── Timer ────────────────────────────────────────────────────
+    function fmtTime(ms) {
+      const s = Math.ceil(Math.max(0, ms) / 1000);
+      return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+    }
+
+    function tickTimer(ts) {
+      if (!tmr.running) return;
+      if (tmr.lastTs === 0) tmr.lastTs = ts;
+      tmr.elapsed += ts - tmr.lastTs;
+      tmr.lastTs = ts;
+      if (tmr.elapsed >= TOTAL_MS) { tmr.elapsed = TOTAL_MS; tmr.running = false; }
+    }
+
+    function timerStart() { tmr.running = true; tmr.lastTs = 0; }
+    function timerPause() { tmr.running = false; tmr.lastTs = 0; }
+    function timerReset() { tmr.running = false; tmr.elapsed = 0; tmr.lastTs = 0; renderTimer(); }
+
+    function renderTimer() {
+      const rem = TOTAL_MS - tmr.elapsed;
+      document.getElementById('timer-display').textContent = fmtTime(rem);
+
+      let lbl, cls;
+      if (tmr.elapsed === 0 && !tmr.running) {
+        lbl = 'READY — PRESS START'; cls = 'ready-period';
+      } else if (rem <= 0) {
+        lbl = 'MATCH OVER'; cls = 'over-period';
+      } else if (tmr.elapsed < AUTO_MS) {
+        lbl = `AUTO  ·  ${fmtTime(AUTO_MS - tmr.elapsed)} left`; cls = 'auto-period';
+      } else {
+        lbl = `TELEOP  ·  ${fmtTime(rem)} left`; cls = 'teleop-period';
+      }
+      const pel = document.getElementById('period-label');
+      pel.textContent = lbl; pel.className = cls;
+
+      const td = document.getElementById('timer-display');
+      td.style.color = rem < 15000 ? '#ff4455' : rem < 45000 ? '#ffdd44' : '#dde';
+    }
+
+    // ─── UI ───────────────────────────────────────────────────────
+    function setDot(id, x, y) {
+      const el = document.getElementById(id);
+      el.style.left = `${(x + 1) / 2 * 100}%`;
+      el.style.top = `${(y + 1) / 2 * 100}%`;
+    }
+
+    function setBar(bid, vid, v) {
+      document.getElementById(vid).textContent = v.toFixed(2);
+      const b = document.getElementById(bid);
+      const pct = Math.abs(v) * 50;
+      b.style.width = pct + '%';
+      b.style.left = v >= 0 ? '50%' : `${50 - pct}%`;
+      b.style.background = v > 0.05 ? (v > 0.6 ? '#4aff88' : '#4a9eff')
+        : v < -0.05 ? '#ff5544' : '#334';
+    }
+
+    function renderUI() {
+      setDot('dl', inp.lx, inp.ly);
+      setDot('dr', inp.rx, 0);
+      setBar('b-fl', 'v-fl', mtr.fl);
+      setBar('b-fr', 'v-fr', mtr.fr);
+      setBar('b-bl', 'v-bl', mtr.bl);
+      setBar('b-br', 'v-br', mtr.br);
+      document.getElementById('t-x').textContent = bot.x.toFixed(2) + ' ft';
+      document.getElementById('t-y').textContent = bot.y.toFixed(2) + ' ft';
+      document.getElementById('t-h').textContent = bot.hdg.toFixed(1) + '°';
+      const spd = Math.hypot(bot.vx, bot.vy);
+      document.getElementById('t-s').textContent = spd.toFixed(2) + ' ft/s';
+      document.getElementById('t-dt').textContent = drivetrain === 'mecanum' ? 'Mecanum' : 'Tank';
+      document.getElementById('t-dm').textContent = driveMode === 'field' ? 'Field-Centric' : 'Robot-Centric';
+      renderTimer();
+    }
+
+    // ─── Config ───────────────────────────────────────────────────
+    function cfgUpdate() {
+      cfg.maxSpd = parseFloat(document.getElementById('s-ms').value);
+      cfg.turnRate = parseFloat(document.getElementById('s-tr').value);
+      cfg.robotSz = parseFloat(document.getElementById('s-rs').value);
+      cfg.deadzone = parseFloat(document.getElementById('s-dz').value);
+      document.getElementById('s-ms-v').textContent = cfg.maxSpd.toFixed(1) + ' ft/s';
+      document.getElementById('s-tr-v').textContent = cfg.turnRate + ' °/s';
+      document.getElementById('s-rs-v').textContent = cfg.robotSz + ' in';
+      document.getElementById('s-dz-v').textContent = cfg.deadzone.toFixed(2);
+    }
+
+    // ─── Controls ─────────────────────────────────────────────────
+    function setDrive(t) {
+      drivetrain = t;
+      document.getElementById('btn-mec').classList.toggle('active', t === 'mecanum');
+      document.getElementById('btn-tank').classList.toggle('active', t === 'tank');
+    }
+    function setMode(m) {
+      driveMode = m;
+      document.getElementById('btn-fc').classList.toggle('active', m === 'field');
+      document.getElementById('btn-rc').classList.toggle('active', m === 'robot');
+    }
+    function resetRobot() { bot.x = 0; bot.y = 0; bot.hdg = 0; bot.vx = 0; bot.vy = 0; }
+
+    // ─── Gamepad ──────────────────────────────────────────────────
+    window.addEventListener('gamepadconnected', e => {
+      gpIdx = e.gamepad.index;
+      const el = document.getElementById('gpstatus');
+      el.textContent = '🎮 ' + (e.gamepad.id.length > 22 ? e.gamepad.id.slice(0, 22) + '…' : e.gamepad.id);
+      el.className = 'gpok';
+    });
+    window.addEventListener('gamepaddisconnected', e => {
+      if (e.gamepad.index === gpIdx) {
+        gpIdx = null;
+        const el = document.getElementById('gpstatus');
+        el.textContent = 'No Gamepad'; el.className = 'gpoff';
+      }
+    });
+
+    // ─── Keyboard ─────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'KeyR') resetRobot();
+      if (e.code === 'KeyF') setMode(driveMode === 'field' ? 'robot' : 'field');
+      if (e.code === 'KeyT') setDrive(drivetrain === 'mecanum' ? 'tank' : 'mecanum');
+      if (e.code === 'Space') { tmr.running ? timerPause() : timerStart(); e.preventDefault(); }
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    });
+    document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    // ─── Main Loop ────────────────────────────────────────────────
+    let lastT = 0;
+    function loop(ts) {
+      const dt = Math.min((ts - lastT) / 1000, 0.05);
+      lastT = ts;
+      tickTimer(ts);
+      // Allow free movement even if match not started / over
+      updateBot(dt);
+      drawField();
+      drawRobot();
+      renderUI();
+      requestAnimationFrame(loop);
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────
+    window.addEventListener('resize', resize);
+    resize();
+    cfgUpdate();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+
+</html>
