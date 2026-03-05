@@ -13,7 +13,7 @@
     }
 
     body {
-      background: #12121f;
+      background: #1a1a1a;
       color: #dde;
       font-family: 'Courier New', monospace;
       display: flex;
@@ -40,7 +40,7 @@
     }
 
     canvas {
-      border: 2px solid #334;
+      border: 2px solid #333333;
       display: block;
       image-rendering: pixelated
     }
@@ -54,9 +54,9 @@
     }
 
     .btn {
-      background: #1e2040;
+      background: #222222;
       color: #ccd;
-      border: 1px solid #445;
+      border: 1px solid #444;
       padding: 5px 11px;
       cursor: pointer;
       font-family: inherit;
@@ -66,14 +66,14 @@
     }
 
     .btn:hover {
-      background: #2a2e5a;
-      border-color: #667
+      background: #2a2a2a;
+      border-color: #666
     }
 
     .btn.active {
-      background: #1a5aaa;
+      background: #800020;
       color: #fff;
-      border-color: #4a9eff
+      border-color: #a0334a
     }
 
     #sidebar {
@@ -91,17 +91,17 @@
     }
 
     #sidebar::-webkit-scrollbar-track {
-      background: #12121f
+      background: #1a1a1a
     }
 
     #sidebar::-webkit-scrollbar-thumb {
-      background: #334;
+      background: #444;
       border-radius: 2px
     }
 
     .panel {
-      background: #161830;
-      border: 1px solid #2a3060;
+      background: #222222;
+      border: 1px solid #333333;
       border-radius: 7px;
       padding: 9px
     }
@@ -110,10 +110,10 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1.2px;
-      color: #4a9eff;
+      color: #800020;
       margin-bottom: 7px;
       padding-bottom: 4px;
-      border-bottom: 1px solid #222a50
+      border-bottom: 1px solid #333333
     }
 
     /* Timer */
@@ -147,7 +147,7 @@
       justify-content: space-between;
       font-size: 12px;
       padding: 2px 0;
-      border-bottom: 1px solid #1a1d38
+      border-bottom: 1px solid #2a2a2a
     }
 
     .trow:last-child {
@@ -182,9 +182,9 @@
       position: relative;
       width: 85px;
       height: 85px;
-      border: 2px solid #2a3060;
+      border: 2px solid #333333;
       border-radius: 50%;
-      background: radial-gradient(circle, #0d1220 60%, #0a0e1a 100%)
+      background: radial-gradient(circle, #181818 60%, #111111 100%)
     }
 
     .stk::after {
@@ -194,7 +194,7 @@
       top: 0;
       width: 1px;
       height: 100%;
-      background: #1e2440;
+      background: #2a2a2a;
       transform: translateX(-50%)
     }
 
@@ -205,7 +205,7 @@
       left: 0;
       width: 100%;
       height: 1px;
-      background: #1e2440;
+      background: #2a2a2a;
       transform: translateY(-50%)
     }
 
@@ -213,12 +213,12 @@
       position: absolute;
       width: 14px;
       height: 14px;
-      background: #4a9eff;
+      background: #800020;
       border-radius: 50%;
       transform: translate(-50%, -50%);
       left: 50%;
       top: 50%;
-      box-shadow: 0 0 6px #4a9eff88;
+      box-shadow: 0 0 6px rgba(128,0,32,0.6);
       z-index: 1
     }
 
@@ -242,14 +242,14 @@
     }
 
     .mval {
-      color: #4a9eff
+      color: #800020
     }
 
     .mbg {
       width: 100%;
       height: 14px;
-      background: #0d1220;
-      border: 1px solid #2a3060;
+      background: #181818;
+      border: 1px solid #333333;
       border-radius: 3px;
       position: relative;
       overflow: hidden
@@ -267,7 +267,7 @@
       top: 0;
       width: 1px;
       height: 100%;
-      background: #33405a;
+      background: #444444;
       pointer-events: none
     }
 
@@ -289,13 +289,13 @@
     }
 
     .sval {
-      color: #4a9eff
+      color: #a0334a
     }
 
     input[type=range] {
       width: 100%;
       height: 3px;
-      accent-color: #4a9eff;
+      accent-color: #800020;
       cursor: pointer;
       outline: none
     }
@@ -347,10 +347,44 @@
     .ready-period {
       color: #778
     }
+
+    /* Home button */
+    .home-btn {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
+      background: #222222;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      border: 1px solid #444;
+      border-radius: 6px;
+      opacity: 0.55;
+      transition: opacity 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .home-btn:hover {
+      opacity: 1;
+      border-color: #800020;
+      background: #2a2a2a;
+    }
+
+    .home-btn .home-arrow {
+      font-size: 14px;
+    }
   </style>
 </head>
 
 <body>
+  <a href="home.html" class="home-btn"><span class="home-arrow">←</span> Home</a>
   <div id="app">
     <div id="field-container">
       <canvas id="c"></canvas>
@@ -451,6 +485,18 @@
           <div class="slrow"><span>Deadzone</span><span class="sval" id="s-dz-v">0.10</span></div>
           <input type="range" id="s-dz" min="0.00" max="0.40" step="0.01" value="0.10" oninput="cfgUpdate()">
         </div>
+        <div class="srow">
+          <div class="slrow"><span>Acceleration</span><span class="sval" id="s-ac-v">15 ft/s²</span></div>
+          <input type="range" id="s-ac" min="5" max="30" step="1" value="15" oninput="cfgUpdate()">
+        </div>
+        <div class="srow">
+          <div class="slrow"><span>Friction</span><span class="sval" id="s-fr-v">8 ft/s²</span></div>
+          <input type="range" id="s-fr" min="2" max="20" step="1" value="8" oninput="cfgUpdate()">
+        </div>
+        <div class="srow">
+          <div class="slrow"><span>Response Delay</span><span class="sval" id="s-rd-v">50 ms</span></div>
+          <input type="range" id="s-rd" min="0" max="300" step="10" value="50" oninput="cfgUpdate()">
+        </div>
       </div>
       <div class="panel">
         <div class="ptitle">Keyboard Controls</div>
@@ -475,8 +521,8 @@
     const fieldImg = new Image(); fieldImg.src = 'decode.webp';
 
     // ─── State ────────────────────────────────────────────────────
-    let cfg = { maxSpd: 8, turnRate: 180, robotSz: 18, deadzone: 0.10 };
-    let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0 }; // x,y in ft; hdg degrees CW from +Y
+    let cfg = { maxSpd: 8, turnRate: 180, robotSz: 18, deadzone: 0.10, accel: 15, friction: 8, inputDelay: 50 };
+    let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0, actualVx: 0, actualVy: 0, actualOmega: 0 };
     let inp = { lx: 0, ly: 0, rx: 0 };
     let mtr = { fl: 0, fr: 0, bl: 0, br: 0 };
     let drivetrain = 'mecanum'; // 'mecanum' | 'tank'
@@ -484,6 +530,19 @@
     let keys = {};
     let gpIdx = null;
     let tmr = { running: false, elapsed: 0, lastTs: 0 };
+    let inputBuffer = []; // { time, lx, ly, rx }
+    let inputTime = 0;    // running clock in ms for input delay
+
+    // ─── Collision Zones (in field ft, origin center) ─────────────
+    // Format: { x, y, w, h } — (x,y) is the CENTER of the rectangle
+    // Field is 12×12 ft, origin center, +X right, +Y up
+    const COLLISION_ZONES = [
+      { x: 5, y: 5.25, w: 2, h: 1.5 },  // Blue GOAL (top-right, flush to wall)
+      { x: -5, y: 5.25, w: 2, h: 1.5 },  // Red GOAL  (top-left, flush to wall)
+      { x: 5.8, y: 3, w: 0.6, h: 6 },  // Blue RAMP (narrow, extends toward center)
+      { x: -5.8, y: 3, w: 0.6, h: 6 },  // Red RAMP  (narrow, extends toward center)
+    ];
+    let debugCollisions = false; // toggle with G key
 
     // ─── Canvas ───────────────────────────────────────────────────
     const cvs = document.getElementById('c');
@@ -500,6 +559,22 @@
     // ─── Field Drawing — FTC 2024-2025 INTO THE DEEP ──────────────
     function drawField() {
       ctx.drawImage(fieldImg, 0, 0, cvs.width, cvs.height);
+    }
+
+    function drawDebugCollisions() {
+      if (!debugCollisions) return;
+      const s = cvs.width / FIELD_FT;
+      for (const z of COLLISION_ZONES) {
+        const cx = (z.x + FIELD_FT / 2) * s;
+        const cy = (-z.y + FIELD_FT / 2) * s;
+        const w = z.w * s;
+        const h = z.h * s;
+        ctx.fillStyle = 'rgba(255, 60, 60, 0.25)';
+        ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+        ctx.strokeStyle = 'rgba(255, 60, 60, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx - w / 2, cy - h / 2, w, h);
+      }
     }
 
     // Lighten a hex color by amt (0-255)
@@ -585,13 +660,14 @@
     }
 
     function updateBot(dt) {
-      // Gather gamepad
+      inputTime += dt * 1000; // track time in ms
+
+      // ── 1. Gather raw input ──────────────────────────────────────
       let lx = 0, ly = 0, rx = 0;
       if (gpIdx !== null) {
         const gp = navigator.getGamepads()[gpIdx];
         if (gp) { lx = dz(gp.axes[0]); ly = dz(gp.axes[1]); rx = dz(gp.axes[2]); }
       }
-
       // Keyboard (overrides / combines with gamepad)
       let kx = 0, ky = 0, krx = 0;
       if (keys['KeyA']) kx -= 1;
@@ -605,45 +681,133 @@
       if (kx !== 0 || ky !== 0) { lx = kx; ly = ky; }
       if (krx !== 0) rx = krx;
 
-      inp.lx = lx; inp.ly = ly; inp.rx = rx;
+      // Push to input buffer for delay
+      inputBuffer.push({ time: inputTime, lx, ly, rx });
 
-      const h = bot.hdg * Math.PI / 180;
-      const fwd = -ly, str = lx;
-
-      // Field velocity
-      let fvx, fvy;
-      if (drivetrain === 'tank') {
-        fvx = fwd * Math.sin(h);
-        fvy = fwd * Math.cos(h);
-      } else if (driveMode === 'field') {
-        fvx = str;
-        fvy = fwd;
-      } else {
-        // Robot-centric: rotate joystick by heading into field frame
-        fvx = fwd * Math.sin(h) + str * Math.cos(h);
-        fvy = fwd * Math.cos(h) - str * Math.sin(h);
+      // ── 2. Read delayed input ────────────────────────────────────
+      const delayThreshold = inputTime - cfg.inputDelay;
+      let dlx = 0, dly = 0, drx = 0;
+      // Find latest entry at or before the threshold
+      while (inputBuffer.length > 1 && inputBuffer[1].time <= delayThreshold) {
+        inputBuffer.shift();
+      }
+      if (inputBuffer.length > 0 && inputBuffer[0].time <= delayThreshold) {
+        dlx = inputBuffer[0].lx;
+        dly = inputBuffer[0].ly;
+        drx = inputBuffer[0].rx;
       }
 
-      bot.vx = fvx * cfg.maxSpd;
-      bot.vy = fvy * cfg.maxSpd;
-      bot.x += bot.vx * dt;
-      bot.y += bot.vy * dt;
-      bot.hdg += rx * cfg.turnRate * dt;
+      inp.lx = dlx; inp.ly = dly; inp.rx = drx;
+
+      // ── 3. Compute target velocity from delayed input ────────────
+      const h = bot.hdg * Math.PI / 180;
+      const fwd = -dly, str = dlx;
+
+      let targetVx, targetVy;
+      if (drivetrain === 'tank') {
+        targetVx = fwd * Math.sin(h);
+        targetVy = fwd * Math.cos(h);
+      } else if (driveMode === 'field') {
+        targetVx = str;
+        targetVy = fwd;
+      } else {
+        targetVx = fwd * Math.sin(h) + str * Math.cos(h);
+        targetVy = fwd * Math.cos(h) - str * Math.sin(h);
+      }
+      targetVx *= cfg.maxSpd;
+      targetVy *= cfg.maxSpd;
+      const targetOmega = drx * cfg.turnRate;
+
+      // ── 4. Apply acceleration / friction ─────────────────────────
+      const accelRate = cfg.accel * dt;
+      const frictionRate = cfg.friction * dt;
+
+      // Helper: move current toward target, using accel when input active, friction when coasting
+      function approach(current, target, accelAmt, frictionAmt) {
+        const diff = target - current;
+        if (Math.abs(diff) < 0.01) return target;
+        if (Math.abs(target) > 0.01) {
+          // Input is active — accelerate toward target
+          if (Math.abs(diff) <= accelAmt) return target;
+          return current + Math.sign(diff) * accelAmt;
+        } else {
+          // No input — decelerate via friction
+          if (Math.abs(current) <= frictionAmt) return 0;
+          return current - Math.sign(current) * frictionAmt;
+        }
+      }
+
+      bot.actualVx = approach(bot.actualVx, targetVx, accelRate, frictionRate);
+      bot.actualVy = approach(bot.actualVy, targetVy, accelRate, frictionRate);
+
+      // Rotational momentum — use proportional rates (deg/s²)
+      const rotAccel = cfg.accel * (cfg.turnRate / cfg.maxSpd) * dt; // scale by turn/speed ratio
+      const rotFriction = cfg.friction * (cfg.turnRate / cfg.maxSpd) * dt;
+      bot.actualOmega = approach(bot.actualOmega, targetOmega, rotAccel, rotFriction);
+
+      // ── 5. Move robot ────────────────────────────────────────────
+      bot.x += bot.actualVx * dt;
+      bot.y += bot.actualVy * dt;
+      bot.hdg += bot.actualOmega * dt;
       bot.hdg = ((bot.hdg + 180) % 360 + 360) % 360 - 180;
 
-      // Clamp to field (half robot size clearance)
-      const hf = FIELD_FT / 2 - cfg.robotSz / 24;
-      bot.x = Math.max(-hf, Math.min(hf, bot.x));
-      bot.y = Math.max(-hf, Math.min(hf, bot.y));
+      // Expose actual velocity for telemetry display
+      bot.vx = bot.actualVx;
+      bot.vy = bot.actualVy;
 
-      // Motor powers (robot-relative mixing)
+      // ── 6. Field wall clamp ──────────────────────────────────────
+      const halfRobot = cfg.robotSz / 24; // robot half-size in ft
+      const hf = FIELD_FT / 2 - halfRobot;
+      if (bot.x < -hf) { bot.x = -hf; bot.actualVx = Math.max(0, bot.actualVx); }
+      if (bot.x > hf) { bot.x = hf; bot.actualVx = Math.min(0, bot.actualVx); }
+      if (bot.y < -hf) { bot.y = -hf; bot.actualVy = Math.max(0, bot.actualVy); }
+      if (bot.y > hf) { bot.y = hf; bot.actualVy = Math.min(0, bot.actualVy); }
+
+      // ── 7. Collision with field elements ─────────────────────────
+      for (const z of COLLISION_ZONES) {
+        // Convert {x, y, w, h} center-format to AABB edges
+        const zL = z.x - z.w / 2, zR = z.x + z.w / 2;
+        const zB = z.y - z.h / 2, zT = z.y + z.h / 2;
+        // Robot AABB
+        const rL = bot.x - halfRobot, rR = bot.x + halfRobot;
+        const rB = bot.y - halfRobot, rT = bot.y + halfRobot;
+        // Check overlap
+        if (rR > zL && rL < zR && rT > zB && rB < zT) {
+          // Compute penetration on each axis
+          const overlapLeft = rR - zL;
+          const overlapRight = zR - rL;
+          const overlapDown = rT - zB;
+          const overlapUp = zT - rB;
+          const minX = Math.min(overlapLeft, overlapRight);
+          const minY = Math.min(overlapDown, overlapUp);
+          // Push out on shallowest axis (slide along edge)
+          if (minX < minY) {
+            if (overlapLeft < overlapRight) {
+              bot.x = zL - halfRobot;
+              bot.actualVx = Math.min(0, bot.actualVx);
+            } else {
+              bot.x = zR + halfRobot;
+              bot.actualVx = Math.max(0, bot.actualVx);
+            }
+          } else {
+            if (overlapDown < overlapUp) {
+              bot.y = zB - halfRobot;
+              bot.actualVy = Math.min(0, bot.actualVy);
+            } else {
+              bot.y = zT + halfRobot;
+              bot.actualVy = Math.max(0, bot.actualVy);
+            }
+          }
+        }
+      }
+
+      // ── 8. Motor powers (unchanged — robot-relative mixing) ─────
       let mFwd = fwd, mStr = str;
       if (driveMode === 'field' && drivetrain === 'mecanum') {
-        // Rotate field joystick to robot frame for motor display
         mFwd = fwd * Math.cos(h) + str * Math.sin(h);
         mStr = -fwd * Math.sin(h) + str * Math.cos(h);
       }
-      const rot = rx;
+      const rot = drx;
       if (drivetrain === 'mecanum') {
         let fl = mFwd + mStr + rot, fr = mFwd - mStr - rot;
         let bl = mFwd - mStr + rot, br = mFwd + mStr - rot;
@@ -736,10 +900,16 @@
       cfg.turnRate = parseFloat(document.getElementById('s-tr').value);
       cfg.robotSz = parseFloat(document.getElementById('s-rs').value);
       cfg.deadzone = parseFloat(document.getElementById('s-dz').value);
+      cfg.accel = parseFloat(document.getElementById('s-ac').value);
+      cfg.friction = parseFloat(document.getElementById('s-fr').value);
+      cfg.inputDelay = parseFloat(document.getElementById('s-rd').value);
       document.getElementById('s-ms-v').textContent = cfg.maxSpd.toFixed(1) + ' ft/s';
       document.getElementById('s-tr-v').textContent = cfg.turnRate + ' °/s';
       document.getElementById('s-rs-v').textContent = cfg.robotSz + ' in';
       document.getElementById('s-dz-v').textContent = cfg.deadzone.toFixed(2);
+      document.getElementById('s-ac-v').textContent = cfg.accel + ' ft/s²';
+      document.getElementById('s-fr-v').textContent = cfg.friction + ' ft/s²';
+      document.getElementById('s-rd-v').textContent = cfg.inputDelay + ' ms';
     }
 
     // ─── Controls ─────────────────────────────────────────────────
@@ -753,7 +923,7 @@
       document.getElementById('btn-fc').classList.toggle('active', m === 'field');
       document.getElementById('btn-rc').classList.toggle('active', m === 'robot');
     }
-    function resetRobot() { bot.x = 0; bot.y = 0; bot.hdg = 0; bot.vx = 0; bot.vy = 0; }
+    function resetRobot() { bot.x = 0; bot.y = 0; bot.hdg = 0; bot.vx = 0; bot.vy = 0; bot.actualVx = 0; bot.actualVy = 0; bot.actualOmega = 0; inputBuffer = []; }
 
     // ─── Gamepad ──────────────────────────────────────────────────
     window.addEventListener('gamepadconnected', e => {
@@ -776,6 +946,7 @@
       if (e.code === 'KeyR') resetRobot();
       if (e.code === 'KeyF') setMode(driveMode === 'field' ? 'robot' : 'field');
       if (e.code === 'KeyT') setDrive(drivetrain === 'mecanum' ? 'tank' : 'mecanum');
+      if (e.code === 'KeyG') debugCollisions = !debugCollisions;
       if (e.code === 'Space') { tmr.running ? timerPause() : timerStart(); e.preventDefault(); }
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     });
@@ -790,6 +961,7 @@
       // Allow free movement even if match not started / over
       updateBot(dt);
       drawField();
+      drawDebugCollisions();
       drawRobot();
       renderUI();
       requestAnimationFrame(loop);

@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Path Planner — R-Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --burgundy: #800020;
+      --burgundy-light: #a0334a;
+      --burgundy-glow: rgba(128,0,32,0.45);
+      --bg: #1a1a1a;
+      --bg-sidebar: #222222;
+      --card: #222222;
+      --card-hover: #2a2a2a;
+      --card-border: #333333;
+      --text: #ffffff;
+      --text-dim: #e0e0e0;
+      --text-muted: #999999;
+      --divider: #2a2a2a;
+      --toggle-bg: #2a2a2a;
+      --toggle-border: #444444;
+      --sidebar-width: 260px;
+    }
+
+    :root.light {
+      --bg: #f5f5f5;
+      --bg-sidebar: #ffffff;
+      --card: #ffffff;
+      --card-hover: #f0f0f0;
+      --card-border: #dddddd;
+      --text: #1a1a1a;
+      --text-dim: #333333;
+      --text-muted: #777777;
+      --divider: #e0e0e0;
+      --toggle-bg: #e8e8e8;
+      --toggle-border: #cccccc;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--divider);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), background 0.35s ease, border-color 0.35s ease;
+    }
+    .sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-width))); }
+
+    .hamburger {
+      position: fixed;
+      top: 14px; left: 14px;
+      z-index: 200;
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--divider);
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .hamburger:hover { border-color: var(--burgundy); }
+    .ham-icon { display:inline-block; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+    .sidebar-open .hamburger { left: calc(var(--sidebar-width) + 14px); }
+
+    .sidebar-brand {
+      padding: 32px 24px 24px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .sidebar-logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+    .sidebar-logo .ftc {
+      background: linear-gradient(135deg, var(--burgundy-light), var(--burgundy));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .sidebar-logo .sim { color: var(--text); -webkit-text-fill-color: var(--text); }
+    .sidebar-tagline { font-size: 11px; color: var(--text-muted); margin-top: 5px; letter-spacing: 0.3px; }
+
+    .sidebar-nav { flex:1; padding: 14px 0; list-style: none; }
+    .nav-item {
+      display: block;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 11px 24px;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    .nav-item.nav-visible { opacity: 1; transform: translateX(0); }
+    .nav-item:hover { color: var(--text); background: var(--card-hover); border-left-color: var(--burgundy); border-left-width: 4px; }
+    .nav-item.active { color: var(--text); border-left-color: var(--burgundy); border-left-width: 4px; background: rgba(128,0,32,0.12); }
+    .nav-icon { margin-right: 10px; font-size: 16px; display:inline-block; width: 22px; text-align:center; }
+
+    .sidebar-footer { padding: 14px 24px 22px; border-top: 1px solid var(--divider); }
+    .theme-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--text-muted); cursor: pointer;
+      padding: 10px 14px; border-radius: 10px;
+      background: var(--toggle-bg); border: 1px solid var(--toggle-border);
+      transition: all 0.25s ease; user-select: none;
+    }
+    .theme-toggle:hover { border-color: var(--burgundy); color: var(--text); }
+    .theme-toggle-icon { font-size: 18px; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); display:inline-block; }
+    .theme-toggle:hover .theme-toggle-icon { transform: rotate(20deg); }
+    .theme-toggle-icon.spin { transform: rotate(360deg) scale(1.3); }
+
+    .sidebar-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 90;
+      opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+    }
+    .sidebar-backdrop.visible { opacity: 1; pointer-events: auto; }
+    @media (max-width: 900px) { .sidebar-backdrop { display: block; } }
+
+    /* ── Top Bar ──────────────────────────────────────── */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: var(--sidebar-width);
+      right: 0;
+      height: 54px;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 20px 0 72px;
+      z-index: 50;
+      gap: 16px;
+      transition: left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.35s ease;
+    }
+    .sidebar-collapsed .topbar { left: 0; }
+    .topbar-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .topbar-sep { color: var(--divider); font-size: 18px; }
+    .home-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      background: var(--card); color: var(--text);
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      text-decoration: none; border: 1px solid var(--card-border);
+      border-radius: 6px; opacity: 0.7;
+      transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .home-btn:hover { opacity: 1; border-color: var(--burgundy); background: var(--card-hover); }
+
+    /* ── Main Layout ──────────────────────────────────── */
+    .main-wrap {
+      margin-left: var(--sidebar-width);
+      margin-top: 54px;
+      width: calc(100% - var(--sidebar-width));
+      height: calc(100vh - 54px);
+      display: flex;
+      transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sidebar-collapsed .main-wrap { margin-left: 0; width: 100%; }
+
+    /* ── Field Panel (left) ───────────────────────────── */
+    .field-panel {
+      flex: 1 1 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111111;
+      border-right: 1px solid var(--divider);
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+    }
+    #fieldCanvas {
+      display: block;
+      cursor: crosshair;
+      border: 2px solid var(--card-border);
+    }
+    #fieldCanvas.dragging { cursor: grabbing; }
+
+    .field-overlay-btns {
+      position: absolute;
+      bottom: 12px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px;
+    }
+    .fob-btn {
+      background: rgba(26,26,26,0.88);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      font-size: 11px; font-family: inherit;
+      padding: 4px 10px; border-radius: 4px;
+      cursor: pointer; backdrop-filter: blur(4px);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .fob-btn:hover { border-color: var(--burgundy); background: rgba(128,0,32,0.18); }
+    .fob-btn.active { border-color: var(--burgundy); background: rgba(128,0,32,0.28); color: #fff; }
+    .fob-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+    /* ── Control Panel (right) ────────────────────────── */
+    .ctrl-panel {
+      flex: 0 0 380px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .ctrl-panel::-webkit-scrollbar { width: 4px; }
+    .ctrl-panel::-webkit-scrollbar-track { background: var(--bg); }
+    .ctrl-panel::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+    /* ── Section ──────────────────────────────────────── */
+    .section {
+      border-bottom: 1px solid var(--divider);
+      padding: 14px 16px;
+    }
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--burgundy);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    /* ── Toolbar ──────────────────────────────────────── */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tbtn {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      font-size: 11px; font-family: inherit;
+      padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .tbtn:hover { border-color: var(--burgundy); background: var(--card-hover); color: var(--text); }
+    .tbtn.primary { background: var(--burgundy); border-color: var(--burgundy); color: #fff; }
+    .tbtn.primary:hover { background: var(--burgundy-light); border-color: var(--burgundy-light); }
+    .tbtn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+    /* ── Waypoint List ────────────────────────────────── */
+    .wp-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+    .wp-list::-webkit-scrollbar { width: 3px; }
+    .wp-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+    .wp-card {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px;
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 6px; cursor: pointer;
+      transition: all 0.15s ease; border-left: 3px solid transparent;
+    }
+    .wp-card:hover { border-color: var(--burgundy-light); background: var(--card-hover); }
+    .wp-card.selected { border-left-color: var(--burgundy); background: rgba(128,0,32,0.1); border-color: var(--burgundy); }
+    .wp-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--burgundy); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .wp-info { flex: 1; }
+    .wp-coords { font-size: 12px; color: var(--text); font-weight: 600; }
+    .wp-heading { font-size: 10px; color: var(--text-muted); }
+    .wp-delete {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 14px; padding: 2px 4px;
+      border-radius: 3px; transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .wp-delete:hover { color: #ff4455; background: rgba(255,68,85,0.12); }
+    .wp-empty {
+      text-align: center; padding: 20px;
+      color: var(--text-muted); font-size: 12px; line-height: 1.6;
+    }
+
+    /* ── Editor Form ──────────────────────────────────── */
+    .editor-form { display: flex; flex-direction: column; gap: 9px; }
+    .form-row { display: flex; gap: 8px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .form-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+    .form-input {
+      background: var(--card); border: 1px solid var(--card-border);
+      color: var(--text); font-family: inherit; font-size: 12px;
+      padding: 5px 8px; border-radius: 5px;
+      outline: none; transition: border-color 0.15s;
+      width: 100%;
+    }
+    .form-input:focus { border-color: var(--burgundy); }
+    .form-select {
+      background: var(--card); border: 1px solid var(--card-border);
+      color: var(--text); font-family: inherit; font-size: 12px;
+      padding: 5px 8px; border-radius: 5px;
+      outline: none; cursor: pointer; width: 100%;
+      transition: border-color 0.15s;
+    }
+    .form-select:focus { border-color: var(--burgundy); }
+
+    /* Angle picker */
+    .angle-row { display: flex; gap: 8px; align-items: center; }
+    #anglePicker {
+      width: 40px; height: 40px; cursor: pointer;
+      border-radius: 50%; border: 1.5px solid var(--card-border);
+      background: var(--card); flex-shrink: 0;
+    }
+
+    /* ── CP Card ──────────────────────────────────────── */
+    .cp-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-left: 3px solid var(--burgundy-light);
+      border-radius: 5px; padding: 8px;
+    }
+    .cp-card-title {
+      font-size: 10px; color: var(--burgundy); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .cp-remove-btn {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 12px; padding: 1px 4px;
+      border-radius: 3px; transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .cp-remove-btn:hover { color: #ff4455; background: rgba(255,68,85,0.12); }
+
+    /* ── Path Settings ────────────────────────────────── */
+    .setting-row { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .setting-row:last-child { margin-bottom: 0; }
+    .setting-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+    .setting-val { color: var(--burgundy-light); font-weight: 600; }
+    input[type=range] {
+      width: 100%; height: 3px;
+      accent-color: var(--burgundy);
+      cursor: pointer; outline: none;
+    }
+    .dim-inputs { display: flex; gap: 8px; }
+    .dim-inputs .form-group { flex: 1; }
+
+    /* ── Code Export ──────────────────────────────────── */
+    .code-block {
+      background: #111111;
+      border: 1px solid var(--card-border);
+      border-radius: 6px; padding: 10px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 10.5px; color: #e0e0e0;
+      white-space: pre; overflow-x: auto; overflow-y: auto;
+      max-height: 200px; min-height: 60px;
+      line-height: 1.55;
+    }
+    .code-block::-webkit-scrollbar { width: 3px; height: 3px; }
+    .code-block::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+    .copy-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .copy-btn {
+      background: var(--card); border: 1px solid var(--card-border);
+      color: var(--text-muted); font-size: 11px; font-family: inherit;
+      padding: 4px 12px; border-radius: 5px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--burgundy); color: var(--text); }
+    .copy-btn.copied { border-color: #4aff88; color: #4aff88; }
+
+    .no-select-msg {
+      text-align: center; color: var(--text-muted); font-size: 12px;
+      padding: 14px; line-height: 1.6;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-width))); }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { left: 14px !important; }
+      .sidebar-open .hamburger { left: calc(var(--sidebar-width) + 14px) !important; }
+      .topbar { left: 0; }
+      .main-wrap { margin-left: 0; width: 100%; flex-direction: column; }
+      .field-panel { flex: 0 0 50vh; border-right: none; border-bottom: 1px solid var(--divider); }
+      .ctrl-panel { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+
+<body class="sidebar-open">
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span class="ham-icon">☰</span></button>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo"><span class="ftc">R-</span><span class="sim">Tracker</span></div>
+      <div class="sidebar-tagline">Rundle Robotics Visualizer</div>
+    </div>
+    <ul class="sidebar-nav">
+      <a href="home.html" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+      <a href="index.html" class="nav-item"><span class="nav-icon">🎮</span>TeleOp Practice</a>
+      <a href="pathplanner.html" class="nav-item active"><span class="nav-icon">📐</span>Path Planner</a>
+      <a href="about.html" class="nav-item"><span class="nav-icon">ℹ️</span>About</a>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span>Toggle Theme</span>
+        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="topbar" id="topbar">
+    <a href="home.html" class="home-btn">← Home</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-title">Path Planner</span>
+  </div>
+
+  <div class="main-wrap" id="mainWrap">
+    <!-- Field Canvas (left) -->
+    <div class="field-panel" id="fieldPanel">
+      <canvas id="fieldCanvas"></canvas>
+      <div class="field-overlay-btns">
+        <button class="fob-btn active" id="btnGrid" onclick="toggleGrid()">Grid</button>
+        <button class="fob-btn" id="btnRobotAnim" onclick="toggleAnim()" disabled>▶ Play</button>
+        <button class="fob-btn" id="btnStopAnim" onclick="stopAnim()" disabled>■ Stop</button>
+      </div>
+    </div>
+
+    <!-- Control Panel (right) -->
+    <div class="ctrl-panel">
+
+      <!-- Path Actions -->
+      <div class="section">
+        <div class="section-title">Path Actions</div>
+        <div class="toolbar">
+          <button class="tbtn primary" onclick="addWaypointAtCenter()">+ Add Point</button>
+          <button class="tbtn" id="btnDelSel" onclick="deleteSelected()" disabled>Delete Selected</button>
+          <button class="tbtn" onclick="clearAll()">Clear All</button>
+          <button class="tbtn" onclick="exportPath()">Export JSON</button>
+        </div>
+      </div>
+
+      <!-- Waypoint List -->
+      <div class="section">
+        <div class="section-title">
+          <span>Waypoints</span>
+          <span id="wpCount" style="color:var(--text-muted);font-size:10px;font-weight:400;float:right;">0 points</span>
+        </div>
+        <div class="wp-list" id="wpList">
+          <div class="wp-empty">Click the field to place waypoints.</div>
+        </div>
+      </div>
+
+      <!-- Editor (waypoint or segment) -->
+      <div class="section" id="editorSection">
+        <div class="section-title" id="editorSectionTitle">Selection</div>
+        <div id="editorContent">
+          <div class="no-select-msg">Click a waypoint or path segment to select it.</div>
+        </div>
+      </div>
+
+      <!-- Path Settings -->
+      <div class="section">
+        <div class="section-title">Path Settings</div>
+        <div class="setting-row">
+          <div class="setting-label"><span>Animation Speed</span><span class="setting-val" id="speedVal">1.0×</span></div>
+          <input type="range" id="speedSlider" min="0.1" max="1.0" step="0.05" value="1.0" oninput="updatePathSettings()">
+        </div>
+        <div style="margin-top:8px;">
+          <div class="form-label" style="margin-bottom:6px;">Robot Dimensions (inches)</div>
+          <div class="dim-inputs">
+            <div class="form-group">
+              <label class="form-label">Width</label>
+              <input type="number" class="form-input" id="robotW" value="18" min="6" max="24" oninput="drawAll()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Length</label>
+              <input type="number" class="form-input" id="robotL" value="18" min="6" max="24" oninput="drawAll()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Export -->
+      <div class="section">
+        <div class="section-title">Pedro Pathing Code</div>
+        <div class="code-block" id="codeBlock">// Add waypoints to generate code</div>
+        <div class="copy-row">
+          <button class="copy-btn" id="copyBtn" onclick="copyCode()">Copy Code</button>
+        </div>
+      </div>
+
+    </div><!-- /ctrl-panel -->
+  </div><!-- /main-wrap -->
+
+  <script>
+    // ── Theme / Sidebar ──────────────────────────────────────────
+    let isDark = true;
+    let sidebarOpen = window.innerWidth > 900;
+
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.classList.toggle('light', !isDark);
+      const icon = document.getElementById('themeIcon');
+      icon.classList.add('spin');
+      setTimeout(() => { icon.textContent = isDark ? '🌙' : '☀️'; icon.classList.remove('spin'); }, 400);
+      drawAll();
+    }
+
+    function toggleSidebar() {
+      sidebarOpen = !sidebarOpen;
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('collapsed', !sidebarOpen);
+      sb.classList.toggle('open', sidebarOpen && window.innerWidth <= 900);
+      document.body.classList.toggle('sidebar-open', sidebarOpen);
+      document.body.classList.toggle('sidebar-collapsed', !sidebarOpen);
+      document.querySelector('.ham-icon').textContent = sidebarOpen ? '✕' : '☰';
+      document.getElementById('sidebarBackdrop').classList.toggle('visible', sidebarOpen && window.innerWidth <= 900);
+      animateNavItems();
+      setTimeout(() => { resizeCanvas(); drawAll(); }, 320);
+    }
+
+    function animateNavItems() {
+      document.querySelectorAll('.nav-item').forEach((item, i) => {
+        item.classList.remove('nav-visible');
+        setTimeout(() => item.classList.add('nav-visible'), 80 + i * 55);
+      });
+    }
+
+    function initSidebar() {
+      if (window.innerWidth <= 900) {
+        sidebarOpen = false;
+        document.getElementById('sidebar').classList.add('collapsed');
+        document.body.classList.remove('sidebar-open');
+        document.body.classList.add('sidebar-collapsed');
+      }
+      animateNavItems();
+    }
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 900) {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarBackdrop').classList.remove('visible');
+      }
+      resizeCanvas(); drawAll();
+    });
+
+    // ── Field Image ──────────────────────────────────────────────
+    const fieldImg = new Image();
+    fieldImg.src = 'decode.webp';
+    fieldImg.onload = () => drawAll();
+
+    // ── Canvas Setup ─────────────────────────────────────────────
+    const cvs = document.getElementById('fieldCanvas');
+    const ctx = cvs.getContext('2d');
+    const FIELD_IN = 144;
+
+    function resizeCanvas() {
+      const fp = document.getElementById('fieldPanel');
+      const W = fp.clientWidth - 8;
+      const H = fp.clientHeight - 44;
+      const sz = Math.max(200, Math.min(W, H));
+      cvs.width = cvs.height = sz;
+    }
+
+    function px(v) { return v * cvs.width / FIELD_IN; }
+    function ftcToCvs(fx, fy) { return { x: px(fx + 72), y: px(72 - fy) }; }
+    function cvsToFtc(cx, cy) { return { x: cx / cvs.width * FIELD_IN - 72, y: 72 - cy / cvs.height * FIELD_IN }; }
+
+    // ── State ────────────────────────────────────────────────────
+    let waypoints = [];   // [{x, y, heading, waitMs, action}]
+    let segments  = [];   // one per gap: {cps:[{x,y}]} — 0,1,or 2 control points
+    let selectedIdx    = -1;  // selected waypoint index
+    let selectedSegIdx = -1;  // selected segment index
+    let showGrid = true;
+
+    // drag state
+    let dragType   = null; // 'waypoint' | 'cp' | null
+    let dragIdx    = -1;
+    let dragSegIdx = -1;
+    let dragCpIdx  = -1;
+    let dragOffX = 0, dragOffY = 0;
+    let mouseDownPos = null;
+    let wasDragging  = false;
+
+    let pathSettings = { speed: 1.0 };
+    let animRunning = false;
+    let animT = 0;
+    let animFrame = null;
+
+    // ── Bezier Evaluation ─────────────────────────────────────────
+    // Evaluate segment si at parameter t in [0,1] — returns canvas {x,y}
+    function evalSegCanvas(si, t) {
+      const a  = ftcToCvs(waypoints[si].x, waypoints[si].y);
+      const b  = ftcToCvs(waypoints[si+1].x, waypoints[si+1].y);
+      const seg = segments[si];
+      const mt = 1 - t;
+      if (seg.cps.length === 0) {
+        return { x: a.x + (b.x-a.x)*t, y: a.y + (b.y-a.y)*t };
+      } else if (seg.cps.length === 1) {
+        const cp = ftcToCvs(seg.cps[0].x, seg.cps[0].y);
+        return { x: mt*mt*a.x + 2*mt*t*cp.x + t*t*b.x,
+                 y: mt*mt*a.y + 2*mt*t*cp.y + t*t*b.y };
+      } else {
+        const cp1 = ftcToCvs(seg.cps[0].x, seg.cps[0].y);
+        const cp2 = ftcToCvs(seg.cps[1].x, seg.cps[1].y);
+        return { x: mt*mt*mt*a.x + 3*mt*mt*t*cp1.x + 3*mt*t*t*cp2.x + t*t*t*b.x,
+                 y: mt*mt*mt*a.y + 3*mt*mt*t*cp1.y + 3*mt*t*t*cp2.y + t*t*t*b.y };
+      }
+    }
+
+    // Evaluate segment in FTC field inches (for animation)
+    function evalSegFTC(si, t) {
+      const a = waypoints[si], b = waypoints[si+1];
+      const seg = segments[si];
+      const mt = 1 - t;
+      let x, y;
+      if (seg.cps.length === 0) {
+        x = a.x + (b.x-a.x)*t; y = a.y + (b.y-a.y)*t;
+      } else if (seg.cps.length === 1) {
+        const cp = seg.cps[0];
+        x = mt*mt*a.x + 2*mt*t*cp.x + t*t*b.x;
+        y = mt*mt*a.y + 2*mt*t*cp.y + t*t*b.y;
+      } else {
+        const cp1 = seg.cps[0], cp2 = seg.cps[1];
+        x = mt*mt*mt*a.x + 3*mt*mt*t*cp1.x + 3*mt*t*t*cp2.x + t*t*t*b.x;
+        y = mt*mt*mt*a.y + 3*mt*mt*t*cp1.y + 3*mt*t*t*cp2.y + t*t*t*b.y;
+      }
+      const heading = a.heading + ((b.heading - a.heading + 540) % 360 - 180) * t;
+      return { x, y, heading };
+    }
+
+    // ── Drawing ──────────────────────────────────────────────────
+    function drawAll() {
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      if (fieldImg.complete && fieldImg.naturalWidth > 0) {
+        ctx.drawImage(fieldImg, 0, 0, cvs.width, cvs.height);
+      } else {
+        ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+      }
+      if (showGrid) drawGrid();
+      if (waypoints.length > 1) drawPath();
+      drawWaypoints();
+      if (waypoints.length > 0) drawRobotAtPos();
+    }
+
+    function drawGrid() {
+      const step = px(12);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x <= cvs.width; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
+      }
+      for (let y = 0; y <= cvs.height; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1;
+      const cx = px(72), cy = px(72);
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, cvs.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(cvs.width, cy); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPath() {
+      // Draw control point handle lines (behind path)
+      drawControlPointHandles();
+
+      // Draw each segment
+      for (let si = 0; si < segments.length; si++) {
+        const a   = ftcToCvs(waypoints[si].x, waypoints[si].y);
+        const b   = ftcToCvs(waypoints[si+1].x, waypoints[si+1].y);
+        const seg = segments[si];
+        const isSel = (si === selectedSegIdx);
+
+        ctx.save();
+        ctx.strokeStyle = isSel ? '#d0003a' : '#800020';
+        ctx.lineWidth   = isSel ? Math.max(2.5, px(2)) : Math.max(1.5, px(1.5));
+        ctx.lineCap     = 'round';
+        ctx.shadowColor = 'rgba(128,0,32,0.6)';
+        ctx.shadowBlur  = isSel ? px(5) : px(2);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        if (seg.cps.length === 0) {
+          ctx.lineTo(b.x, b.y);
+        } else if (seg.cps.length === 1) {
+          const cp = ftcToCvs(seg.cps[0].x, seg.cps[0].y);
+          ctx.quadraticCurveTo(cp.x, cp.y, b.x, b.y);
+        } else {
+          const cp1 = ftcToCvs(seg.cps[0].x, seg.cps[0].y);
+          const cp2 = ftcToCvs(seg.cps[1].x, seg.cps[1].y);
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, b.x, b.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Direction arrow at mid-segment
+        const mid  = evalSegCanvas(si, 0.5);
+        const near = evalSegCanvas(si, 0.42);
+        drawArrowHead(near.x, near.y, mid.x, mid.y, isSel ? '#d0003a' : '#800020');
+      }
+
+      // Draw control point circles on top
+      drawControlPoints();
+    }
+
+    function drawControlPointHandles() {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(160,51,74,0.55)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 5]);
+      segments.forEach((seg, si) => {
+        if (seg.cps.length === 0) return;
+        const a = ftcToCvs(waypoints[si].x, waypoints[si].y);
+        const b = ftcToCvs(waypoints[si+1].x, waypoints[si+1].y);
+        seg.cps.forEach((cp, ci) => {
+          const p = ftcToCvs(cp.x, cp.y);
+          const anchor = (ci === 0) ? a : b;
+          ctx.beginPath(); ctx.moveTo(anchor.x, anchor.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        });
+      });
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    function drawControlPoints() {
+      segments.forEach((seg, si) => {
+        if (seg.cps.length === 0) return;
+        seg.cps.forEach((cp, ci) => {
+          const p = ftcToCvs(cp.x, cp.y);
+          const isDraggingThis = (dragType === 'cp' && dragSegIdx === si && dragCpIdx === ci);
+          ctx.save();
+          ctx.beginPath(); ctx.arc(p.x, p.y, px(3), 0, Math.PI * 2);
+          ctx.fillStyle   = isDraggingThis ? '#ffffff' : '#c04060';
+          ctx.strokeStyle = isDraggingThis ? '#ff3366' : '#800020';
+          ctx.lineWidth   = 1.2;
+          ctx.fill(); ctx.stroke();
+          ctx.restore();
+        });
+      });
+    }
+
+    function drawArrowHead(x1, y1, x2, y2, color) {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const sz = px(4);
+      ctx.save();
+      ctx.fillStyle = color || '#800020';
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - Math.cos(angle - 0.45) * sz, y2 - Math.sin(angle - 0.45) * sz);
+      ctx.lineTo(x2 - Math.cos(angle + 0.45) * sz, y2 - Math.sin(angle + 0.45) * sz);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawWaypoints() {
+      waypoints.forEach((wp, i) => {
+        const p = ftcToCvs(wp.x, wp.y);
+        const r = px(4.5);
+        const isSel = (i === selectedIdx);
+
+        if (isSel) {
+          ctx.save();
+          ctx.beginPath(); ctx.arc(p.x, p.y, r + px(3), 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(160,51,74,0.25)'; ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.save();
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle   = '#ffffff';
+        ctx.strokeStyle = isSel ? '#ff3366' : '#800020';
+        ctx.lineWidth   = isSel ? px(1.5) : px(1);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = `bold ${Math.max(8, px(3.5))}px Inter, sans-serif`;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(i + 1, p.x, p.y);
+        ctx.restore();
+
+        drawHeadingArrow(p.x, p.y, wp.heading, r, isSel);
+      });
+    }
+
+    function drawHeadingArrow(cx, cy, headingDeg, r, highlight) {
+      const ang = (headingDeg - 90) * Math.PI / 180;
+      const len = r + px(7);
+      const ex = cx + Math.cos(ang) * len;
+      const ey = cy + Math.sin(ang) * len;
+      ctx.save();
+      ctx.strokeStyle = highlight ? '#ff3366' : 'rgba(255,255,255,0.75)';
+      ctx.lineWidth   = highlight ? px(1.2) : px(0.8);
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+      const hs = px(2.5);
+      ctx.fillStyle = highlight ? '#ff3366' : 'rgba(255,255,255,0.75)';
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - Math.cos(ang - 0.5) * hs, ey - Math.sin(ang - 0.5) * hs);
+      ctx.lineTo(ex - Math.cos(ang + 0.5) * hs, ey - Math.sin(ang + 0.5) * hs);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // ── Robot Drawing (matches index.html style) ──────────────────
+    function drawRobotAtPos() {
+      if (waypoints.length === 0) return;
+      const wp = animRunning ? getAnimWaypoint() : waypoints[0];
+      if (!wp) return;
+
+      const pos = ftcToCvs(wp.x, wp.y);
+      const robotSzIn = parseFloat(document.getElementById('robotW').value) || 18;
+      // r = half-size in canvas pixels (matching index.html: robotSz/24 * scale * 12ft)
+      // Here field is 144in, so scale = cvs.width/144. robotSz in inches → r = (robotSzIn/2)/144*cvs.width
+      const r = px(robotSzIn / 2);
+      // Heading: 0 = facing +Y (up on field). canvas rotate: positive = CW.
+      // At heading=0, front should face canvas-up (-y). canvas rotate(0) = no rotation.
+      // Same convention as index.html: rotate(hdg * PI/180).
+      const hdgRad = wp.heading * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(hdgRad);
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(-r + 3, -r + 3, r * 2, r * 2);
+
+      // Body
+      ctx.fillStyle = '#b0b8c8';
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+
+      // Front face (top = heading direction)
+      ctx.fillStyle = '#4a9eff';
+      ctx.fillRect(-r, -r, r * 2, r * 0.28);
+
+      // "FTC" text
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = `bold ${Math.max(6, r * 0.6)}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('FTC', 0, r * 0.35);
+
+      // Mecanum wheels
+      const wW = r * 0.25, wH = r * 0.55;
+      const wx = r * 0.82, wy = r * 0.55;
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx, sy]) => {
+        ctx.save();
+        ctx.translate(sx * wx, sy * wy);
+        ctx.rotate(Math.PI / 4 * sx); // angled mecanum rollers
+        ctx.fillStyle = '#222222';
+        ctx.fillRect(-wW/2, -wH/2, wW, wH);
+        ctx.fillStyle = '#6a6a8a';
+        ctx.fillRect(-wW/2 + 1, -wH/2 + 2, wW - 2, 3);
+        ctx.restore();
+      });
+
+      // Outline
+      ctx.strokeStyle = '#778899';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-r, -r, r * 2, r * 2);
+
+      // Heading arrow inside body
+      ctx.beginPath();
+      ctx.moveTo(0, -r + r * 0.28);
+      ctx.lineTo(-r * 0.18, -r + r * 0.50);
+      ctx.lineTo( r * 0.18, -r + r * 0.50);
+      ctx.closePath();
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ── Animation ────────────────────────────────────────────────
+    function getAnimWaypoint() {
+      if (waypoints.length < 2) return waypoints[0];
+      const total = segments.length;
+      const seg   = Math.min(animT * total, total - 0.0001);
+      const si    = Math.floor(seg);
+      const t     = seg - si;
+      return evalSegFTC(si, t);
+    }
+
+    function toggleAnim() {
+      if (animRunning) { stopAnim(); return; }
+      if (waypoints.length < 2) return;
+      animRunning = true; animT = 0;
+      document.getElementById('btnRobotAnim').textContent = '⏸ Pause';
+      document.getElementById('btnStopAnim').disabled = false;
+      let last = null;
+      function step(ts) {
+        if (!animRunning) return;
+        if (last === null) last = ts;
+        const dt = (ts - last) / 1000; last = ts;
+        animT += dt * pathSettings.speed * 0.15;
+        if (animT >= 1) { animT = 1; drawAll(); stopAnim(); return; }
+        drawAll();
+        animFrame = requestAnimationFrame(step);
+      }
+      animFrame = requestAnimationFrame(step);
+    }
+
+    function stopAnim() {
+      animRunning = false;
+      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      document.getElementById('btnRobotAnim').textContent = '▶ Play';
+      document.getElementById('btnStopAnim').disabled = true;
+      animT = 0;
+      drawAll();
+    }
+
+    function toggleGrid() {
+      showGrid = !showGrid;
+      document.getElementById('btnGrid').classList.toggle('active', showGrid);
+      drawAll();
+    }
+
+    // ── Hit Testing ───────────────────────────────────────────────
+    function hitTestCP(cx, cy) {
+      const hitR = px(7);
+      for (let si = segments.length - 1; si >= 0; si--) {
+        for (let ci = segments[si].cps.length - 1; ci >= 0; ci--) {
+          const p = ftcToCvs(segments[si].cps[ci].x, segments[si].cps[ci].y);
+          const dx = cx - p.x, dy = cy - p.y;
+          if (dx*dx + dy*dy <= hitR*hitR) return { si, ci };
+        }
+      }
+      return null;
+    }
+
+    function hitTestWaypoint(cx, cy) {
+      const hitR = px(8);
+      for (let i = waypoints.length - 1; i >= 0; i--) {
+        const p = ftcToCvs(waypoints[i].x, waypoints[i].y);
+        const dx = cx - p.x, dy = cy - p.y;
+        if (dx*dx + dy*dy <= hitR*hitR) return i;
+      }
+      return -1;
+    }
+
+    function hitTestSegment(cx, cy) {
+      if (segments.length === 0) return -1;
+      const threshold = px(10);
+      let bestDist = Infinity, bestSeg = -1;
+      for (let si = 0; si < segments.length; si++) {
+        for (let j = 0; j <= 30; j++) {
+          const pt = evalSegCanvas(si, j / 30);
+          const dx = cx - pt.x, dy = cy - pt.y;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < bestDist) { bestDist = d; bestSeg = si; }
+        }
+      }
+      return bestDist < threshold ? bestSeg : -1;
+    }
+
+    // ── Waypoint Management ───────────────────────────────────────
+    function addWaypoint(ftcX, ftcY) {
+      const heading = waypoints.length > 0 ? waypoints[waypoints.length-1].heading : 0;
+      waypoints.push({ x: parseFloat(ftcX.toFixed(1)), y: parseFloat(ftcY.toFixed(1)), heading, waitMs: 0, action: 'None' });
+      if (waypoints.length >= 2) segments.push({ cps: [] });
+      selectedIdx    = waypoints.length - 1;
+      selectedSegIdx = -1;
+      refreshUI();
+    }
+
+    function addWaypointAtCenter() {
+      addWaypoint((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80);
+    }
+
+    function deleteSelected() {
+      if (selectedIdx >= 0 && selectedIdx < waypoints.length) deleteWpAt(selectedIdx);
+    }
+
+    function deleteWpAt(i) {
+      const old_n = waypoints.length;
+      waypoints.splice(i, 1);
+      // Adjust segments array
+      if (old_n >= 2) {
+        if (i === 0) {
+          segments.splice(0, 1);
+        } else if (i === old_n - 1) {
+          segments.splice(segments.length - 1, 1);
+        } else {
+          // merge segments[i-1] and segments[i] into a straight segment
+          segments.splice(i - 1, 2, { cps: [] });
+        }
+      }
+      if (selectedIdx >= waypoints.length) selectedIdx = waypoints.length - 1;
+      if (selectedSegIdx >= segments.length) selectedSegIdx = -1;
+      refreshUI();
+    }
+
+    function clearAll() {
+      if (waypoints.length === 0) return;
+      if (!confirm('Clear all waypoints and paths?')) return;
+      waypoints = []; segments = [];
+      selectedIdx = -1; selectedSegIdx = -1;
+      stopAnim(); refreshUI();
+    }
+
+    // ── Control Point Management ──────────────────────────────────
+    function addControlPoint(si) {
+      const seg = segments[si];
+      if (seg.cps.length >= 2) return;
+      const a = waypoints[si], b = waypoints[si+1];
+      if (seg.cps.length === 0) {
+        seg.cps.push({ x: parseFloat((a.x + (b.x - a.x) / 3).toFixed(1)),
+                       y: parseFloat((a.y + (b.y - a.y) / 3).toFixed(1)) });
+      } else {
+        seg.cps.push({ x: parseFloat((a.x + (b.x - a.x) * 2 / 3).toFixed(1)),
+                       y: parseFloat((a.y + (b.y - a.y) * 2 / 3).toFixed(1)) });
+      }
+      updateCode(); drawAll();
+      renderSegmentEditor(si);
+    }
+
+    function removeCP(si, ci) {
+      segments[si].cps.splice(ci, 1);
+      updateCode(); drawAll();
+      renderSegmentEditor(si);
+    }
+
+    function updateCP(si, ci, axis, val) {
+      segments[si].cps[ci][axis] = parseFloat(val) || 0;
+      updateCode(); drawAll();
+    }
+
+    // ── UI Rendering ──────────────────────────────────────────────
+    function refreshUI() {
+      renderWpList();
+      renderEditor();
+      updatePlayButton();
+      updateCode();
+      drawAll();
+    }
+
+    function renderWpList() {
+      const list = document.getElementById('wpList');
+      document.getElementById('wpCount').textContent = waypoints.length + ' point' + (waypoints.length !== 1 ? 's' : '');
+      if (waypoints.length === 0) {
+        list.innerHTML = '<div class="wp-empty">Click the field to place waypoints.</div>';
+        return;
+      }
+      list.innerHTML = waypoints.map((wp, i) => `
+        <div class="wp-card${i === selectedIdx ? ' selected' : ''}" onclick="selectWp(${i})">
+          <div class="wp-num">${i + 1}</div>
+          <div class="wp-info">
+            <div class="wp-coords">(${wp.x.toFixed(1)}, ${wp.y.toFixed(1)}) in</div>
+            <div class="wp-heading">Heading: ${wp.heading.toFixed(1)}° · ${wp.action}</div>
+          </div>
+          <button class="wp-delete" onclick="event.stopPropagation(); deleteWpAt(${i})" title="Delete">✕</button>
+        </div>`).join('');
+    }
+
+    function selectWp(i) {
+      selectedIdx = i; selectedSegIdx = -1; refreshUI();
+    }
+
+    function renderEditor() {
+      const titleEl  = document.getElementById('editorSectionTitle');
+      const content  = document.getElementById('editorContent');
+      const delBtn   = document.getElementById('btnDelSel');
+
+      if (selectedIdx >= 0 && selectedIdx < waypoints.length) {
+        titleEl.textContent = `Waypoint ${selectedIdx + 1}`;
+        delBtn.disabled = false;
+        renderWaypointEditor();
+      } else if (selectedSegIdx >= 0 && selectedSegIdx < segments.length) {
+        titleEl.textContent = `Segment ${selectedSegIdx + 1} → ${selectedSegIdx + 2}`;
+        delBtn.disabled = true;
+        renderSegmentEditor(selectedSegIdx);
+      } else {
+        titleEl.textContent = 'Selection';
+        delBtn.disabled = true;
+        content.innerHTML = '<div class="no-select-msg">Click a waypoint or path segment to select it.</div>';
+      }
+    }
+
+    function renderWaypointEditor() {
+      if (selectedIdx < 0 || selectedIdx >= waypoints.length) return;
+      const wp = waypoints[selectedIdx];
+      document.getElementById('editorContent').innerHTML = `
+        <div class="editor-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">X (inches)</label>
+              <input type="number" class="form-input" id="edX" value="${wp.x}" step="0.5" oninput="editorUpdate()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Y (inches)</label>
+              <input type="number" class="form-input" id="edY" value="${wp.y}" step="0.5" oninput="editorUpdate()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label class="form-label">Heading (°)</label>
+              <div class="angle-row">
+                <canvas id="anglePicker" width="40" height="40" title="Click or drag to set heading"></canvas>
+                <input type="number" class="form-input" id="edH" value="${wp.heading}" step="1" min="-180" max="180" oninput="editorUpdate()">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Wait (ms)</label>
+              <input type="number" class="form-input" id="edW" value="${wp.waitMs}" step="100" min="0" oninput="editorUpdate()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Action</label>
+              <select class="form-select" id="edA" onchange="editorUpdate()">
+                ${['None','Wait','Intake','Outtake','Custom'].map(a => `<option${a===wp.action?' selected':''}>${a}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>`;
+      drawAnglePicker(wp.heading);
+      initAnglePicker();
+    }
+
+    function renderSegmentEditor(si) {
+      const seg = segments[si];
+      const canAdd = seg.cps.length < 2;
+      const typeLabel = seg.cps.length === 0 ? 'BezierLine — straight path'
+                      : seg.cps.length === 1  ? 'BezierCurve — 1 control point'
+                      : 'BezierCurve — 2 control points';
+
+      document.getElementById('editorContent').innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">${typeLabel}</div>
+          ${canAdd ? `<button class="tbtn primary" style="align-self:flex-start;" onclick="addControlPoint(${si})">+ Add Control Point</button>` : ''}
+          ${seg.cps.map((cp, ci) => `
+            <div class="cp-card">
+              <div class="cp-card-title">
+                Control Point ${ci + 1}
+                <button class="cp-remove-btn" onclick="removeCP(${si}, ${ci})" title="Remove CP">✕</button>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">X (in)</label>
+                  <input type="number" class="form-input" value="${cp.x.toFixed(1)}" step="0.5"
+                    oninput="updateCP(${si}, ${ci}, 'x', this.value)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Y (in)</label>
+                  <input type="number" class="form-input" value="${cp.y.toFixed(1)}" step="0.5"
+                    oninput="updateCP(${si}, ${ci}, 'y', this.value)">
+                </div>
+              </div>
+            </div>`).join('')}
+          ${seg.cps.length === 0 ? '<div style="font-size:11px;color:var(--text-muted);line-height:1.6;">Add control points to create a Bezier curve. Right-click a control point on the field to remove it.</div>' : ''}
+        </div>`;
+    }
+
+    function editorUpdate() {
+      if (selectedIdx < 0) return;
+      const wp = waypoints[selectedIdx];
+      wp.x       = parseFloat(document.getElementById('edX').value) || 0;
+      wp.y       = parseFloat(document.getElementById('edY').value) || 0;
+      wp.heading = parseFloat(document.getElementById('edH').value) || 0;
+      wp.waitMs  = parseInt(document.getElementById('edW').value)   || 0;
+      wp.action  = document.getElementById('edA').value;
+      drawAnglePicker(wp.heading);
+      renderWpList();
+      updateCode();
+      drawAll();
+    }
+
+    function drawAnglePicker(deg) {
+      const pc = document.getElementById('anglePicker');
+      if (!pc) return;
+      const pctx = pc.getContext('2d');
+      const cx = 20, cy = 20, r = 16;
+      pctx.clearRect(0, 0, 40, 40);
+      pctx.beginPath(); pctx.arc(cx, cy, r, 0, Math.PI * 2);
+      pctx.strokeStyle = '#800020'; pctx.lineWidth = 1.5; pctx.stroke();
+      pctx.fillStyle = '#181818'; pctx.fill();
+      const ang = (deg - 90) * Math.PI / 180;
+      const ex = cx + Math.cos(ang) * (r - 3);
+      const ey = cy + Math.sin(ang) * (r - 3);
+      pctx.strokeStyle = '#a0334a'; pctx.lineWidth = 2; pctx.lineCap = 'round';
+      pctx.beginPath(); pctx.moveTo(cx, cy); pctx.lineTo(ex, ey); pctx.stroke();
+      pctx.fillStyle = '#800020';
+      pctx.beginPath(); pctx.arc(ex, ey, 2.5, 0, Math.PI * 2); pctx.fill();
+    }
+
+    function initAnglePicker() {
+      const pc = document.getElementById('anglePicker');
+      if (!pc || pc._inited) return;
+      pc._inited = true;
+      function onMove(e) {
+        const rect = pc.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+        const px2 = (e.touches ? e.touches[0].clientX : e.clientX) - cx;
+        const py2 = (e.touches ? e.touches[0].clientY : e.clientY) - cy;
+        let deg = Math.atan2(py2, px2) * 180 / Math.PI + 90;
+        if (deg > 180) deg -= 360;
+        if (deg < -180) deg += 360;
+        document.getElementById('edH').value = deg.toFixed(1);
+        editorUpdate();
+      }
+      let down = false;
+      pc.addEventListener('mousedown', () => { down = true; });
+      window.addEventListener('mouseup', () => { down = false; });
+      pc.addEventListener('mousemove', e => { if (down) onMove(e); });
+      pc.addEventListener('click', onMove);
+      pc.addEventListener('touchstart', e => { e.preventDefault(); onMove(e); }, { passive: false });
+      pc.addEventListener('touchmove',  e => { e.preventDefault(); onMove(e); }, { passive: false });
+    }
+
+    // ── Canvas Interaction ────────────────────────────────────────
+    function getCanvasPos(e) {
+      const rect = cvs.getBoundingClientRect();
+      const scaleX = cvs.width / rect.width, scaleY = cvs.height / rect.height;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    cvs.addEventListener('mousedown', e => {
+      if (e.button === 2) return;
+      const cp = getCanvasPos(e);
+      mouseDownPos = { x: cp.x, y: cp.y };
+      wasDragging  = false;
+
+      // CPs take priority (smaller targets)
+      const cpHit = hitTestCP(cp.x, cp.y);
+      if (cpHit) {
+        dragType   = 'cp';
+        dragSegIdx = cpHit.si;
+        dragCpIdx  = cpHit.ci;
+        const p = ftcToCvs(segments[cpHit.si].cps[cpHit.ci].x, segments[cpHit.si].cps[cpHit.ci].y);
+        dragOffX = cp.x - p.x; dragOffY = cp.y - p.y;
+        cvs.classList.add('dragging');
+        return;
+      }
+
+      // Waypoints
+      const wpHit = hitTestWaypoint(cp.x, cp.y);
+      if (wpHit >= 0) {
+        dragType   = 'waypoint';
+        dragIdx    = wpHit;
+        const p = ftcToCvs(waypoints[wpHit].x, waypoints[wpHit].y);
+        dragOffX = cp.x - p.x; dragOffY = cp.y - p.y;
+        selectedIdx    = wpHit;
+        selectedSegIdx = -1;
+        cvs.classList.add('dragging');
+        refreshUI();
+      }
+    });
+
+    cvs.addEventListener('mousemove', e => {
+      if (dragType === null) return;
+      const cp = getCanvasPos(e);
+      if (Math.hypot(cp.x - mouseDownPos.x, cp.y - mouseDownPos.y) > 3) wasDragging = true;
+
+      if (dragType === 'waypoint' && dragIdx >= 0) {
+        const ftc = cvsToFtc(cp.x - dragOffX, cp.y - dragOffY);
+        waypoints[dragIdx].x = parseFloat(ftc.x.toFixed(1));
+        waypoints[dragIdx].y = parseFloat(ftc.y.toFixed(1));
+        renderWpList();
+        if (selectedIdx === dragIdx) renderWaypointEditor();
+        updateCode(); drawAll();
+      } else if (dragType === 'cp') {
+        const ftc = cvsToFtc(cp.x - dragOffX, cp.y - dragOffY);
+        segments[dragSegIdx].cps[dragCpIdx].x = parseFloat(ftc.x.toFixed(1));
+        segments[dragSegIdx].cps[dragCpIdx].y = parseFloat(ftc.y.toFixed(1));
+        if (selectedSegIdx === dragSegIdx) renderSegmentEditor(dragSegIdx);
+        updateCode(); drawAll();
+      }
+    });
+
+    cvs.addEventListener('mouseup', e => {
+      const wasDrag  = wasDragging;
+      const prevType = dragType;
+      dragType = null; dragIdx = -1; dragSegIdx = -1; dragCpIdx = -1;
+      cvs.classList.remove('dragging');
+      if (!wasDrag && e.button !== 2) {
+        handleCanvasClick(getCanvasPos(e));
+      }
+    });
+
+    function handleCanvasClick(cp) {
+      // CPs first
+      const cpHit = hitTestCP(cp.x, cp.y);
+      if (cpHit) {
+        selectedSegIdx = cpHit.si; selectedIdx = -1; refreshUI(); return;
+      }
+      // Waypoints
+      const wpHit = hitTestWaypoint(cp.x, cp.y);
+      if (wpHit >= 0) {
+        selectedIdx = wpHit; selectedSegIdx = -1; refreshUI(); return;
+      }
+      // Segments
+      const segHit = hitTestSegment(cp.x, cp.y);
+      if (segHit >= 0) {
+        selectedSegIdx = segHit; selectedIdx = -1; refreshUI(); return;
+      }
+      // New waypoint
+      const ftc = cvsToFtc(cp.x, cp.y);
+      addWaypoint(ftc.x, ftc.y);
+    }
+
+    cvs.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      const cp = getCanvasPos(e);
+      const cpHit = hitTestCP(cp.x, cp.y);
+      if (cpHit) { removeCP(cpHit.si, cpHit.ci); return; }
+      const wpHit = hitTestWaypoint(cp.x, cp.y);
+      if (wpHit >= 0) deleteWpAt(wpHit);
+    });
+
+    // ── Path Settings ─────────────────────────────────────────────
+    function updatePathSettings() {
+      pathSettings.speed = parseFloat(document.getElementById('speedSlider').value);
+      document.getElementById('speedVal').textContent = pathSettings.speed.toFixed(2) + '×';
+    }
+
+    function updatePlayButton() {
+      document.getElementById('btnRobotAnim').disabled = waypoints.length < 2;
+    }
+
+    // ── Code Generation (Pedro Pathing format) ────────────────────
+    function updateCode() {
+      const block = document.getElementById('codeBlock');
+      if (waypoints.length < 2) {
+        block.textContent = '// Add at least 2 waypoints to generate code';
+        return;
+      }
+      const L = [];
+      L.push('package org.firstinspires.ftc.teamcode.paths;');
+      L.push('');
+      L.push('import com.pedropathing.follower.Follower;');
+      L.push('import com.pedropathing.geometry.BezierCurve;');
+      L.push('import com.pedropathing.geometry.BezierLine;');
+      L.push('import com.pedropathing.geometry.Pose;');
+      L.push('import com.pedropathing.paths.PathChain;');
+      L.push('');
+      L.push('public class AutoPath {');
+      L.push('');
+      L.push('    public Follower follower;');
+      L.push('');
+      waypoints.forEach((wp, i) => {
+        L.push(`    public Pose point${i+1} = new Pose(${wp.x.toFixed(2)}, ${wp.y.toFixed(2)}, Math.toRadians(${wp.heading.toFixed(1)}));`);
+      });
+      L.push('');
+      L.push('    public AutoPath(Follower follower) {');
+      L.push('        this.follower = follower;');
+      L.push('    }');
+      L.push('');
+      for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        const b   = waypoints[i + 1];
+        if (b.waitMs > 0) {
+          L.push(`    // Wait ${b.waitMs}ms at point${i+2}${b.action !== 'None' ? ` (${b.action})` : ''}`);
+        }
+        L.push(`    public PathChain path${i+1}() {`);
+        L.push(`        return follower.pathBuilder()`);
+        if (seg.cps.length === 0) {
+          L.push(`                .addPath(new BezierLine(point${i+1}, point${i+2}))`);
+        } else if (seg.cps.length === 1) {
+          const cp = seg.cps[0];
+          L.push(`                .addPath(new BezierCurve(`);
+          L.push(`                        point${i+1},`);
+          L.push(`                        new Pose(${cp.x.toFixed(2)}, ${cp.y.toFixed(2)}, 0),`);
+          L.push(`                        point${i+2}))`);
+        } else {
+          const cp1 = seg.cps[0], cp2 = seg.cps[1];
+          L.push(`                .addPath(new BezierCurve(`);
+          L.push(`                        point${i+1},`);
+          L.push(`                        new Pose(${cp1.x.toFixed(2)}, ${cp1.y.toFixed(2)}, 0),`);
+          L.push(`                        new Pose(${cp2.x.toFixed(2)}, ${cp2.y.toFixed(2)}, 0),`);
+          L.push(`                        point${i+2}))`);
+        }
+        L.push(`                .setLinearHeadingInterpolation(point${i+1}.getHeading(), point${i+2}.getHeading())`);
+        L.push(`                .build();`);
+        L.push(`    }`);
+        L.push('');
+      }
+      L.push('}');
+      block.textContent = L.join('\n');
+    }
+
+    function copyCode() {
+      const text = document.getElementById('codeBlock').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy Code'; btn.classList.remove('copied'); }, 1800);
+      });
+    }
+
+    function exportPath() {
+      const data = JSON.stringify({ waypoints, segments, pathSettings }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'path.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Page Transitions ──────────────────────────────────────────
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href]');
+      if (!a || a.getAttribute('href').startsWith('#') || a.getAttribute('href').startsWith('http')) return;
+      e.preventDefault();
+      const href = a.getAttribute('href');
+      document.body.style.transition = 'opacity 0.18s ease';
+      document.body.style.opacity = '0';
+      setTimeout(() => window.location.href = href, 180);
+    });
+
+    // ── Init ─────────────────────────────────────────────────────
+    initSidebar();
+    resizeCanvas();
+    updatePathSettings();
+    updateCode();
+    drawAll();
+  </script>
+</body>
+</html>

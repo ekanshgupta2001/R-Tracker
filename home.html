@@ -114,6 +114,15 @@
             border-color: var(--burgundy);
         }
 
+        .hamburger .ham-icon {
+            display: inline-block;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+        }
+
+        .sidebar-open .hamburger .ham-icon {
+            transform: rotate(90deg);
+        }
+
         .sidebar-open .hamburger {
             left: calc(var(--sidebar-width) + 14px);
         }
@@ -165,29 +174,43 @@
             padding: 11px 24px;
             border-left: 3px solid transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease, border-left-width 0.2s ease, transform 0.25s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .nav-item.nav-visible {
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .nav-item:hover {
             color: var(--text);
             background: var(--card-hover);
-            border-left-color: rgba(128, 0, 32, 0.4);
+            border-left-color: var(--burgundy);
+            border-left-width: 4px;
         }
 
         .nav-item.active {
             color: var(--text);
             border-left-color: var(--burgundy);
-            background: rgba(128, 0, 32, 0.08);
+            border-left-width: 4px;
+            background: rgba(128, 0, 32, 0.12);
         }
 
         .nav-item.dimmed {
-            opacity: 0.5;
+            opacity: 0;
             cursor: default;
+        }
+
+        .nav-item.dimmed.nav-visible {
+            opacity: 0.5;
         }
 
         .nav-item.dimmed:hover {
             background: transparent;
             border-left-color: transparent;
+            border-left-width: 3px;
             color: var(--text-muted);
         }
 
@@ -242,11 +265,16 @@
 
         .theme-toggle-icon {
             font-size: 18px;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
         }
 
         .theme-toggle:hover .theme-toggle-icon {
             transform: rotate(20deg);
+        }
+
+        .theme-toggle-icon.spin {
+            transform: rotate(360deg) scale(1.3);
         }
 
         /* ── Main Content ───────────────────────────────────── */
@@ -348,11 +376,28 @@
             cursor: pointer;
         }
 
+        .card.active {
+            animation: burgundyPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes burgundyPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0px transparent;
+            }
+
+            50% {
+                box-shadow: 0 0 18px rgba(128, 0, 32, 0.25), 0 0 40px rgba(128, 0, 32, 0.1);
+            }
+        }
+
         .card.active:hover {
             background: var(--card-hover);
             border-color: var(--burgundy);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 32px var(--burgundy-glow), 0 0 0 1px var(--burgundy), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transform: translateY(-4px) perspective(600px) rotateX(2deg);
+            box-shadow: 0 12px 36px var(--burgundy-glow), 0 0 0 1px var(--burgundy), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            animation: none;
         }
 
         .card.active:hover .card-icon {
@@ -394,11 +439,34 @@
             gap: 10px;
         }
 
+        @keyframes titleShimmer {
+            0%   { background-position: -250% center; }
+            35%  { background-position: -250% center; }
+            65%  { background-position: 250% center; }
+            100% { background-position: 250% center; }
+        }
+
+        .card.active .card-title {
+            background: linear-gradient(
+                90deg,
+                var(--text) 30%,
+                rgba(255, 255, 255, 0.95) 50%,
+                var(--text) 70%
+            );
+            background-size: 250% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShimmer 4s ease-in-out infinite;
+        }
+
         .card-arrow {
             font-size: 18px;
             opacity: 0;
             transition: all 0.3s ease;
             color: var(--burgundy-light);
+            /* restore fill so arrow isn't clipped by parent gradient */
+            -webkit-text-fill-color: var(--burgundy-light);
         }
 
         .card-desc {
@@ -421,6 +489,29 @@
             border: 1px solid rgba(128, 0, 32, 0.3);
             color: var(--burgundy-light);
             margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card .badge::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -75%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.25) 50%, transparent 60%);
+            animation: shimmer 2.5s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -75%;
+            }
+
+            100% {
+                left: 150%;
+            }
         }
 
         /* ── About Section ──────────────────────────────────── */
@@ -471,6 +562,52 @@
 
         .page-footer .accent {
             color: var(--burgundy);
+        }
+
+        /* ── Page Transitions ───────────────────────────────── */
+        @keyframes pageIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-wrap {
+            animation: pageIn 0.35s ease-out both;
+        }
+
+        .page-leaving .main-wrap {
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        /* ── Sidebar Overlay (mobile) ───────────────────────── */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 90;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .sidebar-backdrop.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 820px) {
+            .sidebar-backdrop {
+                display: block;
+            }
         }
 
         /* ── Responsive ──────────────────────────────────────── */
@@ -539,7 +676,8 @@
 </head>
 
 <body class="sidebar-open">
-    <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span class="ham-icon">☰</span></button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand">
@@ -549,8 +687,7 @@
         <ul class="sidebar-nav">
             <a href="home.html" class="nav-item active"><span class="nav-icon">🏠</span>Home</a>
             <a href="index.html" class="nav-item"><span class="nav-icon">🎮</span>TeleOp Practice</a>
-            <span class="nav-item dimmed"><span class="nav-icon">📐</span>Path Planner<span
-                    class="nav-badge">Soon</span></span>
+            <a href="pathplanner.html" class="nav-item"><span class="nav-icon">📐</span>Path Planner</a>
             <a href="about.html" class="nav-item"><span class="nav-icon">ℹ️</span>About</a>
         </ul>
         <div class="sidebar-footer">
@@ -576,15 +713,14 @@
                     </p>
                 </a>
 
-                <div class="card disabled" id="card-pathplanner">
+                <a href="pathplanner.html" class="card active" id="card-pathplanner">
                     <div class="card-icon">📐</div>
-                    <div class="card-title">Path Planner</div>
+                    <div class="card-title">Path Planner<span class="card-arrow">→</span></div>
                     <p class="card-desc">
                         Plan and visualize autonomous paths on the DECODE field. Design waypoints, preview
-                        trajectories, and export path data.
+                        trajectories, and export Pedro Pathing Java code.
                     </p>
-                    <div class="badge">Coming Soon</div>
-                </div>
+                </a>
             </div>
 
             <section class="about-section" id="about">
@@ -610,7 +746,12 @@
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.classList.toggle('light', !isDark);
-            document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+            const icon = document.getElementById('themeIcon');
+            icon.classList.add('spin');
+            setTimeout(() => {
+                icon.textContent = isDark ? '🌙' : '☀️';
+                icon.classList.remove('spin');
+            }, 400);
         }
 
         function toggleSidebar() {
@@ -619,6 +760,19 @@
             document.getElementById('sidebar').classList.toggle('open', sidebarOpen && window.innerWidth <= 820);
             document.body.classList.toggle('sidebar-open', sidebarOpen);
             document.body.classList.toggle('sidebar-collapsed', !sidebarOpen);
+            const hamIcon = document.querySelector('.ham-icon');
+            hamIcon.textContent = sidebarOpen ? '✕' : '☰';
+            const backdrop = document.getElementById('sidebarBackdrop');
+            backdrop.classList.toggle('visible', sidebarOpen && window.innerWidth <= 820);
+            animateNavItems();
+        }
+
+        function animateNavItems() {
+            const items = document.querySelectorAll('.nav-item');
+            items.forEach((item, i) => {
+                item.classList.remove('nav-visible');
+                setTimeout(() => item.classList.add('nav-visible'), 80 + i * 55);
+            });
         }
 
         function initSidebar() {
@@ -628,11 +782,23 @@
                 document.body.classList.remove('sidebar-open');
                 document.body.classList.add('sidebar-collapsed');
             }
+            animateNavItems();
         }
+
+        // Page transition: fade out before navigating
+        document.addEventListener('click', e => {
+            const a = e.target.closest('a[href]');
+            if (!a || a.getAttribute('href').startsWith('#') || a.getAttribute('href').startsWith('http')) return;
+            e.preventDefault();
+            const href = a.getAttribute('href');
+            document.body.classList.add('page-leaving');
+            setTimeout(() => window.location.href = href, 180);
+        });
 
         window.addEventListener('resize', () => {
             if (window.innerWidth > 820) {
                 document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarBackdrop').classList.remove('visible');
             }
         });
 
