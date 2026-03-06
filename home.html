@@ -8,6 +8,10 @@
         content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
     <title>R-Tracker — Rundle Robotics Visualizer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-auth.js"></script>
     <style>
         *,
         *::before,
@@ -548,6 +552,72 @@
             margin-bottom: 0;
         }
 
+        /* ── Driver Rating Card ──────────────────────────────── */
+        .driver-rating-card {
+            width: 100%;
+            margin-top: 24px;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-left: 3px solid var(--burgundy);
+            border-radius: 14px;
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-decoration: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .driver-rating-card:hover {
+            border-color: var(--burgundy);
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--burgundy-glow);
+        }
+        .drc-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--burgundy-light);
+            margin-bottom: 4px;
+        }
+        .drc-grade {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1;
+            min-width: 54px;
+            text-align: center;
+        }
+        .drc-grade.gs { color: #ffd700; }
+        .drc-grade.ga { color: #4aff88; }
+        .drc-grade.gb { color: #4a9eff; }
+        .drc-grade.gc { color: #ffdd44; }
+        .drc-grade.gd { color: #ff8844; }
+        .drc-grade.gf { color: #ff4455; }
+        .drc-info { flex: 1; }
+        .drc-score {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        .drc-profile {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .drc-cta {
+            font-size: 12px;
+            color: var(--burgundy-light);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
         /* ── Footer ──────────────────────────────────────────── */
         .page-footer {
             padding: 28px 48px;
@@ -691,6 +761,7 @@
             <a href="about.html" class="nav-item"><span class="nav-icon">ℹ️</span>About</a>
         </ul>
         <div class="sidebar-footer">
+            <!-- rt-user-section injected here by firebase-auth.js -->
             <div class="theme-toggle" onclick="toggleTheme()">
                 <span>Toggle Theme</span>
                 <span class="theme-toggle-icon" id="themeIcon">🌙</span>
@@ -722,6 +793,19 @@
                     </p>
                 </a>
             </div>
+
+            <!-- Driver Rating Card — shown when signed in with data -->
+            <a href="index.html" class="driver-rating-card" id="driver-rating-card" style="display:none">
+                <div>
+                    <div class="drc-label">Your Driver Rating</div>
+                    <div class="drc-grade" id="drc-grade">B</div>
+                </div>
+                <div class="drc-info">
+                    <div class="drc-score" id="drc-score">— / 100</div>
+                    <div class="drc-profile" id="drc-profile">Open Report Card to analyze</div>
+                </div>
+                <div class="drc-cta">Open Report Card &#8594;</div>
+            </a>
 
             <section class="about-section" id="about">
                 <h2>About <span>R-Tracker</span></h2>
@@ -803,6 +887,40 @@
         });
 
         initSidebar();
+        initAuth(function onSignedIn(user) {
+            loadDriverRatingCard(user);
+        });
+
+        async function loadDriverRatingCard(user) {
+            try {
+                const doc = await rtDb.collection('users').doc(user.uid)
+                    .collection('stats').doc('driverStats').get();
+                if (!doc.exists) return;
+                const d = doc.data();
+                const grade = d.grade || 'F';
+                const score = d.overallRating || 0;
+
+                // Load latest coach report for profile name
+                let profileName = 'Open Report Card to analyze';
+                try {
+                    const rpSnap = await rtDb.collection('users').doc(user.uid)
+                        .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
+                    if (!rpSnap.empty) {
+                        const rp = rpSnap.docs[0].data();
+                        if (rp.driverProfile) profileName = rp.driverProfile.split(' — ')[0];
+                    }
+                } catch (_) {}
+
+                const gradeEl = document.getElementById('drc-grade');
+                gradeEl.textContent = grade;
+                gradeEl.className = 'drc-grade g' + grade.toLowerCase();
+                document.getElementById('drc-score').textContent = score + ' / 100';
+                document.getElementById('drc-profile').textContent = profileName;
+                document.getElementById('driver-rating-card').style.display = 'flex';
+            } catch (e) {
+                console.warn('Could not load driver rating:', e.message);
+            }
+        }
     </script>
 </body>
 

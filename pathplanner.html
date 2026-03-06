@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Path Planner — R-Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-auth.js"></script>
   <style>
     *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 
@@ -396,6 +400,68 @@
     .copy-btn:hover { border-color: var(--burgundy); color: var(--text); }
     .copy-btn.copied { border-color: #4aff88; color: #4aff88; }
 
+    /* ── Cloud Path Save/Load Modal ───────────────────────── */
+    #pp-cloud-backdrop {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.75);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+      font-family: 'Inter', sans-serif;
+    }
+    #pp-cloud-backdrop.open { opacity: 1; pointer-events: all; }
+    #pp-cloud-modal {
+      background: #1e1e1e; border: 1px solid #333; border-top: 2px solid #800020;
+      border-radius: 14px; padding: 24px 26px; width: 420px; max-width: 95vw;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.8);
+      transform: scale(0.92); transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #pp-cloud-backdrop.open #pp-cloud-modal { transform: scale(1); }
+    .ppc-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a;
+    }
+    .ppc-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #800020; }
+    .ppc-close { background: none; border: none; color: #445; cursor: pointer; font-size: 16px; font-family: inherit; line-height: 1; padding: 0 4px; }
+    .ppc-close:hover { color: #dde; }
+    .ppc-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .ppc-input {
+      flex: 1; padding: 10px 12px; background: #252525; border: 1px solid #2d2d2d;
+      border-radius: 8px; color: #fff; font-size: 13px; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .ppc-input:focus { outline: none; border-color: #800020; }
+    .ppc-input::placeholder { color: #444; }
+    .ppc-save-btn {
+      padding: 10px 16px; background: #800020; border: none; border-radius: 8px;
+      color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: background 0.2s; white-space: nowrap;
+    }
+    .ppc-save-btn:hover { background: #9a0028; }
+    .ppc-section-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+      color: #556; margin-bottom: 8px;
+    }
+    .ppc-path-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; background: #252525; border: 1px solid #2a2a2a;
+      border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .ppc-path-item:hover { border-color: #800020; background: #2a1a1e; }
+    .ppc-path-name { font-size: 13px; color: #ccd; font-weight: 500; }
+    .ppc-path-meta { font-size: 11px; color: #445; margin-top: 2px; }
+    .ppc-path-del {
+      background: none; border: none; color: #445; cursor: pointer;
+      font-size: 14px; padding: 2px 6px; font-family: inherit;
+      transition: color 0.2s; flex-shrink: 0;
+    }
+    .ppc-path-del:hover { color: #ff5544; }
+    .ppc-empty { font-size: 12px; color: #445; text-align: center; padding: 20px 0; }
+    .ppc-msg { font-size: 12px; color: #4aff88; text-align: center; min-height: 16px; margin-top: 8px; }
+    .ppc-msg.err { color: #ff5544; }
+
     .no-select-msg {
       text-align: center; color: var(--text-muted); font-size: 12px;
       padding: 14px; line-height: 1.6;
@@ -431,6 +497,7 @@
       <a href="about.html" class="nav-item"><span class="nav-icon">ℹ️</span>About</a>
     </ul>
     <div class="sidebar-footer">
+      <!-- rt-user-section injected here by firebase-auth.js -->
       <div class="theme-toggle" onclick="toggleTheme()">
         <span>Toggle Theme</span>
         <span class="theme-toggle-icon" id="themeIcon">🌙</span>
@@ -466,6 +533,8 @@
           <button class="tbtn" id="btnDelSel" onclick="deleteSelected()" disabled>Delete Selected</button>
           <button class="tbtn" onclick="clearAll()">Clear All</button>
           <button class="tbtn" onclick="exportPath()">Export JSON</button>
+          <button class="tbtn" onclick="openCloudModal('save')">&#9729; Save</button>
+          <button class="tbtn" onclick="openCloudModal('load')">&#128193; Load</button>
         </div>
       </div>
 
@@ -1508,12 +1577,169 @@
       setTimeout(() => window.location.href = href, 180);
     });
 
+    // ── Cloud Path Save / Load ────────────────────────────────────
+    let _cloudMode = 'save'; // 'save' | 'load'
+
+    function openCloudModal(mode) {
+      if (!rtUser) { alert('Please sign in to save or load paths.'); return; }
+      _cloudMode = mode;
+      const modal = document.getElementById('pp-cloud-modal');
+      const saveRow = document.getElementById('ppc-save-row');
+      const loadSec = document.getElementById('ppc-load-section');
+      clearCloudMsg();
+
+      if (mode === 'save') {
+        modal.querySelector('.ppc-title').textContent = 'Save Path to Cloud';
+        saveRow.style.display = 'flex';
+        loadSec.style.display = 'none';
+      } else {
+        modal.querySelector('.ppc-title').textContent = 'Load Path from Cloud';
+        saveRow.style.display = 'none';
+        loadSec.style.display = 'block';
+        renderCloudPaths();
+      }
+      document.getElementById('pp-cloud-backdrop').classList.add('open');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('pp-cloud-backdrop').classList.remove('open');
+    }
+
+    function clearCloudMsg() {
+      const el = document.getElementById('ppc-msg');
+      if (el) { el.textContent = ''; el.className = 'ppc-msg'; }
+    }
+
+    function setCloudMsg(msg, isErr) {
+      const el = document.getElementById('ppc-msg');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'ppc-msg' + (isErr ? ' err' : '');
+    }
+
+    async function savePathToCloud() {
+      const nameInput = document.getElementById('ppc-name-input');
+      const name = nameInput.value.trim();
+      if (!name) { setCloudMsg('Please enter a path name.', true); return; }
+      if (!rtUser) { setCloudMsg('Not signed in.', true); return; }
+
+      setCloudMsg('Saving...', false);
+      try {
+        // Check for existing path with same name
+        const snap = await rtDb.collection('users').doc(rtUser.uid)
+          .collection('paths').where('name', '==', name).limit(1).get();
+
+        const data = {
+          name,
+          waypoints: JSON.parse(JSON.stringify(waypoints)),
+          segments:  JSON.parse(JSON.stringify(segments)),
+          pathSettings: JSON.parse(JSON.stringify(pathSettings)),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (!snap.empty) {
+          await snap.docs[0].ref.update(data);
+        } else {
+          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          await rtDb.collection('users').doc(rtUser.uid).collection('paths').add(data);
+        }
+        setCloudMsg('Path saved!', false);
+        nameInput.value = '';
+      } catch (e) {
+        setCloudMsg('Error: ' + e.message, true);
+      }
+    }
+
+    async function renderCloudPaths() {
+      const container = document.getElementById('ppc-path-list');
+      container.innerHTML = '<div class="ppc-empty">Loading...</div>';
+      try {
+        const snap = await rtDb.collection('users').doc(rtUser.uid)
+          .collection('paths').orderBy('updatedAt', 'desc').get();
+        if (snap.empty) {
+          container.innerHTML = '<div class="ppc-empty">No saved paths yet.</div>';
+          return;
+        }
+        container.innerHTML = '';
+        snap.forEach(doc => {
+          const d = doc.data();
+          const updated = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString() : '';
+          const row = document.createElement('div');
+          row.className = 'ppc-path-item';
+          row.innerHTML = `
+            <div onclick="loadCloudPath('${doc.id}')" style="flex:1;min-width:0">
+              <div class="ppc-path-name">${d.name}</div>
+              <div class="ppc-path-meta">${(d.waypoints||[]).length} waypoints &middot; ${updated}</div>
+            </div>
+            <button class="ppc-path-del" onclick="deleteCloudPath('${doc.id}',event)" title="Delete">&#128465;</button>
+          `;
+          container.appendChild(row);
+        });
+      } catch (e) {
+        container.innerHTML = `<div class="ppc-empty" style="color:#ff5544">Error: ${e.message}</div>`;
+      }
+    }
+
+    async function loadCloudPath(docId) {
+      if (!rtUser) return;
+      setCloudMsg('Loading...', false);
+      try {
+        const doc = await rtDb.collection('users').doc(rtUser.uid)
+          .collection('paths').doc(docId).get();
+        if (!doc.exists) { setCloudMsg('Path not found.', true); return; }
+        const d = doc.data();
+        waypoints = d.waypoints || [];
+        segments  = d.segments  || [];
+        if (d.pathSettings) Object.assign(pathSettings, d.pathSettings);
+        selectedIdx = -1;
+        updateCode();
+        renderWpList();
+        drawAll();
+        setCloudMsg('Path "' + d.name + '" loaded!', false);
+        setTimeout(closeCloudModal, 1200);
+      } catch (e) {
+        setCloudMsg('Error: ' + e.message, true);
+      }
+    }
+
+    async function deleteCloudPath(docId, event) {
+      event.stopPropagation();
+      if (!confirm('Delete this saved path?')) return;
+      try {
+        await rtDb.collection('users').doc(rtUser.uid).collection('paths').doc(docId).delete();
+        renderCloudPaths();
+      } catch (e) {
+        setCloudMsg('Error: ' + e.message, true);
+      }
+    }
+
     // ── Init ─────────────────────────────────────────────────────
     initSidebar();
     resizeCanvas();
     updatePathSettings();
     updateCode();
     drawAll();
+    initAuth();
   </script>
+
+  <!-- Cloud Path Modal -->
+  <div id="pp-cloud-backdrop" onclick="if(event.target===this)closeCloudModal()">
+    <div id="pp-cloud-modal">
+      <div class="ppc-header">
+        <div class="ppc-title">Save Path to Cloud</div>
+        <button class="ppc-close" onclick="closeCloudModal()">&#10005;</button>
+      </div>
+      <div class="ppc-input-row" id="ppc-save-row">
+        <input id="ppc-name-input" class="ppc-input" type="text" placeholder="Path name (e.g. Auto Path 1)"
+               onkeydown="if(event.key==='Enter')savePathToCloud()">
+        <button class="ppc-save-btn" onclick="savePathToCloud()">Save</button>
+      </div>
+      <div id="ppc-load-section" style="display:none">
+        <div class="ppc-section-title">Your Saved Paths</div>
+        <div id="ppc-path-list"><div class="ppc-empty">Loading...</div></div>
+      </div>
+      <div class="ppc-msg" id="ppc-msg"></div>
+    </div>
+  </div>
 </body>
 </html>

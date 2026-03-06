@@ -7,6 +7,10 @@
  <meta name="description" content="About R-Tracker — Rundle Robotics personally designed visualizer for FTC teams.">
  <title>About — R-Tracker</title>
  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+ <script src="firebase-auth.js"></script>
  <style>
  *,
  *::before,
@@ -491,6 +495,7 @@
  <a href="about.html" class="nav-item active"><span class="nav-icon">ℹ️</span>About</a>
  </ul>
  <div class="sidebar-footer">
+ <!-- rt-user-section injected here by firebase-auth.js -->
  <div class="theme-toggle" onclick="toggleTheme()">
  <span>Toggle Theme</span>
  <span class="theme-toggle-icon" id="themeIcon">🌙</span>
@@ -603,6 +608,7 @@
  });
 
  initSidebar();
+ initAuth();
  </script>
 </body>
 
