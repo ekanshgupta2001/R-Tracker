@@ -259,8 +259,24 @@
     .tbtn.primary:hover { background: var(--burgundy-light); border-color: var(--burgundy-light); }
     .tbtn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 
+    /* ── Segment Row (between waypoints) ─────────────── */
+    .seg-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 3px 10px;
+      font-size: 10px; color: var(--text-muted);
+    }
+    .seg-row-label { letter-spacing: 0.3px; }
+    .seg-select {
+      background: var(--card); border: 1px solid var(--card-border);
+      color: var(--text-dim); font-family: inherit; font-size: 10px;
+      padding: 2px 6px; border-radius: 4px; cursor: pointer;
+      outline: none; transition: border-color 0.15s;
+    }
+    .seg-select:focus, .seg-select:hover { border-color: var(--burgundy); }
+    .seg-select.curved { border-color: var(--burgundy-light); color: var(--burgundy-light); }
+
     /* ── Waypoint List ────────────────────────────────── */
-    .wp-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+    .wp-list { display: flex; flex-direction: column; gap: 0; max-height: 260px; overflow-y: auto; }
     .wp-list::-webkit-scrollbar { width: 3px; }
     .wp-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
 
@@ -268,7 +284,7 @@
       display: flex; align-items: center; gap: 8px;
       padding: 7px 10px;
       background: var(--card); border: 1px solid var(--card-border);
-      border-radius: 6px; cursor: pointer;
+      border-radius: 6px; cursor: pointer; margin-bottom: 0;
       transition: all 0.15s ease; border-left: 3px solid transparent;
     }
     .wp-card:hover { border-color: var(--burgundy-light); background: var(--card-hover); }
@@ -577,8 +593,9 @@
     }
 
     function px(v) { return v * cvs.width / FIELD_IN; }
-    function ftcToCvs(fx, fy) { return { x: px(fx + 72), y: px(72 - fy) }; }
-    function cvsToFtc(cx, cy) { return { x: cx / cvs.width * FIELD_IN - 72, y: 72 - cy / cvs.height * FIELD_IN }; }
+    // Pedro Pathing coords: (0,0) = bottom-left corner, X right, Y up, range 0–144 in
+    function ftcToCvs(ppX, ppY) { return { x: px(ppX), y: px(FIELD_IN - ppY) }; }
+    function cvsToFtc(cx, cy) { return { x: cx / cvs.width * FIELD_IN, y: (cvs.height - cy) / cvs.height * FIELD_IN }; }
 
     // ── State ────────────────────────────────────────────────────
     let waypoints = [];   // [{x, y, heading, waitMs, action}]
@@ -658,7 +675,7 @@
     }
 
     function drawGrid() {
-      const step = px(12);
+      const step = px(12); // 12 inches = 1 tile
       ctx.save();
       ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.lineWidth = 0.5;
@@ -668,10 +685,11 @@
       for (let y = 0; y <= cvs.height; y += step) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
       }
+      // Center axes at (72, 72) in PP coords
       ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1;
-      const cx = px(72), cy = px(72);
-      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, cvs.height); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(cvs.width, cy); ctx.stroke();
+      const midX = px(72), midY = px(72);
+      ctx.beginPath(); ctx.moveTo(midX, 0); ctx.lineTo(midX, cvs.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(cvs.width, midY); ctx.stroke();
       ctx.restore();
     }
 
@@ -889,6 +907,22 @@
     }
 
     // ── Animation ────────────────────────────────────────────────
+    const ANIM_SPEED_IPS = 60; // inches per second at speed multiplier 1.0
+    let animPathLength = 1;    // total sampled path length in inches
+
+    function computePathLength() {
+      let total = 0;
+      for (let si = 0; si < segments.length; si++) {
+        let prev = evalSegFTC(si, 0);
+        for (let j = 1; j <= 24; j++) {
+          const curr = evalSegFTC(si, j / 24);
+          total += Math.hypot(curr.x - prev.x, curr.y - prev.y);
+          prev = curr;
+        }
+      }
+      return Math.max(total, 0.1);
+    }
+
     function getAnimWaypoint() {
       if (waypoints.length < 2) return waypoints[0];
       const total = segments.length;
@@ -902,6 +936,7 @@
       if (animRunning) { stopAnim(); return; }
       if (waypoints.length < 2) return;
       animRunning = true; animT = 0;
+      animPathLength = computePathLength();
       document.getElementById('btnRobotAnim').textContent = '⏸ Pause';
       document.getElementById('btnStopAnim').disabled = false;
       let last = null;
@@ -909,7 +944,8 @@
         if (!animRunning) return;
         if (last === null) last = ts;
         const dt = (ts - last) / 1000; last = ts;
-        animT += dt * pathSettings.speed * 0.15;
+        // Advance at constant speed: dt_inches / total_inches = dt_t
+        animT += dt * pathSettings.speed * ANIM_SPEED_IPS / animPathLength;
         if (animT >= 1) { animT = 1; drawAll(); stopAnim(); return; }
         drawAll();
         animFrame = requestAnimationFrame(step);
@@ -973,7 +1009,8 @@
     // ── Waypoint Management ───────────────────────────────────────
     function addWaypoint(ftcX, ftcY) {
       const heading = waypoints.length > 0 ? waypoints[waypoints.length-1].heading : 0;
-      waypoints.push({ x: parseFloat(ftcX.toFixed(1)), y: parseFloat(ftcY.toFixed(1)), heading, waitMs: 0, action: 'None' });
+      const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      waypoints.push({ x: parseFloat(clamp(ftcX, 0, 144).toFixed(1)), y: parseFloat(clamp(ftcY, 0, 144).toFixed(1)), heading, waitMs: 0, action: 'None' });
       if (waypoints.length >= 2) segments.push({ cps: [] });
       selectedIdx    = waypoints.length - 1;
       selectedSegIdx = -1;
@@ -981,7 +1018,9 @@
     }
 
     function addWaypointAtCenter() {
-      addWaypoint((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80);
+      // Place near field center (72,72) with slight random offset
+      addWaypoint(parseFloat((40 + Math.random() * 64).toFixed(1)),
+                  parseFloat((40 + Math.random() * 64).toFixed(1)));
     }
 
     function deleteSelected() {
@@ -1015,17 +1054,41 @@
       stopAnim(); refreshUI();
     }
 
+    // ── Segment Type ──────────────────────────────────────────────
+    function setSegmentType(si, type) {
+      if (type === 'line') {
+        segments[si].cps = [];
+      } else {
+        if (segments[si].cps.length === 0) {
+          // Add one control point offset from midpoint to create a visible curve
+          const a = waypoints[si], b = waypoints[si + 1];
+          const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const perp = 20; // perpendicular offset in inches
+          const len = Math.hypot(dx, dy) || 1;
+          segments[si].cps = [{
+            x: parseFloat(Math.min(144, Math.max(0, mx - dy / len * perp)).toFixed(1)),
+            y: parseFloat(Math.min(144, Math.max(0, my + dx / len * perp)).toFixed(1))
+          }];
+        }
+      }
+      // If selected segment was this one, re-render editor
+      if (selectedSegIdx === si) renderSegmentEditor(si);
+      updateCode(); drawAll();
+    }
+
     // ── Control Point Management ──────────────────────────────────
     function addControlPoint(si) {
       const seg = segments[si];
       if (seg.cps.length >= 2) return;
       const a = waypoints[si], b = waypoints[si+1];
+      const clamp = v => Math.min(144, Math.max(0, v));
       if (seg.cps.length === 0) {
-        seg.cps.push({ x: parseFloat((a.x + (b.x - a.x) / 3).toFixed(1)),
-                       y: parseFloat((a.y + (b.y - a.y) / 3).toFixed(1)) });
+        seg.cps.push({ x: parseFloat(clamp(a.x + (b.x - a.x) / 3).toFixed(1)),
+                       y: parseFloat(clamp(a.y + (b.y - a.y) / 3).toFixed(1)) });
       } else {
-        seg.cps.push({ x: parseFloat((a.x + (b.x - a.x) * 2 / 3).toFixed(1)),
-                       y: parseFloat((a.y + (b.y - a.y) * 2 / 3).toFixed(1)) });
+        seg.cps.push({ x: parseFloat(clamp(a.x + (b.x - a.x) * 2 / 3).toFixed(1)),
+                       y: parseFloat(clamp(a.y + (b.y - a.y) * 2 / 3).toFixed(1)) });
       }
       updateCode(); drawAll();
       renderSegmentEditor(si);
@@ -1058,15 +1121,34 @@
         list.innerHTML = '<div class="wp-empty">Click the field to place waypoints.</div>';
         return;
       }
-      list.innerHTML = waypoints.map((wp, i) => `
-        <div class="wp-card${i === selectedIdx ? ' selected' : ''}" onclick="selectWp(${i})">
-          <div class="wp-num">${i + 1}</div>
-          <div class="wp-info">
-            <div class="wp-coords">(${wp.x.toFixed(1)}, ${wp.y.toFixed(1)}) in</div>
-            <div class="wp-heading">Heading: ${wp.heading.toFixed(1)}° · ${wp.action}</div>
-          </div>
-          <button class="wp-delete" onclick="event.stopPropagation(); deleteWpAt(${i})" title="Delete">✕</button>
-        </div>`).join('');
+      let html = '';
+      waypoints.forEach((wp, i) => {
+        html += `
+          <div class="wp-card${i === selectedIdx ? ' selected' : ''}" onclick="selectWp(${i})" style="margin-bottom:0;">
+            <div class="wp-num">${i + 1}</div>
+            <div class="wp-info">
+              <div class="wp-coords">(${wp.x.toFixed(1)}, ${wp.y.toFixed(1)}) in</div>
+              <div class="wp-heading">Heading: ${wp.heading.toFixed(1)}° · ${wp.action}</div>
+            </div>
+            <button class="wp-delete" onclick="event.stopPropagation(); deleteWpAt(${i})" title="Delete">✕</button>
+          </div>`;
+        // Add segment row after every waypoint except the last
+        if (i < waypoints.length - 1) {
+          const seg = segments[i];
+          const isCurved = seg.cps.length > 0;
+          html += `
+          <div class="seg-row">
+            <span class="seg-row-label">↕ ${i+1}→${i+2}</span>
+            <select class="seg-select${isCurved ? ' curved' : ''}"
+              onchange="setSegmentType(${i}, this.value)"
+              onclick="event.stopPropagation()">
+              <option value="line"${!isCurved ? ' selected' : ''}>BezierLine</option>
+              <option value="curve"${isCurved ? ' selected' : ''}>BezierCurve</option>
+            </select>
+          </div>`;
+        }
+      });
+      list.innerHTML = html;
     }
 
     function selectWp(i) {
@@ -1100,12 +1182,12 @@
         <div class="editor-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">X (inches)</label>
-              <input type="number" class="form-input" id="edX" value="${wp.x}" step="0.5" oninput="editorUpdate()">
+              <label class="form-label">X (0–144 in)</label>
+              <input type="number" class="form-input" id="edX" value="${wp.x}" step="0.5" min="0" max="144" oninput="editorUpdate()">
             </div>
             <div class="form-group">
-              <label class="form-label">Y (inches)</label>
-              <input type="number" class="form-input" id="edY" value="${wp.y}" step="0.5" oninput="editorUpdate()">
+              <label class="form-label">Y (0–144 in)</label>
+              <input type="number" class="form-input" id="edY" value="${wp.y}" step="0.5" min="0" max="144" oninput="editorUpdate()">
             </div>
           </div>
           <div class="form-row">
@@ -1153,13 +1235,13 @@
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">X (in)</label>
-                  <input type="number" class="form-input" value="${cp.x.toFixed(1)}" step="0.5"
+                  <label class="form-label">X (0–144)</label>
+                  <input type="number" class="form-input" value="${cp.x.toFixed(1)}" step="0.5" min="0" max="144"
                     oninput="updateCP(${si}, ${ci}, 'x', this.value)">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Y (in)</label>
-                  <input type="number" class="form-input" value="${cp.y.toFixed(1)}" step="0.5"
+                  <label class="form-label">Y (0–144)</label>
+                  <input type="number" class="form-input" value="${cp.y.toFixed(1)}" step="0.5" min="0" max="144"
                     oninput="updateCP(${si}, ${ci}, 'y', this.value)">
                 </div>
               </div>
@@ -1272,15 +1354,15 @@
 
       if (dragType === 'waypoint' && dragIdx >= 0) {
         const ftc = cvsToFtc(cp.x - dragOffX, cp.y - dragOffY);
-        waypoints[dragIdx].x = parseFloat(ftc.x.toFixed(1));
-        waypoints[dragIdx].y = parseFloat(ftc.y.toFixed(1));
+        waypoints[dragIdx].x = parseFloat(Math.min(144, Math.max(0, ftc.x)).toFixed(1));
+        waypoints[dragIdx].y = parseFloat(Math.min(144, Math.max(0, ftc.y)).toFixed(1));
         renderWpList();
         if (selectedIdx === dragIdx) renderWaypointEditor();
         updateCode(); drawAll();
       } else if (dragType === 'cp') {
         const ftc = cvsToFtc(cp.x - dragOffX, cp.y - dragOffY);
-        segments[dragSegIdx].cps[dragCpIdx].x = parseFloat(ftc.x.toFixed(1));
-        segments[dragSegIdx].cps[dragCpIdx].y = parseFloat(ftc.y.toFixed(1));
+        segments[dragSegIdx].cps[dragCpIdx].x = parseFloat(Math.min(144, Math.max(0, ftc.x)).toFixed(1));
+        segments[dragSegIdx].cps[dragCpIdx].y = parseFloat(Math.min(144, Math.max(0, ftc.y)).toFixed(1));
         if (selectedSegIdx === dragSegIdx) renderSegmentEditor(dragSegIdx);
         updateCode(); drawAll();
       }

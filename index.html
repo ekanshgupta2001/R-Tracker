@@ -348,6 +348,248 @@
       color: #778
     }
 
+    /* ── Mode Tabs ───────────────────────────────────────────── */
+    #mode-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+    }
+
+    .mode-tab {
+      padding: 6px 22px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #556;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      border-bottom: 1px solid #333;
+    }
+
+    .mode-tab:first-child { border-radius: 5px 0 0 0; }
+    .mode-tab:last-child  { border-radius: 0 5px 0 0; border-left: none; }
+
+    .mode-tab.active {
+      background: #222;
+      color: #dde;
+      border-color: #333;
+      border-bottom-color: #222;
+      position: relative;
+      z-index: 1;
+    }
+
+    .mode-tab:hover:not(.active) {
+      background: #202020;
+      color: #99a;
+    }
+
+    /* Field wrap — relative container for overlays */
+    #field-wrap {
+      position: relative;
+      display: inline-block;
+      border: 2px solid #333;
+      line-height: 0;
+    }
+
+    #field-wrap canvas {
+      border: none;
+      display: block;
+    }
+
+    /* Override old canvas border since field-wrap provides it */
+    canvas { border: none; }
+
+    /* ── Countdown Overlay ───────────────────────────────────── */
+    #countdown-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.52);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    #countdown-overlay.visible { opacity: 1; }
+
+    #countdown-text {
+      font-size: 88px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 40px rgba(128,0,32,0.9), 0 4px 12px rgba(0,0,0,0.9);
+      font-family: 'Courier New', monospace;
+    }
+
+    #countdown-text.go { color: #4aff88; text-shadow: 0 0 40px rgba(74,255,136,0.8), 0 4px 12px rgba(0,0,0,0.9); }
+
+    @keyframes countPop {
+      0%   { transform: scale(1.6); opacity: 0; }
+      40%  { transform: scale(0.88); opacity: 1; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    .pop { animation: countPop 0.35s ease-out forwards; }
+
+    /* ── Level HUD (over field) ──────────────────────────────── */
+    #level-hud {
+      position: absolute;
+      top: 8px; left: 8px; right: 8px;
+      display: none;
+      pointer-events: none;
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .hud-chip {
+      background: rgba(0,0,0,0.72);
+      border: 1px solid #333;
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #dde;
+      letter-spacing: 0.5px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .hud-chip.timer-chip  { color: #4aff88; font-size: 15px; }
+    .hud-chip.acc-chip    { color: #4a9eff; }
+    .hud-chip.cp-chip     { color: #ffdd44; }
+
+    /* ── Result Card ─────────────────────────────────────────── */
+    #result-card, #fail-card {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 22px 30px;
+      min-width: 240px;
+      text-align: center;
+      display: none;
+      pointer-events: all;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.85);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0;
+      z-index: 10;
+    }
+
+    #result-card.show, #fail-card.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    #result-card.gold   { border-color: #c8a200; }
+    #result-card.silver { border-color: #909090; }
+    #result-card.bronze { border-color: #a0520a; }
+
+    .rc-medal  { font-size: 52px; margin-bottom: 6px; }
+    .rc-title  { font-size: 20px; font-weight: bold; color: #dde; margin-bottom: 3px; }
+    .rc-level  { font-size: 11px; color: #556; margin-bottom: 14px; }
+    .rc-stars  { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+    .rc-star   { font-size: 26px; color: #2a2a2a; transition: color 0.3s, text-shadow 0.3s; }
+    .rc-star.lit { color: #ffd700; text-shadow: 0 0 12px rgba(255,215,0,0.7); }
+    .rc-stats  { font-size: 11px; color: #778; margin-bottom: 16px; line-height: 1.7; }
+    .rc-stats b { color: #ccd; }
+    .rc-btns   { display: flex; gap: 8px; justify-content: center; }
+
+    .fail-icon  { font-size: 52px; margin-bottom: 6px; }
+    .fail-title { font-size: 22px; font-weight: bold; color: #ff4455; margin-bottom: 3px; }
+    .fail-level { font-size: 11px; color: #556; margin-bottom: 16px; }
+    .fail-btns  { display: flex; gap: 8px; justify-content: center; }
+
+    /* ── Levels Sidebar ──────────────────────────────────────── */
+    #levels-sidebar {
+      width: 270px;
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+    }
+
+    #levels-sidebar::-webkit-scrollbar       { width: 4px; }
+    #levels-sidebar::-webkit-scrollbar-track { background: #1a1a1a; }
+    #levels-sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+    .tier-header {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #800020;
+      padding: 7px 10px 5px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 7px 7px 0 0;
+      margin-top: 8px;
+    }
+
+    .tier-header:first-child { margin-top: 0; }
+
+    .lvl-card {
+      background: #222;
+      border: 1px solid #333;
+      border-top: none;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lvl-card:last-of-type { border-radius: 0 0 7px 7px; }
+    .lvl-card:hover:not(.locked) { background: #2a2a2a; }
+    .lvl-card.locked { cursor: default; opacity: 0.38; }
+    .lvl-card.active-lvl { border-left: 3px solid #800020; background: #260010; }
+
+    .lvl-num {
+      font-size: 15px;
+      font-weight: bold;
+      color: #800020;
+      width: 22px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .lvl-card.locked .lvl-num { color: #444; }
+
+    .lvl-info  { flex: 1; min-width: 0; }
+    .lvl-name  { font-size: 12px; color: #ccd; line-height: 1.3; }
+    .lvl-meta  { font-size: 10px; color: #445; margin-top: 1px; }
+
+    .lvl-stars { display: flex; gap: 2px; margin-top: 3px; }
+    .lvl-star  { font-size: 11px; color: #2a2a2a; }
+    .lvl-star.lit { color: #ffd700; }
+
+    .lvl-lock-icon { font-size: 13px; color: #333; }
+
+    /* Level attempt panel in levels sidebar */
+    #attempt-panel {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 7px;
+      padding: 9px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .ap-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #800020; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid #333; }
+    .ap-row   { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
+    .ap-lbl   { color: #778; }
+    .ap-val   { color: #4aff88; font-weight: bold; }
+
     /* Home button */
     .home-btn {
       position: fixed;
@@ -387,7 +629,48 @@
   <a href="home.html" class="home-btn"><span class="home-arrow">←</span> Home</a>
   <div id="app">
     <div id="field-container">
-      <canvas id="c"></canvas>
+      <div id="mode-tabs">
+        <button class="mode-tab active" id="tab-freedrive" onclick="switchMode('freedrive')">Free Drive</button>
+        <button class="mode-tab" id="tab-levels" onclick="switchMode('levels')">Levels</button>
+      </div>
+      <div id="field-wrap">
+        <canvas id="c"></canvas>
+        <div id="countdown-overlay">
+          <div id="countdown-text">3</div>
+        </div>
+        <div id="level-hud">
+          <div class="hud-row">
+            <div class="hud-chip timer-chip" id="hud-timer">0.0s</div>
+            <div class="hud-chip cp-chip" id="hud-cp">0/0</div>
+            <div class="hud-chip acc-chip" id="hud-acc">100%</div>
+          </div>
+        </div>
+        <div id="result-card">
+          <div class="rc-medal" id="rc-medal">&#127937;</div>
+          <div class="rc-title" id="rc-title">Level Complete!</div>
+          <div class="rc-level" id="rc-level">Level 1 &mdash; Forward March</div>
+          <div class="rc-stars">
+            <span class="rc-star" id="rc-s1">&#9733;</span>
+            <span class="rc-star" id="rc-s2">&#9733;</span>
+            <span class="rc-star" id="rc-s3">&#9733;</span>
+          </div>
+          <div class="rc-stats" id="rc-stats"></div>
+          <div class="rc-btns">
+            <button class="btn" onclick="retryLevel()">&#8635; Retry</button>
+            <button class="btn" onclick="exitToSelect()">&#8801; Levels</button>
+            <button class="btn active" id="rc-next-btn" onclick="nextLevel()">Next &#8250;</button>
+          </div>
+        </div>
+        <div id="fail-card">
+          <div class="fail-icon">&#9200;</div>
+          <div class="fail-title">Time's Up!</div>
+          <div class="fail-level" id="fail-level">Keep practicing!</div>
+          <div class="fail-btns">
+            <button class="btn" onclick="retryLevel()">&#8635; Retry</button>
+            <button class="btn" onclick="exitToSelect()">&#8801; Levels</button>
+          </div>
+        </div>
+      </div>
       <div id="ctrl-bar">
         <button class="btn active" id="btn-mec" onclick="setDrive('mecanum')">Mecanum</button>
         <button class="btn" id="btn-tank" onclick="setDrive('tank')">Tank</button>
@@ -474,8 +757,8 @@
           <input type="range" id="s-ms" min="1" max="15" step="0.5" value="8" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Turn Rate</span><span class="sval" id="s-tr-v">180 °/s</span></div>
-          <input type="range" id="s-tr" min="30" max="400" step="10" value="180" oninput="cfgUpdate()">
+          <div class="slrow"><span>Turn Rate</span><span class="sval" id="s-tr-v">234 °/s</span></div>
+          <input type="range" id="s-tr" min="30" max="400" step="10" value="234" oninput="cfgUpdate()">
         </div>
         <div class="srow">
           <div class="slrow"><span>Robot Size</span><span class="sval" id="s-rs-v">18 in</span></div>
@@ -490,8 +773,8 @@
           <input type="range" id="s-ac" min="5" max="30" step="1" value="15" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Friction</span><span class="sval" id="s-fr-v">8 ft/s²</span></div>
-          <input type="range" id="s-fr" min="2" max="20" step="1" value="8" oninput="cfgUpdate()">
+          <div class="slrow"><span>Friction</span><span class="sval" id="s-fr-v">13 ft/s²</span></div>
+          <input type="range" id="s-fr" min="2" max="20" step="1" value="13" oninput="cfgUpdate()">
         </div>
         <div class="srow">
           <div class="slrow"><span>Response Delay</span><span class="sval" id="s-rd-v">50 ms</span></div>
@@ -511,6 +794,20 @@
         </div>
       </div>
     </div>
+    <div id="levels-sidebar">
+      <div id="attempt-panel">
+        <div class="ap-title" id="ap-name">Level 1</div>
+        <div class="ap-row"><span class="ap-lbl">Time</span><span class="ap-val" id="ap-time">0.0s</span></div>
+        <div class="ap-row"><span class="ap-lbl">Limit</span><span class="ap-val" id="ap-limit">—</span></div>
+        <div class="ap-row"><span class="ap-lbl">Checkpoints</span><span class="ap-val" id="ap-cp">0/0</span></div>
+        <div class="ap-row"><span class="ap-lbl">Accuracy</span><span class="ap-val" id="ap-acc">100%</span></div>
+        <div style="margin-top:7px;display:flex;gap:6px;">
+          <button class="btn" onclick="retryLevel()" style="flex:1">&#8635; Retry</button>
+          <button class="btn" onclick="exitToSelect()" style="flex:1">&#8801; List</button>
+        </div>
+      </div>
+      <div id="lvl-list"></div>
+    </div>
   </div>
   <script>
     // ─── Constants ────────────────────────────────────────────────
@@ -520,8 +817,141 @@
     const AUTO_MS = 30000;  // 0:30
     const fieldImg = new Image(); fieldImg.src = 'decode.webp';
 
+    // ─── Level Definitions ────────────────────────────────────────
+    // Coordinates in field-ft (PP inches / 12 - 6), origin center.
+    // h = heading in degrees (0 = facing +Y/north, CW positive).
+    // Each waypoint h faces toward the next waypoint.
+    // Global checkpoint/accuracy radii are LVL_CP_RADIUS / LVL_ACC_TOL.
+    const LVL_CP_RADIUS = 0.5;   // 6 inches — checkpoint trigger radius (ft)
+    const LVL_ACC_TOL   = 1/3;   // 4 inches — full-accuracy corridor half-width (ft)
+
+    const LEVELS = [
+      // ── Tier 1: Beginner ─────────────────────────────────────────
+      { id:1, tier:'Beginner', name:'Straight Shot', timeLimit:5,
+        path:[
+          {x:0,   y:-4,  h:0},
+          {x:0,   y:4,   h:0},
+        ]},
+      { id:2, tier:'Beginner', name:'Side Step', timeLimit:5,
+        path:[
+          {x:-3,  y:0,   h:90},
+          {x:3,   y:0,   h:90},
+        ]},
+      { id:3, tier:'Beginner', name:'L-Shape', timeLimit:7,
+        path:[
+          {x:-4,  y:-4,  h:0},
+          {x:-4,  y:3,   h:90},
+          {x:4,   y:3,   h:90},
+        ]},
+      // ── Tier 2: Intermediate ──────────────────────────────────────
+      { id:4, tier:'Intermediate', name:'The Square', timeLimit:10,
+        path:[
+          {x:-4,  y:-4,  h:0},
+          {x:-4,  y:4,   h:90},
+          {x:4,   y:4,   h:180},
+          {x:4,   y:-4,  h:-90},
+          {x:-4,  y:-4,  h:-90},
+        ]},
+      { id:5, tier:'Intermediate', name:'Zigzag', timeLimit:10,
+        path:[
+          {x:-5,  y:-4,  h:45},
+          {x:-1,  y:0,   h:-63},
+          {x:-5,  y:2,   h:63},
+          {x:-1,  y:4,   h:-67},
+          {x:-5,  y:5.67,h:-67},
+        ]},
+      { id:6, tier:'Intermediate', name:'Diamond', timeLimit:12,
+        path:[
+          {x:0,   y:-5,  h:39},
+          {x:4,   y:0,   h:-39},
+          {x:0,   y:5,   h:-141},
+          {x:-4,  y:0,   h:141},
+          {x:0,   y:-5,  h:141},
+        ]},
+      // ── Tier 3: Advanced ──────────────────────────────────────────
+      { id:7, tier:'Advanced', name:'Specimen Run', timeLimit:10,
+        path:[
+          {x:-4,  y:-5,  h:0},
+          {x:-4,  y:4,   h:90},
+          {x:0,   y:4,   h:180},
+          {x:0,   y:-5,  h:90},
+          {x:4,   y:-5,  h:90},
+        ]},
+      { id:8, tier:'Advanced', name:'Sample Collect', timeLimit:10,
+        path:[
+          {x:-5,  y:-5,  h:18},
+          {x:-3,  y:1,   h:135},
+          {x:0,   y:-2,  h:45},
+          {x:3,   y:1,   h:162},
+          {x:5,   y:-5,  h:162},
+        ]},
+      { id:9, tier:'Advanced', name:'Spiral In', timeLimit:14,
+        path:[
+          {x:-5,  y:-5,  h:0},
+          {x:-5,  y:5,   h:90},
+          {x:5,   y:5,   h:180},
+          {x:5,   y:-3,  h:-90},
+          {x:-2,  y:-3,  h:0},
+          {x:-2,  y:2,   h:90},
+          {x:2,   y:2,   h:90},
+        ]},
+      // ── Tier 4: Expert ────────────────────────────────────────────
+      { id:10, tier:'Expert', name:'Speed Demon', timeLimit:10,
+        path:[
+          {x:-5,  y:-5,  h:45},
+          {x:5,   y:5,   h:-90},
+          {x:-5,  y:5,   h:135},
+          {x:5,   y:-5,  h:-45},
+          {x:0,   y:0,   h:-45},
+        ]},
+      { id:11, tier:'Expert', name:'Threading the Needle', timeLimit:14,
+        path:[
+          {x:-5,  y:0,   h:27},
+          {x:-3,  y:4,   h:143},
+          {x:0,   y:0,   h:37},
+          {x:3,   y:4,   h:153},
+          {x:5,   y:0,   h:-153},
+          {x:3,   y:-4,  h:-37},
+          {x:0,   y:0,   h:-143},
+          {x:-3,  y:-4,  h:-27},
+          {x:-5,  y:0,   h:-27},
+        ]},
+      { id:12, tier:'Expert', name:'The Gauntlet', timeLimit:16,
+        path:[
+          {x:-5,  y:-5,  h:0},
+          {x:-5,  y:5,   h:135},
+          {x:-2,  y:2,   h:34},
+          {x:0,   y:5,   h:146},
+          {x:2,   y:2,   h:45},
+          {x:5,   y:5,   h:180},
+          {x:5,   y:-5,  h:-45},
+          {x:2,   y:-2,  h:-146},
+          {x:0,   y:-5,  h:-34},
+          {x:-2,  y:-2,  h:-135},
+          {x:-5,  y:-5,  h:-135},
+        ]},
+    ];
+
+    // ─── App Mode ─────────────────────────────────────────────────
+    let appMode = 'freedrive'; // 'freedrive' | 'levels'
+
+    // ─── Level State ──────────────────────────────────────────────
+    let completedLevels = {}; // id -> { stars:[bool,bool,bool], time:float, accuracy:float }
+    let lvl = {
+      phase: 'select',   // 'select'|'countdown'|'attempt'|'result'|'fail'
+      id: null,          // current level id (1-12)
+      countdownVal: 3,
+      countdownTs: 0,
+      elapsed: 0,        // seconds elapsed during attempt
+      nextCp: 1,         // next checkpoint index (starts at 1, path[0] is spawn)
+      cpCooldown: 0,     // seconds to wait before checking next cp (prevents same-spot triggers)
+      accInside: 0,      // frames robot was within LVL_ACC_TOL of the path
+      accFrames: 0,
+      ghostT: 0,         // normalized path progress 0-1 for ghost
+    };
+
     // ─── State ────────────────────────────────────────────────────
-    let cfg = { maxSpd: 8, turnRate: 180, robotSz: 18, deadzone: 0.10, accel: 15, friction: 8, inputDelay: 50 };
+    let cfg = { maxSpd: 8, turnRate: 234, robotSz: 18, deadzone: 0.10, accel: 15, friction: 13, inputDelay: 50 };
     let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0, actualVx: 0, actualVy: 0, actualOmega: 0 };
     let inp = { lx: 0, ly: 0, rx: 0 };
     let mtr = { fl: 0, fr: 0, bl: 0, br: 0 };
@@ -549,10 +979,10 @@
     const ctx = cvs.getContext('2d');
 
     function resize() {
-      const sb = document.getElementById('sidebar');
-      const avW = window.innerWidth - sb.offsetWidth - 28;
+      const sbW = 270; // both sidebars fixed at 270px
+      const avW = window.innerWidth - sbW - 28;
       const avH = window.innerHeight - 20;
-      const sz = Math.min(avW, avH - 50); // leave room for ctrl bar
+      const sz = Math.min(avW, avH - 70); // leave room for ctrl bar + mode tabs
       cvs.width = cvs.height = Math.max(300, sz);
     }
 
@@ -763,8 +1193,8 @@
       if (bot.y < -hf) { bot.y = -hf; bot.actualVy = Math.max(0, bot.actualVy); }
       if (bot.y > hf) { bot.y = hf; bot.actualVy = Math.min(0, bot.actualVy); }
 
-      // ── 7. Collision with field elements ─────────────────────────
-      for (const z of COLLISION_ZONES) {
+      // ── 7. Collision with field elements (disabled in Levels mode) ─
+      for (const z of appMode === 'levels' ? [] : COLLISION_ZONES) {
         // Convert {x, y, w, h} center-format to AABB edges
         const zL = z.x - z.w / 2, zR = z.x + z.w / 2;
         const zB = z.y - z.h / 2, zT = z.y + z.h / 2;
@@ -944,26 +1374,574 @@
     document.addEventListener('keydown', e => {
       keys[e.code] = true;
       if (e.code === 'KeyR') resetRobot();
-      if (e.code === 'KeyF') setMode(driveMode === 'field' ? 'robot' : 'field');
-      if (e.code === 'KeyT') setDrive(drivetrain === 'mecanum' ? 'tank' : 'mecanum');
       if (e.code === 'KeyG') debugCollisions = !debugCollisions;
-      if (e.code === 'Space') { tmr.running ? timerPause() : timerStart(); e.preventDefault(); }
+      if (appMode === 'freedrive') {
+        if (e.code === 'KeyF') setMode(driveMode === 'field' ? 'robot' : 'field');
+        if (e.code === 'KeyT') setDrive(drivetrain === 'mecanum' ? 'tank' : 'mecanum');
+        if (e.code === 'Space') { tmr.running ? timerPause() : timerStart(); e.preventDefault(); }
+      }
+      if (e.code === 'KeyL') switchMode(appMode === 'freedrive' ? 'levels' : 'freedrive');
+      if (e.code === 'Escape' && appMode === 'levels') {
+        if (lvl.phase !== 'select') exitToSelect(); else switchMode('freedrive');
+      }
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     });
     document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    // ─── Angle Helpers ────────────────────────────────────────────
+    function normAngle(a) { return ((a + 180) % 360 + 360) % 360 - 180; }
+
+    function lerpAngle(a, b, t) {
+      return a + normAngle(b - a) * t;
+    }
+
+    function ghostHeadingAtT(path, t) {
+      const { lens, total } = pathSegLengths(path);
+      let dist = Math.max(0, Math.min(1, t)) * total;
+      for (let i = 0; i < path.length - 1; i++) {
+        if (dist <= lens[i] + 1e-9) {
+          const frac = lens[i] > 0 ? dist / lens[i] : 0;
+          return lerpAngle(path[i].h, path[i + 1].h, frac);
+        }
+        dist -= lens[i];
+      }
+      return path[path.length - 1].h;
+    }
+
+    // ─── Level Path Helpers ───────────────────────────────────────
+    function pathSegLengths(path) {
+      const lens = [];
+      let total = 0;
+      for (let i = 0; i < path.length - 1; i++) {
+        const d = Math.hypot(path[i+1].x - path[i].x, path[i+1].y - path[i].y);
+        lens.push(d); total += d;
+      }
+      return { lens, total };
+    }
+
+    function posAtT(path, t) {
+      const { lens, total } = pathSegLengths(path);
+      let dist = Math.max(0, Math.min(1, t)) * total;
+      for (let i = 0; i < path.length - 1; i++) {
+        if (dist <= lens[i] + 1e-9) {
+          const frac = lens[i] > 0 ? dist / lens[i] : 0;
+          return {
+            x: path[i].x + frac * (path[i+1].x - path[i].x),
+            y: path[i].y + frac * (path[i+1].y - path[i].y),
+          };
+        }
+        dist -= lens[i];
+      }
+      return path[path.length - 1];
+    }
+
+    function nearestPointOnSeg(px, py, ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      if (len2 === 0) return Math.hypot(px - ax, py - ay);
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+      return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    }
+
+    function distToPath(rx, ry, path) {
+      let min = Infinity;
+      for (let i = 0; i < path.length - 1; i++) {
+        const d = nearestPointOnSeg(rx, ry, path[i].x, path[i].y, path[i+1].x, path[i+1].y);
+        if (d < min) min = d;
+      }
+      return min;
+    }
+
+    // ─── Level Drawing ────────────────────────────────────────────
+
+    function drawLevelOverlay() {
+      if (appMode !== 'levels') return;
+      if (lvl.phase === 'select') return;
+      const def = LEVELS.find(l => l.id === lvl.id);
+      if (!def) return;
+      const path = def.path;
+      const s = cvs.width / FIELD_FT;
+      const corridorPx = LVL_ACC_TOL * s; // half-width of corridor in px
+
+      function ftx(fx) { return (fx + FIELD_FT / 2) * s; }
+      function fty(fy) { return (-fy + FIELD_FT / 2) * s; }
+
+      ctx.save();
+
+      // ── Corridor fill — straight lines, wide stroke ───────────────
+      ctx.beginPath();
+      ctx.moveTo(ftx(path[0].x), fty(path[0].y));
+      for (let i = 1; i < path.length; i++) ctx.lineTo(ftx(path[i].x), fty(path[i].y));
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.lineWidth = corridorPx * 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // ── Corridor edges ────────────────────────────────────────────
+      ctx.beginPath();
+      ctx.moveTo(ftx(path[0].x), fty(path[0].y));
+      for (let i = 1; i < path.length; i++) ctx.lineTo(ftx(path[i].x), fty(path[i].y));
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // ── Dashed centerline (straight) ──────────────────────────────
+      ctx.beginPath();
+      ctx.moveTo(ftx(path[0].x), fty(path[0].y));
+      for (let i = 1; i < path.length; i++) ctx.lineTo(ftx(path[i].x), fty(path[i].y));
+      ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([7, 7]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // ── Waypoint circles ──────────────────────────────────────────
+      const cpR = Math.max(7, corridorPx * 0.75); // radius in px
+      const pulse = 0.65 + 0.35 * Math.sin(Date.now() / 180);
+
+      for (let i = 0; i < path.length; i++) {
+        const cx = ftx(path[i].x), cy = fty(path[i].y);
+        const isDone   = i < lvl.nextCp;
+        const isTarget = i === lvl.nextCp;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, cpR, 0, Math.PI * 2);
+
+        if (isDone) {
+          // Completed — green fill
+          ctx.fillStyle = 'rgba(74,200,100,0.75)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(74,255,120,0.95)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        } else if (isTarget) {
+          // Current target — white fill, pulsing burgundy glow border
+          // Glow
+          ctx.save();
+          ctx.shadowColor = '#800020';
+          ctx.shadowBlur = 10 + 8 * pulse;
+          ctx.beginPath();
+          ctx.arc(cx, cy, cpR + 2, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(128,0,32,${0.6 * pulse})`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.restore();
+          // Fill
+          ctx.beginPath();
+          ctx.arc(cx, cy, cpR, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.90)';
+          ctx.fill();
+          ctx.strokeStyle = '#800020';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
+          // Future — white fill, dim border
+          ctx.fillStyle = 'rgba(255,255,255,0.25)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Label: 'S' for index 0, number otherwise
+        const label = i === 0 ? 'S' : String(i);
+        ctx.fillStyle = isDone ? '#0a1a0a'
+                      : isTarget ? '#1a0005'
+                      : 'rgba(200,200,210,0.85)';
+        ctx.font = `bold ${Math.max(8, cpR * 0.85)}px Courier New`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, cx, cy);
+      }
+
+      // ── Ghost robot (follows straight-line path, attempt only) ───
+      if (lvl.phase === 'attempt') {
+        const gp = posAtT(path, lvl.ghostT);
+        const gx = ftx(gp.x), gy = fty(gp.y);
+        const r = (cfg.robotSz / 24) * s;
+        ctx.save();
+        ctx.globalAlpha = 0.30;
+        ctx.translate(gx, gy);
+        ctx.fillStyle = '#4a9eff';
+        ctx.fillRect(-r, -r, r * 2, r * 2);
+        ctx.strokeStyle = '#88ccff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-r, -r, r * 2, r * 2);
+        ctx.restore();
+      }
+
+      // ── Arrow from robot to current target waypoint ───────────────
+      if (lvl.phase === 'attempt' && lvl.nextCp < path.length) {
+        const target = path[lvl.nextCp];
+        const dx = target.x - bot.x;
+        const dy = target.y - bot.y;
+        const dist = Math.hypot(dx, dy);
+        const hideRadius = 20 / 12; // 20 inches in ft
+
+        if (dist > hideRadius) {
+          const bx = ftx(bot.x), by = fty(bot.y);
+          const tx2 = ftx(target.x), ty2 = fty(target.y);
+
+          // Direction unit vector (canvas coords, y flipped)
+          const cdx = tx2 - bx, cdy = ty2 - by;
+          const clen = Math.hypot(cdx, cdy);
+          const ux = cdx / clen, uy = cdy / clen;
+
+          // Line from robot edge to ~60% of the way there
+          const robotPx = (cfg.robotSz / 24) * s;
+          const startX = bx + ux * (robotPx + 2);
+          const startY = by + uy * (robotPx + 2);
+          const endX   = bx + ux * Math.min(clen * 0.55, 60);
+          const endY   = by + uy * Math.min(clen * 0.55, 60);
+
+          ctx.save();
+          ctx.strokeStyle = 'rgba(160,50,60,0.65)';
+          ctx.lineWidth = 1.5;
+          ctx.lineCap = 'round';
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Small arrowhead
+          const aw = 5;
+          ctx.fillStyle = 'rgba(160,50,60,0.65)';
+          ctx.beginPath();
+          ctx.moveTo(endX + ux * aw, endY + uy * aw);
+          ctx.lineTo(endX - uy * aw * 0.55, endY + ux * aw * 0.55);
+          ctx.lineTo(endX + uy * aw * 0.55, endY - ux * aw * 0.55);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // ─── Level Logic ──────────────────────────────────────────────
+    function getLevelDef() { return LEVELS.find(l => l.id === lvl.id) || null; }
+
+    function isLevelUnlocked(id) {
+      if (id === 1) return true;
+      return !!completedLevels[id - 1];
+    }
+
+    function startCountdown(id) {
+      if (!isLevelUnlocked(id)) return;
+      lvl.id = id;
+      lvl.phase = 'countdown';
+      lvl.countdownVal = 3;
+      lvl.elapsed = 0;
+      lvl.nextCp = 1;
+      lvl.cpCooldown = 0.4; // brief lock-out at start so spawn doesn't instantly trigger cp1
+      lvl.accInside = 0;
+      lvl.accFrames = 0;
+      lvl.ghostT = 0;
+
+      const def = getLevelDef();
+      const spawn = def.path[0];
+      resetRobot();
+      bot.x = spawn.x; bot.y = spawn.y;
+
+      hideCards();
+      document.getElementById('level-hud').style.display = 'block';
+      showCountdown(3);
+      renderLevelsSidebar();
+    }
+
+    let _cdTimeout = null;
+    function showCountdown(n) {
+      const el = document.getElementById('countdown-overlay');
+      const txt = document.getElementById('countdown-text');
+      el.classList.add('visible');
+      txt.className = '';
+      txt.textContent = n > 0 ? String(n) : 'GO!';
+      txt.classList.toggle('go', n === 0);
+      void txt.offsetWidth; // reflow for animation restart
+      txt.classList.add('pop');
+      if (_cdTimeout) clearTimeout(_cdTimeout);
+      if (n > 0) {
+        _cdTimeout = setTimeout(() => showCountdown(n - 1), 900);
+      } else {
+        _cdTimeout = setTimeout(() => {
+          el.classList.remove('visible');
+          lvl.phase = 'attempt';
+          lvl.countdownTs = performance.now();
+        }, 700);
+      }
+    }
+
+    function updateLevel(dt) {
+      if (appMode !== 'levels') return;
+      if (lvl.phase !== 'attempt') return;
+      const def = getLevelDef();
+      if (!def) return;
+
+      lvl.elapsed += dt;
+      lvl.ghostT = Math.min(1, lvl.elapsed / def.timeLimit);
+
+      // Accuracy = fraction of frames the robot spends INSIDE the tolerance corridor
+      const dist = distToPath(bot.x, bot.y, def.path);
+      if (dist < LVL_ACC_TOL) lvl.accInside++;
+      lvl.accFrames++;
+
+      // Checkpoint detection — strictly sequential, one at a time, with cooldown
+      lvl.cpCooldown = Math.max(0, lvl.cpCooldown - dt);
+      if (lvl.cpCooldown <= 0 && lvl.nextCp < def.path.length) {
+        const cp = def.path[lvl.nextCp];
+        const cpDist = Math.hypot(bot.x - cp.x, bot.y - cp.y);
+        // Debug: log distance to target every ~0.5s
+        if (Math.round(lvl.elapsed * 2) !== Math.round((lvl.elapsed - dt) * 2)) {
+          const avgAcc = lvl.accFrames > 0 ? Math.round(lvl.accInside / lvl.accFrames * 100) : 100;
+          console.log(`[Level ${def.id}] t=${lvl.elapsed.toFixed(1)}s | CP target: ${lvl.nextCp}/${def.path.length-1} | dist to target: ${cpDist.toFixed(2)}ft | acc: ${avgAcc}% | dist to path: ${dist.toFixed(2)}ft`);
+        }
+        if (cpDist < LVL_CP_RADIUS) {
+          console.log(`[Level ${def.id}] ✓ Checkpoint ${lvl.nextCp} HIT at t=${lvl.elapsed.toFixed(2)}s (dist=${cpDist.toFixed(3)}ft)`);
+          lvl.nextCp++;
+          lvl.cpCooldown = 0.3; // lock out next check briefly to prevent multi-trigger
+          if (lvl.nextCp >= def.path.length) {
+            console.log(`[Level ${def.id}] All checkpoints complete! Finishing level.`);
+            finishLevel(true);
+            return;
+          } else {
+            console.log(`[Level ${def.id}] Next target: CP ${lvl.nextCp} at (${def.path[lvl.nextCp].x.toFixed(1)}, ${def.path[lvl.nextCp].y.toFixed(1)})`);
+          }
+        }
+      }
+
+      // Time limit — only failure condition
+      if (lvl.elapsed >= def.timeLimit) {
+        console.log(`[Level ${def.id}] TIME'S UP. Completed ${lvl.nextCp-1}/${def.path.length-1} checkpoints.`);
+        finishLevel(false);
+      }
+    }
+
+    function finishLevel(success) {
+      const def = getLevelDef();
+      const avgAcc = lvl.accFrames > 0 ? lvl.accInside / lvl.accFrames : 0;
+      const timeFrac = lvl.elapsed / def.timeLimit;
+
+      console.log(`[Level ${def.id}] finishLevel: success=${success} | avgAcc=${Math.round(avgAcc*100)}% | timeFrac=${(timeFrac*100).toFixed(0)}% | inside=${lvl.accInside}/${lvl.accFrames} frames`);
+
+      // Fail ONLY if time ran out — accuracy affects star rating only
+      if (!success) {
+        lvl.phase = 'fail';
+        showFailCard(def, avgAcc);
+      } else {
+        // Determine medal tier
+        let starCount;
+        if      (avgAcc >= 0.90 && timeFrac <= 0.60) starCount = 3; // Gold
+        else if (avgAcc >= 0.80 && timeFrac <= 0.75) starCount = 2; // Silver
+        else                                          starCount = 1; // Bronze
+        const stars = [starCount >= 1, starCount >= 2, starCount >= 3];
+
+        // Save best result by star count
+        const prev = completedLevels[lvl.id];
+        if (!prev || starCount > prev.stars.filter(Boolean).length) {
+          completedLevels[lvl.id] = { stars, time: lvl.elapsed, accuracy: avgAcc };
+        }
+
+        lvl.phase = 'result';
+        showResultCard(stars, avgAcc, lvl.elapsed, def);
+      }
+
+      document.getElementById('level-hud').style.display = 'none';
+      renderLevelsSidebar();
+    }
+
+    function showResultCard(stars, acc, time, def) {
+      const starCount = stars.filter(Boolean).length;
+      const medals = ['', 'bronze', 'silver', 'gold'];
+      const medalEmoji = ['', '&#129350;', '&#129353;', '&#129351;'];
+      const medalLabel = ['', 'Bronze!', 'Silver!', 'Gold!'];
+
+      const card = document.getElementById('result-card');
+      card.className = medals[starCount];
+      document.getElementById('rc-medal').innerHTML = medalEmoji[starCount];
+      document.getElementById('rc-title').textContent = medalLabel[starCount];
+      document.getElementById('rc-level').textContent = `Level ${def.id} — ${def.name}`;
+      document.getElementById('rc-stats').innerHTML =
+        `<b>${time.toFixed(1)}s</b> of ${def.timeLimit}s &nbsp;|&nbsp; Accuracy <b>${Math.round(acc * 100)}%</b>`;
+
+      const starEls = ['rc-s1','rc-s2','rc-s3'];
+      starEls.forEach((id, i) => {
+        document.getElementById(id).className = 'rc-star' + (stars[i] ? ' lit' : '');
+      });
+
+      // Next level button
+      const nextId = def.id + 1;
+      const nextBtn = document.getElementById('rc-next-btn');
+      const hasNext = LEVELS.some(l => l.id === nextId);
+      nextBtn.style.display = hasNext ? '' : 'none';
+
+      card.style.display = 'block';
+      requestAnimationFrame(() => card.classList.add('show'));
+    }
+
+    function showFailCard(def, avgAcc) {
+      const cpDone = Math.max(0, lvl.nextCp - 1);
+      const cpTotal = def.path.length - 1;
+      document.getElementById('fail-level').textContent =
+        `Level ${def.id} — ${def.name}  ·  ${cpDone}/${cpTotal} checkpoints  ·  ${Math.round((avgAcc||0)*100)}% acc`;
+      const card = document.getElementById('fail-card');
+      card.style.display = 'block';
+      requestAnimationFrame(() => card.classList.add('show'));
+    }
+
+    function hideCards() {
+      ['result-card','fail-card'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('show');
+        el.style.display = 'none';
+      });
+    }
+
+    function retryLevel() {
+      hideCards();
+      if (lvl.id) startCountdown(lvl.id);
+    }
+
+    function exitToSelect() {
+      hideCards();
+      lvl.phase = 'select';
+      lvl.id = null;
+      document.getElementById('level-hud').style.display = 'none';
+      document.getElementById('countdown-overlay').classList.remove('visible');
+      if (_cdTimeout) { clearTimeout(_cdTimeout); _cdTimeout = null; }
+      renderLevelsSidebar();
+    }
+
+    function nextLevel() {
+      const nextId = lvl.id + 1;
+      hideCards();
+      if (isLevelUnlocked(nextId)) startCountdown(nextId);
+      else exitToSelect();
+    }
+
+    // ─── Mode Switching ───────────────────────────────────────────
+    function switchMode(mode) {
+      if (appMode === mode) return;
+      appMode = mode;
+      document.getElementById('tab-freedrive').classList.toggle('active', mode === 'freedrive');
+      document.getElementById('tab-levels').classList.toggle('active', mode === 'levels');
+      document.getElementById('sidebar').style.display = mode === 'freedrive' ? 'flex' : 'none';
+      const ls = document.getElementById('levels-sidebar');
+      ls.style.display = mode === 'levels' ? 'flex' : 'none';
+
+      if (mode === 'levels') {
+        exitToSelect();
+        renderLevelsSidebar();
+      } else {
+        // Return to free drive — clean up any level state
+        hideCards();
+        document.getElementById('level-hud').style.display = 'none';
+        document.getElementById('countdown-overlay').classList.remove('visible');
+        if (_cdTimeout) { clearTimeout(_cdTimeout); _cdTimeout = null; }
+        lvl.phase = 'select'; lvl.id = null;
+      }
+      resize();
+    }
+
+    // ─── Levels Sidebar UI ────────────────────────────────────────
+    function renderLevelsSidebar() {
+      // Attempt panel
+      const ap = document.getElementById('attempt-panel');
+      const def = getLevelDef();
+      if (lvl.phase !== 'select' && def) {
+        ap.style.display = 'flex';
+        document.getElementById('ap-name').textContent = `Level ${def.id} — ${def.name}`;
+        document.getElementById('ap-limit').textContent = def.timeLimit + 's';
+        document.getElementById('ap-cp').textContent = `${Math.max(0,lvl.nextCp-1)}/${def.path.length-1}`;
+        const acc = lvl.accFrames > 0 ? Math.round(lvl.accInside / lvl.accFrames * 100) : 100;
+        document.getElementById('ap-acc').textContent = acc + '%';
+        document.getElementById('ap-time').textContent = lvl.elapsed.toFixed(1) + 's';
+      } else {
+        ap.style.display = 'none';
+      }
+
+      // Level list
+      const container = document.getElementById('lvl-list');
+      const tiers = [...new Set(LEVELS.map(l => l.tier))];
+      let html = '';
+      for (const tier of tiers) {
+        html += `<div class="tier-header">${tier}</div>`;
+        for (const ld of LEVELS.filter(l => l.tier === tier)) {
+          const unlocked = isLevelUnlocked(ld.id);
+          const comp = completedLevels[ld.id];
+          const isActive = lvl.id === ld.id;
+          const cls = ['lvl-card',
+            !unlocked ? 'locked' : '',
+            isActive   ? 'active-lvl' : ''
+          ].filter(Boolean).join(' ');
+          const stars = comp ? comp.stars : [false,false,false];
+          const starsHtml = stars.map(s =>
+            `<span class="lvl-star${s?' lit':''}">&#9733;</span>`).join('');
+          html += `<div class="${cls}" onclick="${unlocked ? `startCountdown(${ld.id})` : ''}">
+            <div class="lvl-num">${ld.id}</div>
+            <div class="lvl-info">
+              <div class="lvl-name">${ld.name}</div>
+              <div class="lvl-meta">${ld.timeLimit}s limit &middot; ${ld.path.length-1} CP</div>
+              ${comp ? `<div class="lvl-stars">${starsHtml}</div>` : ''}
+            </div>
+            ${!unlocked ? '<span class="lvl-lock-icon">&#128274;</span>' : ''}
+          </div>`;
+        }
+      }
+      container.innerHTML = html;
+    }
+
+    function renderLevelsHud() {
+      if (appMode !== 'levels' || lvl.phase !== 'attempt') return;
+      const def = getLevelDef();
+      const timeLeft = def ? def.timeLimit - lvl.elapsed : 0;
+      document.getElementById('hud-timer').textContent =
+        (timeLeft < 10 ? timeLeft.toFixed(1) : Math.ceil(timeLeft)) + 's';
+      document.getElementById('hud-cp').textContent =
+        `${Math.max(0, lvl.nextCp - 1)}/${def ? def.path.length - 1 : 0}`;
+      const acc = lvl.accFrames > 0 ? Math.round(lvl.accInside / lvl.accFrames * 100) : 100;
+      document.getElementById('hud-acc').textContent = acc + '%';
+      // Update attempt panel too
+      if (def) {
+        document.getElementById('ap-time').textContent = lvl.elapsed.toFixed(1) + 's';
+        document.getElementById('ap-cp').textContent =
+          `${Math.max(0, lvl.nextCp - 1)}/${def.path.length - 1}`;
+        document.getElementById('ap-acc').textContent = acc + '%';
+      }
+    }
 
     // ─── Main Loop ────────────────────────────────────────────────
     let lastT = 0;
     function loop(ts) {
       const dt = Math.min((ts - lastT) / 1000, 0.05);
       lastT = ts;
-      tickTimer(ts);
-      // Allow free movement even if match not started / over
-      updateBot(dt);
+
+      if (appMode === 'freedrive') {
+        tickTimer(ts);
+      }
+
+      // Robot always moves (level attempt freezes during countdown phase)
+      const robotFrozen = appMode === 'levels' && lvl.phase === 'countdown';
+      if (!robotFrozen) updateBot(dt);
+
+      if (appMode === 'levels') updateLevel(dt);
+
       drawField();
       drawDebugCollisions();
+      drawLevelOverlay();
       drawRobot();
-      renderUI();
+
+      if (appMode === 'freedrive') {
+        renderUI();
+      } else {
+        renderLevelsHud();
+      }
+
       requestAnimationFrame(loop);
     }
 
@@ -971,6 +1949,8 @@
     window.addEventListener('resize', resize);
     resize();
     cfgUpdate();
+    // Init levels sidebar (hidden by default, populated for first switch)
+    renderLevelsSidebar();
     requestAnimationFrame(loop);
   </script>
 </body>
