@@ -1,0 +1,178 @@
+/* ── R-Tracker Login / Auth Overlay Styles ───────────────────────────────── */
+/* Prevents white flash and styles the login modal and loading overlay */
+
+/* Prevent flash of white while Firebase resolves */
+html, body { background: #1a1a1a; }
+
+/* ── Auth Overlay ────────────────────────────────────────────────────────── */
+#rt-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 8, 12, 0.97);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#rt-auth-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-top: 2px solid #800020;
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  width: 380px;
+  max-width: 95vw;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(128, 0, 32, 0.15);
+}
+
+#rt-auth-logo {
+  text-align: center;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+#rt-auth-logo .al-r {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #a0334a, #800020);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#rt-auth-logo .al-t {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  color: #fff;
+}
+
+#rt-auth-team {
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 0.5px;
+  margin-bottom: 28px;
+}
+
+#rt-auth-google-btn {
+  width: 100%;
+  padding: 13px 20px;
+  background: #fff;
+  color: #222;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+#rt-auth-google-btn:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+#rt-auth-google-btn:active { transform: translateY(0); }
+
+.rt-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #3a3a3a;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.rt-auth-divider::before, .rt-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #2d2d2d;
+}
+
+.rt-auth-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: #252525;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.rt-auth-input:focus { outline: none; border-color: #800020; }
+.rt-auth-input::placeholder { color: #444; }
+
+.rt-auth-btn-row { display: flex; gap: 8px; }
+
+.rt-auth-btn {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.rt-auth-btn:hover { border-color: #800020; color: #fff; }
+
+.rt-auth-btn.primary {
+  background: #800020;
+  border-color: #800020;
+  color: #fff;
+}
+
+.rt-auth-btn.primary:hover { background: #9a0028; border-color: #9a0028; }
+
+#rt-auth-error {
+  color: #ff5544;
+  font-size: 12px;
+  margin-top: 10px;
+  min-height: 16px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+#rt-auth-loading {
+  color: #556;
+  font-size: 12px;
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}
+
+#rt-auth-loading::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  animation: rt-dots 1.2s infinite;
+}
+
+@keyframes rt-dots {
+  0%   { content: ''; }
+  33%  { content: '.'; }
+  66%  { content: '..'; }
+  100% { content: '...'; }
+}

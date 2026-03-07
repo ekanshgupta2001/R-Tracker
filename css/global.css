@@ -1,0 +1,138 @@
+/* ── R-Tracker Global Styles ─────────────────────────────────────────────── */
+/* Shared CSS reset, variables, body, fonts, and utilities used on every page */
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── CSS Variables — Dark Mode (default) ────────────────────────────────── */
+:root {
+  --burgundy: #800020;
+  --burgundy-light: #a0334a;
+  --burgundy-glow: rgba(128, 0, 32, 0.45);
+  --bg: #1a1a1a;
+  --bg-sidebar: #222222;
+  --card: #222222;
+  --card-hover: #2a2a2a;
+  --card-border: #333333;
+  --text: #ffffff;
+  --text-dim: #e0e0e0;
+  --text-muted: #999999;
+  --divider: #2a2a2a;
+  --topbar-bg: #222222;
+  --toggle-bg: #2a2a2a;
+  --toggle-border: #444444;
+  --grid-line: rgba(128, 0, 32, 0.03);
+  --sidebar-width: 260px;
+}
+
+/* ── CSS Variables — Light Mode ─────────────────────────────────────────── */
+:root.light {
+  --bg: #f5f5f5;
+  --bg-sidebar: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f0f0f0;
+  --card-border: #dddddd;
+  --text: #1a1a1a;
+  --text-dim: #333333;
+  --text-muted: #777777;
+  --divider: #e0e0e0;
+  --topbar-bg: #e0e0e0;
+  --toggle-bg: #e8e8e8;
+  --toggle-border: #cccccc;
+  --grid-line: rgba(128, 0, 32, 0.04);
+}
+
+/* ── Body Base ───────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+/* ── Grid background pattern ─────────────────────────────────────────────── */
+body.grid-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Page transition ─────────────────────────────────────────────────────── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-leaving .main-wrap {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+/* ── Page loader (highest z-index, covers everything) ───────────────────── */
+#rt-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.3s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#rt-page-loader.rt-loader-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rt-loader-logo {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  animation: rt-logo-pulse 1.8s ease-in-out infinite;
+}
+
+.rt-logo-r {
+  background: linear-gradient(135deg, #a0334a, #800020);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rt-logo-t { color: #fff; }
+
+.rt-loader-tagline {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #2e2e2e;
+}
+
+@keyframes rt-logo-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.97); }
+  50%       { opacity: 1;   transform: scale(1); }
+}

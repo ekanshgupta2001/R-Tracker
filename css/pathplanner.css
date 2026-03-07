@@ -1,0 +1,390 @@
+/* ── R-Tracker Path Planner Page Styles ──────────────────────────────────── */
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  height: 54px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--divider);
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 72px;
+  z-index: 50;
+  gap: 16px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s ease;
+}
+
+.sidebar-collapsed .topbar { left: 0; }
+.topbar-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.topbar-sep   { color: var(--divider); font-size: 18px; }
+
+.home-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.home-btn:hover { opacity: 1; border-color: var(--burgundy); background: var(--card-hover); }
+
+/* ── Main Layout ─────────────────────────────────────────────────────────── */
+.main-wrap {
+  margin-left: var(--sidebar-width);
+  margin-top: 54px;
+  width: calc(100% - var(--sidebar-width));
+  height: calc(100vh - 54px);
+  display: flex;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .main-wrap { margin-left: 0; width: 100%; }
+
+/* ── Field Panel ─────────────────────────────────────────────────────────── */
+.field-panel {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111111;
+  border-right: 1px solid var(--divider);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#fieldCanvas { display: block; cursor: crosshair; border: 2px solid var(--card-border); }
+#fieldCanvas.dragging { cursor: grabbing; }
+
+.field-overlay-btns {
+  position: absolute;
+  bottom: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px;
+}
+
+.fob-btn {
+  background: rgba(26,26,26,0.88);
+  border: 1px solid var(--card-border);
+  color: var(--text-dim);
+  font-size: 11px; font-family: inherit;
+  padding: 4px 10px; border-radius: 4px;
+  cursor: pointer; backdrop-filter: blur(4px);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.fob-btn:hover    { border-color: var(--burgundy); background: rgba(128,0,32,0.18); }
+.fob-btn.active   { border-color: var(--burgundy); background: rgba(128,0,32,0.28); color: #fff; }
+.fob-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+/* ── Control Panel ───────────────────────────────────────────────────────── */
+.ctrl-panel {
+  flex: 0 0 380px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ctrl-panel::-webkit-scrollbar       { width: 4px; }
+.ctrl-panel::-webkit-scrollbar-track { background: var(--bg); }
+.ctrl-panel::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+.section {
+  border-bottom: 1px solid var(--divider);
+  padding: 14px 16px;
+}
+
+.section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--burgundy);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.tbtn {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  color: var(--text-dim);
+  font-size: 11px; font-family: inherit;
+  padding: 5px 10px; border-radius: 5px;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.tbtn:hover         { border-color: var(--burgundy); background: var(--card-hover); color: var(--text); }
+.tbtn.primary       { background: var(--burgundy); border-color: var(--burgundy); color: #fff; }
+.tbtn.primary:hover { background: var(--burgundy-light); border-color: var(--burgundy-light); }
+.tbtn:disabled      { opacity: 0.4; cursor: default; pointer-events: none; }
+
+/* ── Segment Row ─────────────────────────────────────────────────────────── */
+.seg-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 3px 10px;
+  font-size: 10px; color: var(--text-muted);
+}
+
+.seg-row-label { letter-spacing: 0.3px; }
+
+.seg-select {
+  background: var(--card); border: 1px solid var(--card-border);
+  color: var(--text-dim); font-family: inherit; font-size: 10px;
+  padding: 2px 6px; border-radius: 4px; cursor: pointer;
+  outline: none; transition: border-color 0.15s;
+}
+
+.seg-select:focus, .seg-select:hover { border-color: var(--burgundy); }
+.seg-select.curved { border-color: var(--burgundy-light); color: var(--burgundy-light); }
+
+/* ── Waypoint List ───────────────────────────────────────────────────────── */
+.wp-list {
+  display: flex; flex-direction: column; gap: 0;
+  max-height: 260px; overflow-y: auto;
+}
+
+.wp-list::-webkit-scrollbar       { width: 3px; }
+.wp-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+.wp-card {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 6px; cursor: pointer; margin-bottom: 0;
+  transition: all 0.15s ease; border-left: 3px solid transparent;
+}
+
+.wp-card:hover    { border-color: var(--burgundy-light); background: var(--card-hover); }
+.wp-card.selected { border-left-color: var(--burgundy); background: rgba(128,0,32,0.1); border-color: var(--burgundy); }
+
+.wp-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--burgundy); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.wp-info    { flex: 1; }
+.wp-coords  { font-size: 12px; color: var(--text); font-weight: 600; }
+.wp-heading { font-size: 10px; color: var(--text-muted); }
+
+.wp-delete {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 14px; padding: 2px 4px;
+  border-radius: 3px; transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.wp-delete:hover { color: #ff4455; background: rgba(255,68,85,0.12); }
+
+.wp-empty {
+  text-align: center; padding: 20px;
+  color: var(--text-muted); font-size: 12px; line-height: 1.6;
+}
+
+/* ── Editor Form ─────────────────────────────────────────────────────────── */
+.editor-form { display: flex; flex-direction: column; gap: 9px; }
+.form-row    { display: flex; gap: 8px; }
+.form-group  { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.form-label  { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+.form-input {
+  background: var(--card); border: 1px solid var(--card-border);
+  color: var(--text); font-family: inherit; font-size: 12px;
+  padding: 5px 8px; border-radius: 5px;
+  outline: none; transition: border-color 0.15s;
+  width: 100%;
+}
+
+.form-input:focus { border-color: var(--burgundy); }
+
+.form-select {
+  background: var(--card); border: 1px solid var(--card-border);
+  color: var(--text); font-family: inherit; font-size: 12px;
+  padding: 5px 8px; border-radius: 5px;
+  outline: none; cursor: pointer; width: 100%;
+  transition: border-color 0.15s;
+}
+
+.form-select:focus { border-color: var(--burgundy); }
+
+.angle-row { display: flex; gap: 8px; align-items: center; }
+
+#anglePicker {
+  width: 40px; height: 40px; cursor: pointer;
+  border-radius: 50%; border: 1.5px solid var(--card-border);
+  background: var(--card); flex-shrink: 0;
+}
+
+/* ── CP Card ─────────────────────────────────────────────────────────────── */
+.cp-card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-left: 3px solid var(--burgundy-light);
+  border-radius: 5px; padding: 8px;
+}
+
+.cp-card-title {
+  font-size: 10px; color: var(--burgundy); text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 6px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.cp-remove-btn {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 12px; padding: 1px 4px;
+  border-radius: 3px; transition: color 0.15s, background 0.15s; line-height: 1;
+}
+
+.cp-remove-btn:hover { color: #ff4455; background: rgba(255,68,85,0.12); }
+
+/* ── Path Settings ───────────────────────────────────────────────────────── */
+.setting-row           { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.setting-row:last-child { margin-bottom: 0; }
+.setting-label         { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+.setting-val           { color: var(--burgundy-light); font-weight: 600; }
+
+input[type=range] {
+  width: 100%; height: 3px;
+  accent-color: var(--burgundy);
+  cursor: pointer; outline: none;
+}
+
+.dim-inputs          { display: flex; gap: 8px; }
+.dim-inputs .form-group { flex: 1; }
+
+/* ── Code Export ─────────────────────────────────────────────────────────── */
+.code-block {
+  background: #111111;
+  border: 1px solid var(--card-border);
+  border-radius: 6px; padding: 10px 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 10.5px; color: #e0e0e0;
+  white-space: pre; overflow-x: auto; overflow-y: auto;
+  max-height: 200px; min-height: 60px;
+  line-height: 1.55;
+}
+
+.code-block::-webkit-scrollbar       { width: 3px; height: 3px; }
+.code-block::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+.copy-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+.copy-btn {
+  background: var(--card); border: 1px solid var(--card-border);
+  color: var(--text-muted); font-size: 11px; font-family: inherit;
+  padding: 4px 12px; border-radius: 5px; cursor: pointer;
+  transition: all 0.15s;
+}
+
+.copy-btn:hover  { border-color: var(--burgundy); color: var(--text); }
+.copy-btn.copied { border-color: #4aff88; color: #4aff88; }
+
+/* ── Cloud Modal ─────────────────────────────────────────────────────────── */
+#pp-cloud-backdrop {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+  font-family: 'Inter', sans-serif;
+}
+
+#pp-cloud-backdrop.open { opacity: 1; pointer-events: all; }
+
+#pp-cloud-modal {
+  background: #1e1e1e; border: 1px solid #333; border-top: 2px solid #800020;
+  border-radius: 14px; padding: 24px 26px; width: 420px; max-width: 95vw;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.8);
+  transform: scale(0.92); transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+#pp-cloud-backdrop.open #pp-cloud-modal { transform: scale(1); }
+
+.ppc-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a;
+}
+
+.ppc-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #800020; }
+.ppc-close { background: none; border: none; color: #445; cursor: pointer; font-size: 16px; font-family: inherit; line-height: 1; padding: 0 4px; }
+.ppc-close:hover { color: #dde; }
+
+.ppc-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.ppc-input {
+  flex: 1; padding: 10px 12px; background: #252525; border: 1px solid #2d2d2d;
+  border-radius: 8px; color: #fff; font-size: 13px; font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.ppc-input:focus       { outline: none; border-color: #800020; }
+.ppc-input::placeholder { color: #444; }
+
+.ppc-save-btn {
+  padding: 10px 16px; background: #800020; border: none; border-radius: 8px;
+  color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background 0.2s; white-space: nowrap;
+}
+
+.ppc-save-btn:hover { background: #9a0028; }
+
+.ppc-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #556; margin-bottom: 8px; }
+
+.ppc-path-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: #252525; border: 1px solid #2a2a2a;
+  border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ppc-path-item:hover { border-color: #800020; background: #2a1a1e; }
+.ppc-path-name       { font-size: 13px; color: #ccd; font-weight: 500; }
+.ppc-path-meta       { font-size: 11px; color: #445; margin-top: 2px; }
+
+.ppc-path-del {
+  background: none; border: none; color: #445; cursor: pointer;
+  font-size: 14px; padding: 2px 6px; font-family: inherit;
+  transition: color 0.2s; flex-shrink: 0;
+}
+
+.ppc-path-del:hover { color: #ff5544; }
+
+.ppc-empty { font-size: 12px; color: #445; text-align: center; padding: 20px 0; }
+.ppc-msg   { font-size: 12px; color: #4aff88; text-align: center; min-height: 16px; margin-top: 8px; }
+.ppc-msg.err { color: #ff5544; }
+
+.no-select-msg { text-align: center; color: var(--text-muted); font-size: 12px; padding: 14px; line-height: 1.6; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .topbar     { left: 0; }
+  .main-wrap  { margin-left: 0; width: 100%; flex-direction: column; }
+  .field-panel { flex: 0 0 50vh; border-right: none; border-bottom: 1px solid var(--divider); }
+  .ctrl-panel  { flex: 1 1 auto; }
+}

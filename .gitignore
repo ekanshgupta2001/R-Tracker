@@ -2,3 +2,6 @@ config.js
 *.env
 .env
 config/
+.DS_Store
+node_modules/
+*.log
