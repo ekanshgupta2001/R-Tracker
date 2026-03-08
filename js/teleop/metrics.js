@@ -4,36 +4,44 @@ let driverMetrics = {
   sessionStart: performance.now(),
   totalDistance: 0,
   totalInputs: 0,
-  jerkSum: 0, jerkFrames: 0,
-  spinWhileMovingSum: 0, spinWhileMovingFrames: 0,
+  jerkSum: 0, jerkFrames: 0, _prevAx: 0, _prevAy: 0,
+  // Stability: heading steady when rx is near zero (not actively turning)
+  stabilityGoodFrames: 0, stabilityTotalFrames: 0, _prevHdg: 0,
+  // Strafe
   strafeSum: 0, strafeFrames: 0,
-  turnSum: 0, turnFrames: 0,
+  // Turn control: smoothness of rotation input (|drx| per frame)
+  turnJerkSum: 0, turnJerkFrames: 0,
+  // Path accuracy (levels)
   pathAccuracyHistory: [],
   levelsCompleted: 0,
+  // Recovery: reaction times (levels checkpoints + free-drive heading events)
   pendingReactionTs: null,
   reactionTimes: [],
-  _prevAx: 0, _prevAy: 0,
+  _hdgUnstable: false, _hdgUnstableStart: null,
+  // Smoothness (joystick jerk)
   joystickJerkSum: 0, joystickJerkFrames: 0, joystickHeavyJerkFrames: 0,
   _prevLx: 0, _prevLy: 0, _prevRx: 0,
+  // Strafe contamination
   strafeContamSum: 0, strafeContamFrames: 0,
 };
 
 let prevRatingBeforeLevel = null;
 let metricsVisible = true;
 
-function updateMetrics(dt, prevBx, prevBy) {
+function updateMetrics(_dt, prevBx, prevBy) {
   const dx = bot.x - prevBx, dy = bot.y - prevBy;
   const dist = Math.hypot(dx, dy);
   driverMetrics.totalDistance += dist;
 
+  // Legacy accel jerk (kept for potential future use)
   const ax = dist > 0 ? bot.actualVx : 0;
   const ay = dist > 0 ? bot.actualVy : 0;
-  const jerk = Math.hypot(ax - driverMetrics._prevAx, ay - driverMetrics._prevAy);
-  driverMetrics.jerkSum += jerk;
+  driverMetrics.jerkSum += Math.hypot(ax - driverMetrics._prevAx, ay - driverMetrics._prevAy);
   driverMetrics.jerkFrames++;
   driverMetrics._prevAx = ax;
   driverMetrics._prevAy = ay;
 
+  // Joystick jerk (smoothness)
   const dlx = inp.lx - driverMetrics._prevLx;
   const dly = inp.ly - driverMetrics._prevLy;
   const drx = inp.rx - driverMetrics._prevRx;
@@ -45,11 +53,21 @@ function updateMetrics(dt, prevBx, prevBy) {
   driverMetrics._prevLy = inp.ly;
   driverMetrics._prevRx = inp.rx;
 
-  if (dist > 0.002) {
-    const spinFrac = Math.min(1, Math.abs(bot.actualOmega || 0) / 360);
-    driverMetrics.spinWhileMovingSum += spinFrac;
-    driverMetrics.spinWhileMovingFrames++;
+  // Heading stability: when not actively turning (|rx| < 0.1), heading should stay steady
+  // normAngle is defined in levels.js (loaded before this file)
+  const hdgChange = Math.abs(normAngle(bot.hdg - driverMetrics._prevHdg));
+  if (Math.abs(inp.rx) < 0.1) {
+    driverMetrics.stabilityTotalFrames++;
+    if (hdgChange < 0.5) driverMetrics.stabilityGoodFrames++;
+  }
+  driverMetrics._prevHdg = bot.hdg;
 
+  // Turn control: track jerkiness of rotation input (rate of change of rx)
+  driverMetrics.turnJerkSum += Math.abs(drx);
+  driverMetrics.turnJerkFrames++;
+
+  // Strafe use
+  if (dist > 0.002) {
     const fwd = Math.abs(bot.actualVy || 0), str = Math.abs(bot.actualVx || 0);
     if (fwd + str > 0.01) {
       driverMetrics.strafeSum += str / (fwd + str);
@@ -61,9 +79,18 @@ function updateMetrics(dt, prevBx, prevBy) {
     }
   }
 
-  const omega = Math.abs(bot.actualOmega || 0);
-  driverMetrics.turnSum += Math.min(1, omega / 180);
-  driverMetrics.turnFrames++;
+  // Recovery in free drive: track how quickly heading stabilizes after spinning (>60°/s)
+  if (appMode === 'freedrive') {
+    const isUnstable = Math.abs(bot.actualOmega || 0) > 60;
+    if (isUnstable && !driverMetrics._hdgUnstable) {
+      driverMetrics._hdgUnstable = true;
+      driverMetrics._hdgUnstableStart = performance.now();
+    } else if (!isUnstable && driverMetrics._hdgUnstable && driverMetrics._hdgUnstableStart !== null) {
+      driverMetrics._hdgUnstable = false;
+      driverMetrics.reactionTimes.push(performance.now() - driverMetrics._hdgUnstableStart);
+      driverMetrics._hdgUnstableStart = null;
+    }
+  }
 
   if (Math.abs(inp.lx) > 0.05 || Math.abs(inp.ly) > 0.05 || Math.abs(inp.rx) > 0.05) {
     driverMetrics.totalInputs++;
@@ -72,27 +99,45 @@ function updateMetrics(dt, prevBx, prevBy) {
 
 function computeScores() {
   const m = driverMetrics;
+  const sessionSec = (performance.now() - m.sessionStart) / 1000;
+  // After 5s of driving, no metric should drop below 10 (prevents zero-dragging the overall)
+  const minFloor = sessionSec > 5 ? 10 : 0;
+
+  // Smoothness: joystick jerk (lower average delta = smoother)
   const avgStickJerk   = m.joystickJerkFrames > 0 ? m.joystickJerkSum / m.joystickJerkFrames : 0;
   const heavyJerkRatio = m.joystickJerkFrames > 0 ? m.joystickHeavyJerkFrames / m.joystickJerkFrames : 0;
-  const smoothness     = Math.max(0, Math.min(100, 100 - avgStickJerk * 200 - heavyJerkRatio * 40));
+  const smoothness = Math.max(minFloor, Math.min(100, 100 - avgStickJerk * 200 - heavyJerkRatio * 40));
 
-  const avgSpin    = m.spinWhileMovingFrames > 0 ? m.spinWhileMovingSum / m.spinWhileMovingFrames : 0;
-  const stability  = Math.max(0, Math.min(100, 100 - avgSpin * 280));
+  // Stability: fraction of non-turning frames where heading was steady (<0.5°/frame)
+  // Defaults to 60 (slightly above neutral) until there is data
+  const stability = m.stabilityTotalFrames > 0
+    ? Math.max(minFloor, Math.min(100, (m.stabilityGoodFrames / m.stabilityTotalFrames) * 100))
+    : 60;
 
+  // Strafe use: low contamination = good strafe discipline
   const avgContam = m.strafeContamFrames > 0 ? m.strafeContamSum / m.strafeContamFrames : 0.20;
-  const strafe    = Math.max(0, Math.min(100, 100 - avgContam * 320));
+  const strafe    = Math.max(minFloor, Math.min(100, 100 - avgContam * 320));
 
-  const avgTurn = m.turnFrames > 0 ? m.turnSum / m.turnFrames : 0;
-  const turn    = Math.max(0, Math.min(100, 100 - avgTurn * 260));
+  // Turn control: smoothness of rotation input changes (low avg |drx| = smoother turns)
+  // Defaults to 60 (slightly above neutral) until there is data
+  const avgTurnJerk = m.turnJerkFrames > 0 ? m.turnJerkSum / m.turnJerkFrames : 0;
+  const turn = m.turnJerkFrames > 0
+    ? Math.max(minFloor, Math.min(100, 100 - avgTurnJerk * 400))
+    : 60;
 
+  // Path accuracy (levels) — defaults to 50 (neutral) when no levels attempted
   const levelScore = m.pathAccuracyHistory.length > 0
     ? (m.pathAccuracyHistory.reduce((s, v) => s + v, 0) / m.pathAccuracyHistory.length) * 100
-    : 40;
+    : 50;
 
+  // Recovery: avg time to stabilize after going off-heading or missing a checkpoint
+  // Defaults to 60 (slightly above neutral) when no events recorded yet
   const avgReact = m.reactionTimes.length > 0
     ? m.reactionTimes.reduce((s, v) => s + v, 0) / m.reactionTimes.length
-    : 2000;
-  const recovery = Math.max(0, Math.min(100, 100 - (avgReact - 200) / 10));
+    : null;
+  const recovery = avgReact !== null
+    ? Math.max(minFloor, Math.min(100, 100 - (avgReact - 200) / 10))
+    : 60;
 
   return { smoothness, stability, strafe, turn, levelScore, recovery };
 }
@@ -110,7 +155,7 @@ function computeOverallRating() {
   const vals = [s.smoothness, s.stability, s.strafe, s.turn, s.levelScore, s.recovery];
   const minVal = Math.min(...vals);
   const maxVal = Math.max(...vals);
-  const consistencyPenalty = maxVal > 0 ? minVal / maxVal : 1;
+  const consistencyPenalty = maxVal > 0 ? Math.sqrt(minVal / maxVal) : 1;
 
   const goldCount = Object.values(completedLevels).filter(c => c.stars.filter(Boolean).length === 3).length;
   const goldPenalty = goldCount < 12 ? 1 - (12 - goldCount) * 0.02 : 1;
@@ -119,20 +164,20 @@ function computeOverallRating() {
 }
 
 function gradeFromRating(r) {
-  if (r >= 97) return 'S';
-  if (r >= 90) return 'A';
-  if (r >= 80) return 'B';
-  if (r >= 65) return 'C';
-  if (r >= 50) return 'D';
+  if (r >= 95) return 'S';
+  if (r >= 85) return 'A';
+  if (r >= 72) return 'B';
+  if (r >= 55) return 'C';
+  if (r >= 40) return 'D';
   return 'F';
 }
 
 function percentileFromRating(r) {
-  if (r >= 95) return 'Top 1% of drivers';
   if (r >= 90) return 'Top 5% of drivers';
-  if (r >= 80) return 'Top 20% of drivers';
-  if (r >= 65) return 'Average — top 50%';
-  if (r >= 50) return 'Below average — bottom 40%';
+  if (r >= 85) return 'Top 10% of drivers';
+  if (r >= 72) return 'Top 25% of drivers';
+  if (r >= 55) return 'Average — top 50%';
+  if (r >= 40) return 'Below average — bottom 40%';
   return 'Bottom 25% — needs significant improvement';
 }
 
@@ -222,13 +267,13 @@ function resetMetrics() {
   driverMetrics = {
     sessionStart: performance.now(),
     totalDistance: 0, totalInputs: 0,
-    jerkSum: 0, jerkFrames: 0,
-    spinWhileMovingSum: 0, spinWhileMovingFrames: 0,
+    jerkSum: 0, jerkFrames: 0, _prevAx: 0, _prevAy: 0,
+    stabilityGoodFrames: 0, stabilityTotalFrames: 0, _prevHdg: 0,
     strafeSum: 0, strafeFrames: 0,
-    turnSum: 0, turnFrames: 0,
+    turnJerkSum: 0, turnJerkFrames: 0,
     pathAccuracyHistory: [], levelsCompleted: 0,
     pendingReactionTs: null, reactionTimes: [],
-    _prevAx: 0, _prevAy: 0,
+    _hdgUnstable: false, _hdgUnstableStart: null,
     joystickJerkSum: 0, joystickJerkFrames: 0, joystickHeavyJerkFrames: 0,
     _prevLx: 0, _prevLy: 0, _prevRx: 0,
     strafeContamSum: 0, strafeContamFrames: 0,

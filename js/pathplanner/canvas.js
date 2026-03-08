@@ -1,7 +1,7 @@
 // ── R-Tracker Path Planner — Canvas & Drawing ─────────────────────────────
 
 const fieldImg = new Image();
-fieldImg.src = '../assets/decode.webp';
+fieldImg.src = '../../assets/decode.webp';
 fieldImg.onload = () => drawAll();
 
 const cvs = document.getElementById('fieldCanvas');

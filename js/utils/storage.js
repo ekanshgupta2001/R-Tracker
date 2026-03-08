@@ -14,6 +14,15 @@ async function saveLevelResult(levelId, starCount, time, accuracy) {
       attempts: firebase.firestore.FieldValue.increment(1),
       lastPlayed: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+
+    const ts = Date.now();
+    const name = rtUser.displayName || rtUser.email.split('@')[0];
+    const starStr = starCount === 3 ? 'Gold' : (starCount === 2 ? 'Silver' : 'Bronze');
+    await rtDb.collection('teams').doc('team27502').collection('activity').doc(String(ts)).set({
+      userName: name,
+      action: `completed Level ${levelId} with ${starStr}`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
   } catch (e) {
     console.warn('Failed to save level result:', e.message);
   }
@@ -29,16 +38,63 @@ async function saveDriverStats() {
       overallRating: rating,
       grade: gradeFromRating(rating),
       smoothness: Math.round(scores.smoothness),
-      stability:  Math.round(scores.stability),
-      strafe:     Math.round(scores.strafe),
-      turn:       Math.round(scores.turn),
+      stability: Math.round(scores.stability),
+      strafe: Math.round(scores.strafe),
+      turn: Math.round(scores.turn),
       levelScore: Math.round(scores.levelScore),
-      recovery:   Math.round(scores.recovery),
+      recovery: Math.round(scores.recovery),
       totalPracticeMs: Math.round(sessMs),
       levelsCompleted: driverMetrics.levelsCompleted,
       totalDistanceFt: Math.round(driverMetrics.totalDistance),
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+
+    let profileName = 'The Rookie';
+    if (window.generateCoachReport) {
+      const r = window.generateCoachReport();
+      profileName = r.driverProfile.split(' — ')[0];
+    }
+    const goldCount = window.completedLevels ? Object.values(window.completedLevels).filter(c => c.stars && c.stars.filter(Boolean).length === 3).length : 0;
+
+    await rtDb.collection('teams').doc('team27502').collection('members').doc(rtUser.uid).set({
+      displayName: rtUser.displayName || rtUser.email.split('@')[0],
+      email: rtUser.email,
+      overallScore: rating,
+      letterGrade: gradeFromRating(rating),
+      driverProfile: profileName,
+      metrics: {
+        smoothness: Math.round(scores.smoothness),
+        heading: Math.round(scores.stability),
+        strafe: Math.round(scores.strafe),
+        turn: Math.round(scores.turn),
+        recovery: Math.round(scores.recovery),
+        reaction: Math.round(scores.recovery)
+      },
+      levelsCompleted: driverMetrics.levelsCompleted,
+      goldCount: goldCount,
+      totalPracticeTime: Math.round(sessMs),
+      lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    if (sessMs >= 300000) {
+      const mins = Math.round(sessMs / 60000);
+      const ts = Date.now();
+      const name = rtUser.displayName || rtUser.email.split('@')[0];
+      await rtDb.collection('teams').doc('team27502').collection('activity').doc(String(ts)).set({
+        userName: name,
+        action: `practiced ${mins} minutes today`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    const reportTs = Date.now();
+    const reportName = rtUser.displayName || rtUser.email.split('@')[0];
+    const reportRating = rating;
+    await rtDb.collection('teams').doc('team27502').collection('activity').doc(String(reportTs + 1)).set({
+      userName: reportName,
+      action: `generated a driver report — Overall ${reportRating} (${gradeFromRating(reportRating)})`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
   } catch (e) {
     console.warn('Failed to save driver stats:', e.message);
   }
@@ -111,9 +167,9 @@ async function openLeaderboard(levelId) {
       const d = doc.data();
       const isMe = doc.id === myUid;
       const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-      const rankStr = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : `#${rank}`;
-      const starsHtml = [1,2,3].map(i =>
-        `<span class="${i <= (d.stars||1) ? 'lb-star-lit' : 'lb-star-dim'}">★</span>`
+      const rankStr = rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : `#${rank}`;
+      const starsHtml = [1, 2, 3].map(i =>
+        `<span class="${i <= (d.stars || 1) ? 'lb-star-lit' : 'lb-star-dim'}">★</span>`
       ).join('');
       html += `<div class="lb-row${isMe ? ' mine' : ''}">
         <div class="lb-rank ${rankClass}">${rankStr}</div>

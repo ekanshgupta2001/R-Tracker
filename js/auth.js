@@ -1,11 +1,15 @@
 // ── R-Tracker Auth ───────────────────────────────────────────────────────────
 // Load AFTER: firebase CDN scripts, config.js, js/firebase-init.js
 // Exposes: window.initAuth(), window.rtSignInGoogle(), window.rtSignInEmail(),
-//          window.rtCreateAccount(), window.rtSignOut()
+//          window.rtCreateAccount(), window.rtSignOut(), window.rtSelectRole()
 // CSS lives in css/login.css (linked in <head> of each page).
 
 (function () {
   'use strict';
+
+  // ── Globals exposed after auth resolves ───────────────────────────────────
+  window.rtUserRole   = null;  // 'player' | 'coach'
+  window.rtUserTeamId = null;  // teamId string or null
 
   // ── HTML ─────────────────────────────────────────────────────────────────
   const LOADER_HTML = `
@@ -51,31 +55,79 @@
     </div>
   `;
 
-  // ── Inject loader + auth overlay into body ────────────────────────────────
-  function injectUI() {
-    document.body.insertAdjacentHTML('afterbegin', LOADER_HTML);
-    document.body.insertAdjacentHTML('beforeend', OVERLAY_HTML);
+  const ROLE_MODAL_HTML = `
+    <div id="rt-role-overlay" style="display:none">
+      <div id="rt-role-card">
+        <div id="rt-auth-logo">
+          <span class="al-r">R-</span><span class="al-t">Tracker</span>
+        </div>
+        <div class="rt-role-title">Welcome to R-Tracker!</div>
+        <div class="rt-role-subtitle">Select your role to continue:</div>
+        <div class="rt-role-options">
+          <button class="rt-role-btn" onclick="rtSelectRole('player')">
+            <span class="rt-role-icon">🎮</span>
+            <div class="rt-role-name">Player / Driver</div>
+            <div class="rt-role-desc">I'm a team member practicing driving skills. I'll complete levels, track my stats, and improve my driving.</div>
+          </button>
+          <button class="rt-role-btn" onclick="rtSelectRole('coach')">
+            <span class="rt-role-icon">📋</span>
+            <div class="rt-role-name">Coach / Mentor</div>
+            <div class="rt-role-desc">I'm a coach or mentor. I'll manage players, view the team dashboard, and track everyone's progress.</div>
+          </button>
+        </div>
+        <div id="rt-role-saving" style="display:none">Saving your role...</div>
+      </div>
+    </div>
+  `;
 
-    document.getElementById('rt-auth-password').addEventListener('keydown', e => {
-      if (e.key === 'Enter') rtSignInEmail();
-    });
-    document.getElementById('rt-auth-email').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const pw = document.getElementById('rt-auth-password');
-        if (pw.value) rtSignInEmail(); else pw.focus();
-      }
-    });
+  // ── Role selection callback (set before showing modal) ────────────────────
+  let _onRoleChosen = null;
+
+  // Guard: prevent loader from being recreated after it has been dismissed
+  let loaderDismissed = false;
+
+  // Guard: prevent handling onAuthStateChanged more than once per session
+  let authHandled = false;
+
+  // ── Inject loader + overlays into body ────────────────────────────────────
+  function injectUI() {
+    if (!loaderDismissed && !document.getElementById('rt-page-loader')) {
+      document.body.insertAdjacentHTML('afterbegin', LOADER_HTML);
+    }
+    if (!document.getElementById('rt-auth-overlay')) {
+      document.body.insertAdjacentHTML('beforeend', OVERLAY_HTML);
+      document.getElementById('rt-auth-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') rtSignInEmail();
+      });
+      document.getElementById('rt-auth-email').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          const pw = document.getElementById('rt-auth-password');
+          if (pw.value) rtSignInEmail(); else pw.focus();
+        }
+      });
+    }
+    if (!document.getElementById('rt-role-overlay')) {
+      document.body.insertAdjacentHTML('beforeend', ROLE_MODAL_HTML);
+    }
   }
 
   // ── Dismiss the page loader (fade out then remove) ────────────────────────
   function dismissLoader(cb) {
+    console.log('[R-Tracker] Dismissing loader');
+    loaderDismissed = true;
     const loader = document.getElementById('rt-page-loader');
-    if (!loader) { if (cb) cb(); return; }
-    loader.classList.add('rt-loader-out');
+    if (!loader) {
+      console.log('[R-Tracker] No loader element found — skipping dismiss');
+      if (cb) cb();
+      return;
+    }
+    loader.style.transition = 'opacity 0.3s ease';
+    loader.style.opacity = '0';
+    loader.style.pointerEvents = 'none';
     setTimeout(() => {
       loader.remove();
       if (cb) cb();
-    }, 320);
+    }, 350);
   }
 
   // ── Auth Actions ──────────────────────────────────────────────────────────
@@ -112,8 +164,86 @@
   };
 
   window.rtSignOut = function () {
+    window.rtUserRole   = null;
+    window.rtUserTeamId = null;
     window.rtAuth.signOut();
   };
+
+  // ── Role Selection ────────────────────────────────────────────────────────
+  window.rtSelectRole = function (role) {
+    const saving = document.getElementById('rt-role-saving');
+    const btns   = document.querySelectorAll('.rt-role-btn');
+    if (saving) saving.style.display = 'block';
+    btns.forEach(b => b.disabled = true);
+
+    if (_onRoleChosen) {
+      _onRoleChosen(role).catch(err => {
+        console.error('Failed to save role:', err);
+        if (saving) saving.style.display = 'none';
+        btns.forEach(b => b.disabled = false);
+      });
+    }
+  };
+
+  // ── Check / load user profile from Firestore ──────────────────────────────
+  // Calls onReady() once rtUserRole and rtUserTeamId are set.
+  function checkUserProfile(user, onReady) {
+    let settled = false;
+
+    // Timeout fallback: if Firestore takes >3s, default to player and unblock
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      console.warn('[R-Tracker] Role check timed out — defaulting to player');
+      window.rtUserRole   = 'player';
+      window.rtUserTeamId = null;
+      onReady();
+    }, 3000);
+
+    window.rtDb.collection('users').doc(user.uid).get()
+      .then(doc => {
+        if (settled) return;
+        clearTimeout(timer);
+        settled = true;
+
+        if (doc.exists && doc.data().role) {
+          window.rtUserRole   = doc.data().role;
+          window.rtUserTeamId = doc.data().teamId || null;
+          onReady();
+          return;
+        }
+
+        // No profile yet — show role selection modal
+        _onRoleChosen = async (role) => {
+          const name = user.displayName || user.email.split('@')[0];
+          await window.rtDb.collection('users').doc(user.uid).set({
+            displayName: name,
+            email:       user.email,
+            role:        role,
+            teamId:      null,
+            createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          window.rtUserRole   = role;
+          window.rtUserTeamId = null;
+          const overlay = document.getElementById('rt-role-overlay');
+          if (overlay) overlay.style.display = 'none';
+          onReady();
+        };
+
+        const overlay = document.getElementById('rt-role-overlay');
+        if (overlay) overlay.style.display = 'flex';
+      })
+      .catch(err => {
+        if (settled) return;
+        clearTimeout(timer);
+        settled = true;
+        console.error('[R-Tracker] Role check failed:', err.message);
+        window.rtUserRole   = 'player';
+        window.rtUserTeamId = null;
+        onReady();
+      });
+  }
 
   function setError(msg) {
     const el = document.getElementById('rt-auth-error');
@@ -143,60 +273,146 @@
   }
 
   // ── User Profile in Sidebar ───────────────────────────────────────────────
+  // Called after checkUserProfile so window.rtUserRole is already set.
   function injectUserProfile(user) {
-    const existing = document.getElementById('rt-user-section');
-    if (existing) existing.remove();
+    document.getElementById('rt-user-section')?.remove();
+    document.getElementById('rt-role-popover')?.remove();
 
     const footer = document.querySelector('.sidebar-footer');
     if (!footer) return;
 
-    const name   = user.displayName || user.email.split('@')[0];
-    const email  = user.email || '';
-    const photo  = user.photoURL;
-    const letter = name.charAt(0).toUpperCase();
+    const name     = user.displayName || user.email.split('@')[0];
+    const email    = user.email || '';
+    const photo    = user.photoURL;
+    const letter   = name.charAt(0).toUpperCase();
+    const role     = window.rtUserRole || 'player';
+    const roleOther = role === 'coach' ? 'player' : 'coach';
+    const roleLbl   = role === 'coach' ? 'Coach' : 'Player';
+    const roleOtherLbl = role === 'coach' ? 'Player' : 'Coach';
 
     const avatarHtml = photo
       ? `<div class="rt-user-avatar"><img src="${photo}" referrerpolicy="no-referrer" alt="${letter}"></div>`
       : `<div class="rt-user-avatar">${letter}</div>`;
 
+    // Popover (hidden by default)
+    const popover = document.createElement('div');
+    popover.id        = 'rt-role-popover';
+    popover.className = 'rt-role-popover';
+    popover.style.display = 'none';
+    popover.innerHTML = `
+      <div class="rt-popover-role">Currently: <strong>${roleLbl}</strong></div>
+      <button class="rt-popover-btn" id="rt-switch-btn" onclick="rtSwitchRole('${roleOther}')">
+        Switch to ${roleOtherLbl}
+      </button>
+      <div class="rt-popover-divider"></div>
+      <button class="rt-popover-signout" onclick="rtSignOut()">Sign Out</button>
+    `;
+
+    // User section (clickable)
     const section = document.createElement('div');
     section.id        = 'rt-user-section';
     section.className = 'rt-user-section';
     section.innerHTML = `
       ${avatarHtml}
       <div class="rt-user-info">
-        <div class="rt-user-name">${name}</div>
+        <div class="rt-user-name-row">
+          <span class="rt-user-name">${name}</span>
+          <span class="rt-role-badge">${roleLbl}</span>
+        </div>
         <div class="rt-user-email">${email}</div>
       </div>
-      <button class="rt-signout-btn" onclick="rtSignOut()" title="Sign out">&#8594;&#xFE0E; out</button>
+      <span class="rt-user-chevron">&#8250;</span>
     `;
-    footer.insertBefore(section, footer.firstChild);
+
+    section.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = popover.style.display !== 'none';
+      popover.style.display = isOpen ? 'none' : 'block';
+      section.classList.toggle('active', !isOpen);
+    });
+
+    // Close popover on outside click
+    document.addEventListener('click', e => {
+      if (!section.contains(e.target) && !popover.contains(e.target)) {
+        popover.style.display = 'none';
+        section.classList.remove('active');
+      }
+    });
+
+    // Insert before theme toggle
+    const themeToggle = footer.querySelector('.theme-toggle');
+    footer.insertBefore(popover, themeToggle);
+    footer.insertBefore(section, popover);
   }
+
+  // ── Role Switching ────────────────────────────────────────────────────────
+  window.rtSwitchRole = async function (newRole) {
+    if (!window.rtUser) return;
+    const btn = document.getElementById('rt-switch-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
+
+    try {
+      await window.rtDb.collection('users').doc(window.rtUser.uid).set(
+        { role: newRole }, { merge: true }
+      );
+      window.rtUserRole = newRole;
+
+      // Re-render the profile section with new role
+      const popover = document.getElementById('rt-role-popover');
+      if (popover) popover.style.display = 'none';
+      injectUserProfile(window.rtUser);
+
+      // Update sidebar nav items
+      if (typeof window.updateSidebarRole === 'function') {
+        window.updateSidebarRole(newRole);
+      }
+    } catch (e) {
+      console.error('Role switch failed:', e);
+      if (btn) { btn.disabled = false; btn.textContent = 'Switch failed. Retry?'; }
+    }
+  };
 
   // ── Auth State Listener ───────────────────────────────────────────────────
   function setupListener(onSignedIn, onSignedOut) {
     let firstFire = true;
 
     window.rtAuth.onAuthStateChanged(user => {
+      console.log('[R-Tracker] Auth state changed, user:', user ? user.email : 'null');
       const isFirst = firstFire;
       firstFire = false;
 
       if (user) {
+        // Skip duplicate fired callbacks once auth has been handled for this session
+        if (authHandled) {
+          console.log('[R-Tracker] Auth already handled — skipping duplicate callback');
+          return;
+        }
+        authHandled = true;
+
         window.rtUser = user;
         const overlay = document.getElementById('rt-auth-overlay');
         if (overlay) overlay.style.display = 'none';
 
-        if (isFirst) {
-          dismissLoader(() => {
+        const proceed = () => {
+          checkUserProfile(user, () => {
             injectUserProfile(user);
+            if (typeof window.updateSidebarRole === 'function') {
+              window.updateSidebarRole(window.rtUserRole);
+            }
             if (typeof onSignedIn === 'function') onSignedIn(user);
           });
+        };
+
+        if (isFirst) {
+          dismissLoader(proceed);
         } else {
-          injectUserProfile(user);
-          if (typeof onSignedIn === 'function') onSignedIn(user);
+          proceed();
         }
       } else {
-        window.rtUser = null;
+        authHandled = false;  // reset so next sign-in is processed
+        window.rtUser       = null;
+        window.rtUserRole   = null;
+        window.rtUserTeamId = null;
         const sec = document.getElementById('rt-user-section');
         if (sec) sec.remove();
 

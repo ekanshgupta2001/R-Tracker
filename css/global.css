@@ -27,23 +27,35 @@
   --toggle-border: #444444;
   --grid-line: rgba(128, 0, 32, 0.03);
   --sidebar-width: 260px;
+  --card-shadow: none;
+  --card-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --input-bg: #111111;
+  --input-border: #333333;
+  --scrollbar-thumb: #444444;
+  --overlay-bg: rgba(10, 8, 12, 0.97);
 }
 
 /* ── CSS Variables — Light Mode ─────────────────────────────────────────── */
 :root.light {
   --bg: #f5f5f5;
-  --bg-sidebar: #ffffff;
+  --bg-sidebar: #f0f0f0;
   --card: #ffffff;
-  --card-hover: #f0f0f0;
-  --card-border: #dddddd;
+  --card-hover: #fafafa;
+  --card-border: #e0e0e0;
   --text: #1a1a1a;
-  --text-dim: #333333;
-  --text-muted: #777777;
+  --text-dim: #555555;
+  --text-muted: #888888;
   --divider: #e0e0e0;
-  --topbar-bg: #e0e0e0;
+  --topbar-bg: #ffffff;
   --toggle-bg: #e8e8e8;
   --toggle-border: #cccccc;
   --grid-line: rgba(128, 0, 32, 0.04);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
+  --input-bg: #ffffff;
+  --input-border: #e0e0e0;
+  --scrollbar-thumb: #cccccc;
+  --overlay-bg: rgba(0, 0, 0, 0.35);
 }
 
 /* ── Body Base ───────────────────────────────────────────────────────────── */
@@ -84,14 +96,14 @@ body.grid-bg::before {
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
 /* ── Page loader (highest z-index, covers everything) ───────────────────── */
 #rt-page-loader {
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: #1a1a1a;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -123,13 +135,14 @@ body.grid-bg::before {
   background-clip: text;
 }
 
-.rt-logo-t { color: #fff; }
+.rt-logo-t { color: var(--text); }
 
 .rt-loader-tagline {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #2e2e2e;
+  color: var(--text-muted);
+  opacity: 0.4;
 }
 
 @keyframes rt-logo-pulse {

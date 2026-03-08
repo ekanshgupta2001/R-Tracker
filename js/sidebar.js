@@ -17,14 +17,17 @@
     { id: 'index',       href: root + 'index.html',              icon: '🏠', label: 'Home' },
     { id: 'teleop',      href: root + 'pages/teleop.html',       icon: '🎮', label: 'TeleOp Practice' },
     { id: 'pathplanner', href: root + 'pages/pathplanner.html',  icon: '📐', label: 'Path Planner' },
+    { id: 'dashboard',   href: root + 'pages/dashboard.html',    icon: '📊', label: 'Dashboard',   coachOnly: true },
+    { id: 'manage-team', href: root + 'pages/manage-team.html',  icon: '👥', label: 'Manage Team', coachOnly: true },
     { id: 'about',       href: root + 'pages/about.html',        icon: 'ℹ️',  label: 'About' },
   ];
 
   // Build sidebar HTML
   function buildSidebarHTML() {
     const navItems = NAV_ITEMS.map(item => {
-      const active = item.id === pageName ? ' active' : '';
-      return `<a href="${item.href}" class="nav-item${active}"><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
+      const active     = item.id === pageName ? ' active' : '';
+      const coachAttr  = item.coachOnly ? ' data-coach="true" style="display:none"' : '';
+      return `<a href="${item.href}" class="nav-item${active}"${coachAttr}><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
     }).join('');
 
     return `
@@ -121,6 +124,13 @@
       if (backdrop) backdrop.classList.remove('visible');
     }
   });
+
+  // ── Role-based nav visibility (called by auth.js after role resolves) ─────
+  window.updateSidebarRole = function (role) {
+    document.querySelectorAll('[data-coach="true"]').forEach(el => {
+      el.style.display = role === 'coach' ? 'flex' : 'none';
+    });
+  };
 
   // ── initSidebar ───────────────────────────────────────────────────────────
   window.initSidebar = function () {

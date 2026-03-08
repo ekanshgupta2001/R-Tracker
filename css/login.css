@@ -1,8 +1,8 @@
 /* ── R-Tracker Login / Auth Overlay Styles ───────────────────────────────── */
 /* Prevents white flash and styles the login modal and loading overlay */
 
-/* Prevent flash of white while Firebase resolves */
-html, body { background: #1a1a1a; }
+/* Prevent flash while Firebase resolves */
+html, body { background: var(--bg, #1a1a1a); }
 
 /* ── Auth Overlay ────────────────────────────────────────────────────────── */
 #rt-auth-overlay {
@@ -176,3 +176,159 @@ html, body { background: #1a1a1a; }
   66%  { content: '..'; }
   100% { content: '...'; }
 }
+
+/* ── Role Selection Modal ─────────────────────────────────────────────────── */
+#rt-role-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(10, 8, 12, 0.97);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#rt-role-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-top: 2px solid #800020;
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  width: 540px;
+  max-width: 95vw;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(128, 0, 32, 0.15);
+  text-align: center;
+}
+
+#rt-role-card #rt-auth-logo {
+  margin-bottom: 16px;
+}
+
+.rt-role-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.rt-role-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 28px;
+  letter-spacing: 0.3px;
+}
+
+.rt-role-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.rt-role-btn {
+  flex: 1;
+  padding: 22px 16px;
+  background: #242424;
+  border: 2px solid #333;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.rt-role-btn:hover {
+  border-color: #800020;
+  background: #1f0a10;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(128, 0, 32, 0.25);
+}
+
+.rt-role-btn:active { transform: translateY(0); }
+
+.rt-role-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rt-role-icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.rt-role-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.rt-role-desc {
+  font-size: 11px;
+  color: #777;
+  line-height: 1.5;
+}
+
+#rt-role-saving {
+  color: #666;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 520px) {
+  .rt-role-options { flex-direction: column; }
+  #rt-role-card { padding: 28px 20px 24px; }
+}
+
+/* ── Light Mode ──────────────────────────────────────────────────────────── */
+html.light #rt-auth-overlay { background: rgba(0, 0, 0, 0.35); }
+
+html.light #rt-auth-card,
+html.light #rt-role-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  border-top-color: #800020;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(128, 0, 32, 0.1);
+}
+
+html.light #rt-auth-logo .al-t { color: #1a1a1a; }
+html.light #rt-auth-team { color: #888888; }
+
+html.light .rt-auth-divider { color: #cccccc; }
+html.light .rt-auth-divider::before,
+html.light .rt-auth-divider::after { background: #e0e0e0; }
+
+html.light .rt-auth-input {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  color: #1a1a1a;
+}
+html.light .rt-auth-input::placeholder { color: #aaaaaa; }
+
+html.light .rt-auth-btn {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #555555;
+}
+html.light .rt-auth-btn:hover { border-color: #800020; color: #1a1a1a; }
+
+html.light #rt-auth-loading { color: #888888; }
+
+html.light #rt-role-overlay { background: rgba(0, 0, 0, 0.35); }
+html.light .rt-role-title { color: #1a1a1a; }
+html.light .rt-role-subtitle { color: #888888; }
+
+html.light .rt-role-btn {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+}
+html.light .rt-role-btn:hover {
+  border-color: #800020;
+  background: #fdf0f3;
+  box-shadow: 0 8px 24px rgba(128, 0, 32, 0.1);
+}
+html.light .rt-role-name { color: #1a1a1a; }
+html.light .rt-role-desc { color: #888888; }
+html.light #rt-role-saving { color: #888888; }

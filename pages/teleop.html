@@ -301,5 +301,10 @@
   <script src="../js/utils/storage.js"></script>
   <script src="../js/teleop/coach.js"></script>
   <script src="../js/teleop/ui.js"></script>
+  <script>
+    initAuth(function(user) {
+      if (typeof loadLevelProgress === 'function') loadLevelProgress();
+    });
+  </script>
 </body>
 </html>

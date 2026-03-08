@@ -22,52 +22,100 @@
 <body class="sidebar-open">
   <div class="main-wrap">
     <div class="content">
-      <div class="hero-title"><span class="brand-r">R-</span><span class="brand-t">Tracker</span></div>
-      <div class="hero-subtitle">Rundle Robotics personally designed visualizer</div>
 
+      <!-- ── Header ─────────────────────────────────────────────────────── -->
+      <div class="hero-title"><span class="brand-r">R-</span><span class="brand-t">Tracker</span></div>
+      <div class="hero-subtitle">Rundle Robotics Castle</div>
+      <div class="hero-greeting" id="hero-greeting" style="display:none">
+        Welcome back, <strong id="hero-name">there</strong>
+      </div>
+
+      <hr class="hero-divider">
+
+      <!-- ── Team status (shown ABOVE cards) ───────────────────────────── -->
+
+      <!-- Join Team Card — shown for players NOT yet on a team -->
+      <div class="join-team-card" id="join-team-card" style="display:none">
+        <div class="jtc-title">Join Your Team</div>
+        <div class="jtc-desc">Enter the invite code from your coach to join a team.</div>
+        <div class="jtc-row">
+          <input class="jtc-input" id="jtc-code" type="text" maxlength="6"
+                 placeholder="Invite code" autocomplete="off" spellcheck="false">
+          <button class="jtc-btn" id="jtc-btn" onclick="joinTeam()">Join</button>
+        </div>
+        <div class="jtc-msg" id="jtc-msg"></div>
+      </div>
+
+      <!-- Team Banner — shown for players already on a team -->
+      <div class="team-banner" id="team-banner" style="display:none">
+        <span class="team-banner-icon">🏆</span>
+        <span class="team-banner-name" id="team-banner-name">Your Team</span>
+        <a href="pages/teleop.html" class="team-banner-cta">Practice →</a>
+        <button class="team-banner-leave" onclick="leaveTeam()">Leave</button>
+      </div>
+
+      <!-- ── Main Cards ─────────────────────────────────────────────────── -->
       <div class="cards">
         <a href="pages/teleop.html" class="card active" id="card-teleop">
-          <div class="card-icon">🎮</div>
-          <div class="card-title">TeleOp Practice<span class="card-arrow">→</span></div>
-          <p class="card-desc">
-            Practice driving with gamepad or keyboard on the DECODE field. Supports mecanum and tank
-            drivetrains with field-centric and robot-centric modes.
-          </p>
+          <div class="card-header">
+            <span class="card-icon">🎮</span>
+            <span class="card-title">TeleOp Practice</span>
+            <span class="card-arrow">→</span>
+          </div>
+          <p class="card-desc">Practice driving on the DECODE field with gamepad or keyboard. Mecanum and tank drivetrains, field-centric and robot-centric modes.</p>
         </a>
 
         <a href="pages/pathplanner.html" class="card active" id="card-pathplanner">
-          <div class="card-icon">📐</div>
-          <div class="card-title">Path Planner<span class="card-arrow">→</span></div>
-          <p class="card-desc">
-            Plan and visualize autonomous paths on the DECODE field. Design waypoints, preview
-            trajectories, and export Pedro Pathing Java code.
-          </p>
+          <div class="card-header">
+            <span class="card-icon">📐</span>
+            <span class="card-title">Path Planner</span>
+            <span class="card-arrow">→</span>
+          </div>
+          <p class="card-desc">Design waypoints, preview trajectories, and export Pedro Pathing Java code for autonomous paths.</p>
         </a>
       </div>
 
-      <!-- Driver Rating Card — shown when signed in with data -->
+      <!-- Driver Rating Card — shown for players with data -->
       <a href="pages/teleop.html" class="driver-rating-card" id="driver-rating-card" style="display:none">
         <div>
-          <div class="drc-label">Your Driver Rating</div>
+          <div class="drc-label">Driver Rating</div>
           <div class="drc-grade" id="drc-grade">B</div>
         </div>
         <div class="drc-info">
           <div class="drc-score" id="drc-score">— / 100</div>
           <div class="drc-profile" id="drc-profile">Open Report Card to analyze</div>
         </div>
-        <div class="drc-cta">Open Report Card &#8594;</div>
+        <div class="drc-cta">Report Card →</div>
       </a>
+
+      <!-- Coach Quick-Links — shown for coaches -->
+      <div class="coach-cards" id="coach-cards" style="display:none">
+        <a href="pages/dashboard.html" class="card active">
+          <div class="card-header">
+            <span class="card-icon">📊</span>
+            <span class="card-title">Team Dashboard</span>
+            <span class="card-arrow">→</span>
+          </div>
+          <p class="card-desc">Driver rankings, performance comparisons, and AI recommendations for your team.</p>
+        </a>
+        <a href="pages/manage-team.html" class="card active">
+          <div class="card-header">
+            <span class="card-icon">👥</span>
+            <span class="card-title">Manage Team</span>
+            <span class="card-arrow">→</span>
+          </div>
+          <p class="card-desc">Create your team, generate an invite code, and manage players.</p>
+        </a>
+      </div>
 
       <section class="about-section" id="about">
         <h2>About <span>R-Tracker</span></h2>
         <p>
-          R-Tracker is a browser-based driver practice and path planning tool built for FTC teams
-          competing in the 2025–2026 DECODE season. Practice with a real gamepad or keyboard, tune your
+          A browser-based driver practice and path planning tool for FTC teams competing
+          in the 2025–2026 DECODE season. Practice with a real gamepad or keyboard, tune your
           robot config, and prepare for competition — no robot required.
         </p>
-        <p>
-          Built with HTML, CSS, and JavaScript. No installation needed — just open and drive.
-        </p>
+        <p>Built with HTML, CSS, and JavaScript. No installation needed.</p>
       </section>
     </div>
 
@@ -76,7 +124,20 @@
 
   <script>
     initAuth(function onSignedIn(user) {
-      loadDriverRatingCard(user);
+      // Personalized greeting — prefer display name, fall back to email prefix
+      const name = user.displayName
+        ? user.displayName.split(' ')[0]
+        : user.email.split('@')[0];
+      document.getElementById('hero-name').textContent = name;
+      document.getElementById('hero-greeting').style.display = 'block';
+
+      const role = window.rtUserRole;
+      if (role === 'coach') {
+        document.getElementById('coach-cards').style.display = 'grid';
+      } else {
+        loadDriverRatingCard(user);
+        loadTeamStatus(user);
+      }
     });
 
     async function loadDriverRatingCard(user) {
@@ -106,6 +167,115 @@
         document.getElementById('driver-rating-card').style.display = 'flex';
       } catch (e) {
         console.warn('Could not load driver rating:', e.message);
+      }
+    }
+
+    async function loadTeamStatus(user) {
+      try {
+        const doc = await rtDb.collection('users').doc(user.uid).get();
+        const teamId = doc.exists ? doc.data().teamId : null;
+
+        if (teamId) {
+          const teamDoc = await rtDb.collection('teams').doc(teamId).get();
+          const name = teamDoc.exists ? (teamDoc.data().name || 'Your Team') : 'Your Team';
+          const num  = teamDoc.exists ? (teamDoc.data().number || '') : '';
+          document.getElementById('team-banner-name').textContent =
+            num ? `${name} — #${num}` : name;
+          document.getElementById('team-banner').style.display = 'flex';
+        } else {
+          document.getElementById('join-team-card').style.display = 'block';
+        }
+      } catch (e) {
+        console.warn('Could not load team status:', e.message);
+      }
+    }
+
+    async function joinTeam() {
+      const raw = document.getElementById('jtc-code').value.trim().toUpperCase();
+      const msg = document.getElementById('jtc-msg');
+      const btn = document.getElementById('jtc-btn');
+
+      msg.textContent = '';
+      msg.className = 'jtc-msg';
+
+      if (!raw || raw.length !== 6) {
+        msg.textContent = 'Enter a valid 6-character code.';
+        msg.className = 'jtc-msg error';
+        return;
+      }
+      if (!window.rtUser) return;
+
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const snap = await rtDb.collection('teams').where('inviteCode', '==', raw).limit(1).get();
+        if (snap.empty) {
+          msg.textContent = 'Invalid invite code. Check with your coach and try again.';
+          msg.className = 'jtc-msg error';
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          return;
+        }
+
+        const teamDoc  = snap.docs[0];
+        const teamId   = teamDoc.id;
+        const teamData = teamDoc.data();
+        const user     = window.rtUser;
+        const name     = user.displayName || user.email.split('@')[0];
+
+        await rtDb.collection('teams').doc(teamId).collection('members').doc(user.uid).set({
+          displayName: name,
+          email:       user.email,
+          role:        'player',
+          joinedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await rtDb.collection('users').doc(user.uid).set(
+          { teamId: teamId },
+          { merge: true }
+        );
+        window.rtUserTeamId = teamId;
+
+        const teamName = teamData.number
+          ? `${teamData.name} — #${teamData.number}`
+          : teamData.name;
+        msg.textContent = `You've joined ${teamData.name}!`;
+        msg.className = 'jtc-msg success';
+
+        setTimeout(() => {
+          document.getElementById('join-team-card').style.display = 'none';
+          document.getElementById('team-banner-name').textContent = teamName;
+          document.getElementById('team-banner').style.display = 'flex';
+        }, 1200);
+
+      } catch (e) {
+        msg.textContent = 'Failed to join: ' + e.message;
+        msg.className = 'jtc-msg error';
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+
+    async function leaveTeam() {
+      if (!window.rtUser) return;
+      if (!confirm('Leave this team? You can rejoin with an invite code.')) return;
+
+      try {
+        const uid    = window.rtUser.uid;
+        const teamId = window.rtUserTeamId;
+        if (teamId) {
+          await rtDb.collection('teams').doc(teamId).collection('members').doc(uid).delete();
+        }
+        await rtDb.collection('users').doc(uid).set({ teamId: null }, { merge: true });
+        window.rtUserTeamId = null;
+
+        document.getElementById('team-banner').style.display = 'none';
+        document.getElementById('join-team-card').style.display = 'block';
+        document.getElementById('jtc-code').value = '';
+        document.getElementById('jtc-msg').textContent = '';
+      } catch (e) {
+        alert('Failed to leave team: ' + e.message);
       }
     }
   </script>

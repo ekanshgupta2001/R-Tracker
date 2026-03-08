@@ -311,9 +311,14 @@ function updateLevel(dt) {
         driverMetrics.reactionTimes.push(performance.now() - driverMetrics.pendingReactionTs);
       }
       driverMetrics.pendingReactionTs = performance.now();
+      const hitIdx = lvl.nextCp;
       lvl.nextCp++;
       lvl.cpCooldown = 0.3;
-      if (lvl.nextCp >= def.path.length) { finishLevel(true); return; }
+      if (lvl.nextCp >= def.path.length) {
+        console.log(`[Level ${lvl.id}] Waypoint ${hitIdx} hit (dist: ${cpDist.toFixed(3)}ft). ALL WAYPOINTS COMPLETE → LEVEL PASSED`);
+        finishLevel(true); return;
+      }
+      console.log(`[Level ${lvl.id}] Waypoint ${hitIdx} hit (dist: ${cpDist.toFixed(3)}ft). Next target: waypoint ${lvl.nextCp}`);
     }
   }
 
@@ -325,7 +330,9 @@ function finishLevel(success) {
   const avgAcc = lvl.accFrames > 0 ? lvl.accInside / lvl.accFrames : 0;
   const timeFrac = lvl.elapsed / def.timeLimit;
 
-  if (!success || avgAcc < 0.70) {
+  console.log(`[Level ${lvl.id}] Finished: ${success ? 'PASSED' : 'FAILED (time out)'}. Waypoints hit: ${Math.max(0, lvl.nextCp - 1)}/${def.path.length - 1}. Accuracy: ${Math.round(avgAcc * 100)}%. Time: ${lvl.elapsed.toFixed(1)}s / ${def.timeLimit}s`);
+
+  if (!success) {
     lvl.phase = 'fail';
     showFailCard(def, avgAcc);
   } else {
@@ -432,7 +439,7 @@ function switchMode(mode) {
   appMode = mode;
   document.getElementById('tab-freedrive').classList.toggle('active', mode === 'freedrive');
   document.getElementById('tab-levels').classList.toggle('active', mode === 'levels');
-  document.getElementById('sidebar').style.display = mode === 'freedrive' ? 'flex' : 'none';
+  document.getElementById('sidebar-teleop').style.display = mode === 'freedrive' ? 'flex' : 'none';
   const ls = document.getElementById('levels-sidebar');
   ls.style.display = mode === 'levels' ? 'flex' : 'none';
 

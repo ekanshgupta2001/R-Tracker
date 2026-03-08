@@ -4,7 +4,7 @@ const FIELD_FT = 12;
 const TILES = 6;
 
 const fieldImg = new Image();
-fieldImg.src = '../assets/decode.webp';
+fieldImg.src = '../../assets/decode.webp';
 
 const cvs = document.getElementById('c');
 const ctx = cvs.getContext('2d');
