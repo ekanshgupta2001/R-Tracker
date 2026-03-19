@@ -19,6 +19,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/curriculum/gemini.js"></script>
+  <script src="../js/curriculum/lessons.js"></script>
 </head>
 
 <body class="sidebar-open">
@@ -251,41 +252,8 @@
       <blockquote><strong>Mentor Note:</strong> If you're comfortable with all of these concepts, take the quiz below. You need 80% to unlock Phase 1.</blockquote>
     `;
 
-    LESSONS.phase1 = `
-      <h2>The FTC Ecosystem</h2>
-      <p>FTC robots run on Android phones using the FTC SDK. Your code lives in <strong>OpModes</strong> — either <code>LinearOpMode</code> (sequential) or <code>OpMode</code> (iterative loop).</p>
-
-      <h3>Hardware Map</h3>
-      <p>The <strong>hardwareMap</strong> connects your code to physical devices. Names must match the robot configuration on the Driver Station.</p>
-      <div class="curr-code-block"><span class="syn-type">DcMotor</span> frontLeft = hardwareMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"frontLeft"</span>);
-<span class="syn-type">Servo</span> claw = hardwareMap.<span class="syn-fn">get</span>(<span class="syn-type">Servo</span>.<span class="syn-kw">class</span>, <span class="syn-str">"claw"</span>);</div>
-
-      <h3>Motor Control</h3>
-      <p>Motors accept power from <strong>-1.0</strong> (full reverse) to <strong>1.0</strong> (full forward). Always set direction so positive = intuitive.</p>
-      <div class="curr-code-block">frontLeft.<span class="syn-fn">setDirection</span>(DcMotor.Direction.REVERSE);
-frontLeft.<span class="syn-fn">setPower</span>(<span class="syn-num">0.75</span>); <span class="syn-cm">// 75% forward</span></div>
-
-      <h3>Gamepad Input</h3>
-      <p>The <code>gamepad1</code> and <code>gamepad2</code> objects give you access to joysticks, buttons, and triggers in real time.</p>
-      <div class="curr-code-block"><span class="syn-kw">double</span> drive = -gamepad1.left_stick_y; <span class="syn-cm">// Y is inverted!</span>
-<span class="syn-kw">double</span> turn  = gamepad1.right_stick_x;
-
-frontLeft.<span class="syn-fn">setPower</span>(drive + turn);
-frontRight.<span class="syn-fn">setPower</span>(drive - turn);</div>
-
-      <h3>Telemetry</h3>
-      <p>Use <code>telemetry</code> to display debug info on the Driver Station screen.</p>
-      <div class="curr-code-block">telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Drive"</span>, drive);
-telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Turn"</span>, turn);
-telemetry.<span class="syn-fn">update</span>();</div>
-
-      <div class="curr-activity">
-        <div class="curr-activity-header">&#10067; Check Your Understanding</div>
-        <p>Why is <code>gamepad1.left_stick_y</code> negated? What would happen if you forgot to negate it?</p>
-      </div>
-
-      <blockquote><strong>Mentor Note:</strong> The deliverable for this phase is a working TeleOp with drivetrain control, at least one mechanism (servo or second motor), and telemetry output.</blockquote>
-    `;
+    // Phase 1 uses interactive lesson system from lessons.js
+    LESSONS.phase1 = null;
 
     LESSONS.phase2 = `
       <h2>Subsystems and Architecture</h2>
@@ -467,82 +435,12 @@ telemetry.<span class="syn-fn">update</span>();</div>
       <blockquote><strong>Mentor Note:</strong> For the deliverable, prepare a broken codebase (3-5 bugs) and give the student 20 minutes to diagnose and fix under pressure. Evaluate their debugging process, not just whether they found all bugs.</blockquote>
     `;
 
-    LESSONS.advanced_command = `
-      <h2>Command-Based Programming</h2>
-      <p>The command-based paradigm separates <em>what</em> the robot does (Commands) from <em>what</em> it uses (Subsystems). This pattern, used in FRC and supported by FTC libraries like FTCLib, scales well for complex robots.</p>
+    // Advanced modules use interactive system from lessons.js
+    LESSONS.advanced_command = null;
 
-      <h3>Core Concepts</h3>
-      <ul>
-        <li><strong>Subsystem</strong> — Owns hardware, provides capabilities</li>
-        <li><strong>Command</strong> — Uses a subsystem to perform an action</li>
-        <li><strong>Scheduler</strong> — Manages which commands run and when</li>
-        <li><strong>Trigger</strong> — Binds gamepad buttons to commands</li>
-      </ul>
+    LESSONS.advanced_strategy = null;
 
-      <h3>Example</h3>
-      <div class="curr-code-block"><span class="syn-kw">public class</span> <span class="syn-type">GrabCommand</span> <span class="syn-kw">extends</span> <span class="syn-type">CommandBase</span> {
-  <span class="syn-kw">private</span> <span class="syn-type">ClawSubsystem</span> claw;
-
-  <span class="syn-kw">public</span> <span class="syn-fn">GrabCommand</span>(<span class="syn-type">ClawSubsystem</span> claw) {
-    <span class="syn-kw">this</span>.claw = claw;
-    <span class="syn-fn">addRequirements</span>(claw);
-  }
-
-  <span class="syn-ann">@Override</span>
-  <span class="syn-kw">public void</span> <span class="syn-fn">execute</span>() { claw.<span class="syn-fn">close</span>(); }
-
-  <span class="syn-ann">@Override</span>
-  <span class="syn-kw">public boolean</span> <span class="syn-fn">isFinished</span>() { <span class="syn-kw">return true</span>; }
-}</div>
-
-      <blockquote><strong>Mentor Note:</strong> This module is optional. It's most valuable for teams with complex robots that need parallel command scheduling.</blockquote>
-    `;
-
-    LESSONS.advanced_strategy = `
-      <h2>Competition Strategy Engineering</h2>
-      <p>Great code isn't enough — you need a strategy. This module covers match analysis, alliance coordination, and autonomous selection.</p>
-
-      <h3>Key Topics</h3>
-      <ul>
-        <li><strong>Scouting data analysis</strong> — Identify opponents' weaknesses</li>
-        <li><strong>Autonomous selection</strong> — Choose your auto based on alliance partner</li>
-        <li><strong>Cycle time optimization</strong> — Measure and improve your scoring rate</li>
-        <li><strong>Endgame planning</strong> — When to transition from cycling to endgame</li>
-        <li><strong>Driver communication protocol</strong> — Standardized callouts during matches</li>
-      </ul>
-
-      <div class="curr-activity">
-        <div class="curr-activity-header">&#10067; Strategy Exercise</div>
-        <p>Watch 3 match recordings. For each, identify: (1) What the winning alliance did better, (2) Where the losing alliance left points on the field, (3) What autonomous strategy would counter the top-seeded team.</p>
-      </div>
-    `;
-
-    LESSONS.capstone = `
-      <h2>Full Competition Autonomous</h2>
-      <p>Your capstone project: build a complete competition-ready autonomous that scores maximum points in the DECODE season.</p>
-
-      <h3>Requirements</h3>
-      <ul>
-        <li>Start from either alliance position</li>
-        <li>Score at least 2 game elements autonomously</li>
-        <li>Navigate using odometry (no time-based driving)</li>
-        <li>Handle at least one sensor-based decision</li>
-        <li>End parked in the correct zone</li>
-        <li>Complete reliably in under 30 seconds</li>
-      </ul>
-
-      <h3>Evaluation Criteria</h3>
-      <table>
-        <tr><th>Criteria</th><th>Weight</th></tr>
-        <tr><td>Consistency (5/5 runs)</td><td>30%</td></tr>
-        <tr><td>Points scored</td><td>25%</td></tr>
-        <tr><td>Code quality</td><td>20%</td></tr>
-        <tr><td>Error handling</td><td>15%</td></tr>
-        <tr><td>Documentation</td><td>10%</td></tr>
-      </table>
-
-      <blockquote><strong>Mentor Note:</strong> This is the culmination of the curriculum. The student should be able to explain every line of their code and justify their design decisions.</blockquote>
-    `;
+    LESSONS.capstone = null;
 
     /* ══════════════════════════════════════════════════════════════════════════
        DELIVERABLE DEFINITIONS
@@ -603,16 +501,39 @@ telemetry.<span class="syn-fn">update</span>();</div>
           'Completed within 20 minutes'
         ]
       },
+      advanced_command: {
+        title: 'Command-Based Refactor',
+        req: 'Take your Phase 4 autonomous and refactor it using FTCLib\'s command-based framework.',
+        checklist: [
+          'Convert drivetrain subsystem to extend SubsystemBase',
+          'Write a FollowPath command wrapping Pedro Pathing followPath() + isBusy()',
+          'Write a RunIntake command that runs for a specified duration',
+          'Compose a SequentialCommandGroup replicating your original autonomous',
+          'Compare both versions: which is easier to read and modify?'
+        ]
+      },
+      advanced_strategy: {
+        title: 'Strategy Analysis',
+        req: 'Analyze your team\'s current autonomous strategy using the frameworks from this module.',
+        checklist: [
+          'Calculate expected value for your current autonomous (success rate \u00d7 points)',
+          'Design a 3-tier autonomous system with clear tier selection criteria',
+          'Add timer-based fallbacks and end-of-auto protection to your existing code',
+          'Create a match log template your team can use at competition',
+          'Write a 1-page strategy document for your next competition'
+        ]
+      },
       capstone: {
         title: 'Full Competition Autonomous',
-        req: 'Build a complete competition-ready autonomous for the DECODE season.',
+        req: 'Build a complete, competition-grade autonomous routine from scratch — one that could run in an actual FTC match.',
         checklist: [
-          'Works from either alliance starting position',
-          'Scores at least 2 game elements',
-          'Uses odometry for navigation (no time-based driving)',
-          'At least one sensor-based decision',
-          'Ends parked in the correct zone',
-          'Completes reliably in under 30 seconds'
+          'All hardware wrapped in subsystem classes with private fields and public methods',
+          'Pedro Pathing for all driving with at least 4 distinct waypoints',
+          'At least one sensor-driven decision with filtering',
+          'Telemetry displaying current state, sensor values, motor powers, loop time',
+          'Timer-based fallback and emergency park if less than 3 seconds remain',
+          'Alliance mirroring — works on both sides from one codebase',
+          'Survives 5 consecutive runs without crashing'
         ]
       }
     };
@@ -770,9 +691,19 @@ telemetry.<span class="syn-fn">update</span>();</div>
       html += '</div>';
 
       // Lesson content
-      html += '<div class="curr-lesson">';
-      html += LESSONS[phase.id] || '<p>Content coming soon.</p>';
-      html += '</div>';
+      var hasInteractiveLessons = window.PHASE_LESSONS && window.PHASE_LESSONS[phase.id];
+      var hasAdvancedContent = window.ADVANCED_CONTENT && window.ADVANCED_CONTENT[phase.id];
+      if (hasAdvancedContent) {
+        // Advanced / capstone — rendered after innerHTML is set
+        html += '<div id="adv-container"></div>';
+      } else if (hasInteractiveLessons) {
+        // Interactive lesson container — rendered after innerHTML is set
+        html += '<div id="les-container"></div>';
+      } else {
+        html += '<div class="curr-lesson">';
+        html += LESSONS[phase.id] || '<p>Content coming soon.</p>';
+        html += '</div>';
+      }
 
       // Quiz for Phase 0
       if (phase.id === 'phase0') {
@@ -786,6 +717,17 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       el.innerHTML = html;
       el.scrollTop = 0;
+
+      // Render advanced/capstone content after DOM is ready
+      if (hasAdvancedContent) {
+        window.renderAdvancedContent(phase.id, 'adv-container');
+      }
+
+      // Render interactive lessons after DOM is ready
+      if (hasInteractiveLessons) {
+        var completedSections = window.getLessonProgress ? window.getLessonProgress(phase.id, data) : [];
+        window.renderLessons(phase.id, window.PHASE_LESSONS[phase.id], 'les-container', completedSections);
+      }
     }
 
     function renderBadge(status) {
@@ -1415,6 +1357,16 @@ telemetry.<span class="syn-fn">update</span>();</div>
             console.log('Phase', nextPhase.id, 'unlocked (status: not_started)');
           }
         }
+      }
+
+      // Sync curriculum progress to driverStats
+      if (window.saveCurriculumProgress) {
+        var verified = PHASES.filter(function(p) { return currData[p.id] && currData[p.id].status === 'verified'; });
+        var totalScore = 0;
+        verified.forEach(function(p) { totalScore += (currData[p.id].aiScore || currData[p.id].bestScore || 0); });
+        var avgScore = verified.length > 0 ? totalScore / verified.length : 0;
+        var highestVerified = verified.length > 0 ? verified[verified.length - 1].id : phaseId;
+        window.saveCurriculumProgress(verified.length, avgScore, highestVerified);
       }
 
       // Update timeline UI

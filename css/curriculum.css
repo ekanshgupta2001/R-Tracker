@@ -554,6 +554,743 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LESSON STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Progress bar */
+.les-progress-wrap {
+  margin-bottom: 24px;
+}
+
+.les-progress-bar {
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.les-progress-fill {
+  height: 100%;
+  background: #800020;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.les-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #777;
+}
+
+/* Section cards */
+.les-section {
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.les-section.active {
+  border-color: #800020;
+}
+
+.les-section.done {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.les-section.locked {
+  opacity: 0.5;
+}
+
+/* Section header */
+.les-sec-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.les-sec-header:hover {
+  background: rgba(128, 0, 32, 0.06);
+}
+
+.les-section.locked .les-sec-header {
+  cursor: default;
+}
+
+.les-section.locked .les-sec-header:hover {
+  background: transparent;
+}
+
+.les-sec-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #800020;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.les-sec-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.les-sec-lock {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.les-sec-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.les-section.locked .les-sec-title {
+  color: #666;
+}
+
+.les-section.done .les-sec-title {
+  color: #aaa;
+}
+
+.les-sec-expand {
+  font-size: 10px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+/* Section body */
+.les-sec-body {
+  padding: 0 16px 16px;
+}
+
+/* Slide-in animation */
+.les-slide-in {
+  animation: lesSlideIn 0.4s ease-out;
+}
+
+@keyframes lesSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Learn block */
+.les-learn {
+  border-left: 3px solid #800020;
+  background: #1a1a1a;
+  padding: 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #bbb;
+}
+
+.les-learn strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.les-learn code {
+  background: rgba(128, 0, 32, 0.15);
+  color: #e8a0b0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Code block */
+.les-code-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.les-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #333;
+  color: #999;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s;
+}
+
+.les-copy-btn:hover {
+  background: #444;
+  color: #ddd;
+}
+
+.les-code {
+  background: #0d1117;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #c9d1d9;
+}
+
+.les-code code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Check block */
+.les-check {
+  border-left: 3px solid #eab308;
+  background: rgba(26, 26, 10, 0.6);
+  padding: 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 12px;
+}
+
+.les-check-icon {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.les-check-q {
+  font-size: 14px;
+  font-weight: 600;
+  color: #eee;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.les-check-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.les-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.les-opt:hover {
+  border-color: #800020;
+  transform: translateX(2px);
+}
+
+.les-opt-letter {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #333;
+  color: #999;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.les-opt-text {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.4;
+  padding-top: 2px;
+}
+
+/* Correct answer */
+.les-opt.les-correct {
+  background: #0a2e0a;
+  border-color: #22c55e;
+}
+
+.les-opt.les-correct .les-opt-letter {
+  background: #22c55e;
+  color: #fff;
+}
+
+.les-opt.les-correct .les-opt-text {
+  color: #a3e9a3;
+}
+
+/* Wrong answer */
+.les-opt.les-wrong {
+  background: #2e0a0a;
+  border-color: #ef4444;
+}
+
+.les-opt.les-wrong .les-opt-letter {
+  background: #ef4444;
+  color: #fff;
+}
+
+.les-opt.les-wrong .les-opt-text {
+  color: #f8a0a0;
+}
+
+/* Explanation */
+.les-check-explain {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.les-check-explain.correct {
+  background: rgba(34, 197, 94, 0.08);
+  color: #a3e9a3;
+}
+
+.les-check-explain.wrong {
+  background: rgba(239, 68, 68, 0.08);
+  color: #f8a0a0;
+}
+
+.les-explain-icon {
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.les-explain-icon.correct { color: #22c55e; }
+.les-explain-icon.wrong { color: #ef4444; }
+
+/* Collapsed check (completed) */
+.les-check-done {
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+/* Continue button (for sections without checks) */
+.les-auto-complete {
+  margin-top: 12px;
+}
+
+.les-continue-btn {
+  background: #800020;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.les-continue-btn:hover {
+  background: #a00028;
+}
+
+/* Mentor tip */
+.les-tip {
+  margin-top: 12px;
+  border-left: 3px solid #555;
+  border-radius: 0 8px 8px 0;
+  overflow: hidden;
+}
+
+.les-tip-toggle {
+  padding: 10px 14px;
+  background: #1e1e1e;
+  cursor: pointer;
+  font-size: 13px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.les-tip-toggle:hover {
+  background: #252525;
+}
+
+.les-tip-icon {
+  font-size: 14px;
+}
+
+.les-tip-arrow {
+  font-size: 9px;
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+
+.les-tip-body {
+  padding: 12px 14px;
+  background: #1e1e1e;
+  font-size: 13px;
+  font-style: italic;
+  color: #aaa;
+  line-height: 1.6;
+  border-top: 1px solid #2a2a2a;
+}
+
+/* ── Lesson light mode ────────────────────────────────────────────────── */
+html.light .les-section {
+  border-color: #e0e0e0;
+}
+
+html.light .les-section.active {
+  border-color: #800020;
+}
+
+html.light .les-section.done {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+html.light .les-sec-header:hover {
+  background: rgba(128, 0, 32, 0.04);
+}
+
+html.light .les-sec-title {
+  color: #333;
+}
+
+html.light .les-section.done .les-sec-title {
+  color: #666;
+}
+
+html.light .les-learn {
+  background: #f8f8f8;
+  color: #444;
+}
+
+html.light .les-learn strong {
+  color: #111;
+}
+
+html.light .les-learn code {
+  background: rgba(128, 0, 32, 0.08);
+  color: #800020;
+}
+
+html.light .les-code {
+  background: #f6f8fa;
+  color: #24292e;
+}
+
+html.light .les-copy-btn {
+  background: #e0e0e0;
+  color: #666;
+}
+
+html.light .les-check {
+  background: rgba(234, 179, 8, 0.05);
+}
+
+html.light .les-check-q {
+  color: #222;
+}
+
+html.light .les-opt {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+
+html.light .les-opt:hover {
+  border-color: #800020;
+}
+
+html.light .les-opt-text {
+  color: #333;
+}
+
+html.light .les-opt-letter {
+  background: #ddd;
+  color: #666;
+}
+
+html.light .les-check-explain.correct {
+  background: rgba(34, 197, 94, 0.06);
+  color: #166534;
+}
+
+html.light .les-check-explain.wrong {
+  background: rgba(239, 68, 68, 0.06);
+  color: #991b1b;
+}
+
+html.light .les-tip-toggle {
+  background: #f5f5f5;
+}
+
+html.light .les-tip-toggle:hover {
+  background: #eee;
+}
+
+html.light .les-tip-body {
+  background: #f5f5f5;
+  color: #666;
+  border-top-color: #e0e0e0;
+}
+
+html.light .les-progress-bar {
+  background: #e0e0e0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ADVANCED / CAPSTONE STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Banner */
+.adv-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.adv-banner-advanced {
+  background: linear-gradient(135deg, rgba(128,0,32,0.18), rgba(128,0,32,0.06));
+  border: 1px solid rgba(128,0,32,0.35);
+  color: #d4a0b0;
+}
+.adv-banner-capstone {
+  background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(234,179,8,0.04));
+  border: 1px solid rgba(234,179,8,0.35);
+  color: #eab308;
+}
+.adv-banner-icon {
+  font-size: 20px;
+}
+
+/* Estimated time */
+.adv-time {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+/* Intro text (capstone) */
+.adv-intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+/* Headings */
+.adv-h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #800020;
+  margin: 32px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(128,0,32,0.2);
+}
+.adv-h2:first-of-type {
+  margin-top: 0;
+}
+.adv-h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #b0b0b0;
+  margin: 20px 0 8px;
+}
+
+/* Body text */
+.adv-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+/* Blockquote (tips, scenario) */
+.adv-quote {
+  border-left: 3px solid #800020;
+  padding: 12px 16px;
+  margin: 16px 0 20px;
+  background: rgba(128,0,32,0.08);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #ccc;
+  font-style: normal;
+}
+
+/* Checklist with burgundy checkboxes */
+.adv-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 20px;
+}
+.adv-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ccc;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.adv-check-item:last-child {
+  border-bottom: none;
+}
+.adv-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #800020;
+  border-radius: 4px;
+  margin-top: 2px;
+  background: rgba(128,0,32,0.1);
+}
+
+/* Deliverables ordered list */
+.adv-deliverables {
+  padding-left: 20px;
+  margin: 8px 0 24px;
+}
+.adv-deliverables li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #ccc;
+  padding: 6px 0;
+}
+
+/* Rubric table */
+.adv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 28px;
+  font-size: 13px;
+}
+.adv-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: rgba(128,0,32,0.18);
+  color: #d4a0b0;
+  font-weight: 700;
+  border-bottom: 2px solid #800020;
+}
+.adv-table td {
+  padding: 10px 14px;
+  color: #ccc;
+  border-bottom: 1px solid #2a2a2a;
+}
+.adv-table tbody tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+.adv-table tbody tr:hover td {
+  background: rgba(128,0,32,0.06);
+}
+
+/* Deliverable section inside advanced modules */
+.adv-deliverable-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(128,0,32,0.3);
+}
+
+/* ── Light mode overrides ─────────────────────────────────────────────── */
+html.light .adv-banner-advanced {
+  background: linear-gradient(135deg, rgba(128,0,32,0.1), rgba(128,0,32,0.03));
+  color: #800020;
+}
+html.light .adv-banner-capstone {
+  background: linear-gradient(135deg, rgba(180,130,0,0.12), rgba(180,130,0,0.03));
+  color: #8a6d00;
+}
+html.light .adv-time {
+  color: #888;
+  border-bottom-color: #e0e0e0;
+}
+html.light .adv-intro,
+html.light .adv-text,
+html.light .adv-check-item,
+html.light .adv-deliverables li,
+html.light .adv-quote {
+  color: #444;
+}
+html.light .adv-h2 {
+  border-bottom-color: rgba(128,0,32,0.15);
+}
+html.light .adv-h3 {
+  color: #666;
+}
+html.light .adv-quote {
+  background: rgba(128,0,32,0.05);
+}
+html.light .adv-checkbox {
+  background: rgba(128,0,32,0.05);
+}
+html.light .adv-check-item {
+  border-bottom-color: rgba(0,0,0,0.06);
+}
+html.light .adv-table th {
+  background: rgba(128,0,32,0.08);
+  color: #800020;
+}
+html.light .adv-table td {
+  color: #444;
+  border-bottom-color: #e0e0e0;
+}
+html.light .adv-table tbody tr:nth-child(even) td {
+  background: rgba(0,0,0,0.02);
+}
+html.light .adv-table tbody tr:hover td {
+  background: rgba(128,0,32,0.04);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
    QUIZ STYLES
    ══════════════════════════════════════════════════════════════════════════ */
 .quiz-container {

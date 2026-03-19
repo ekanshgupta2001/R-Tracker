@@ -117,7 +117,7 @@
           </div>
           <div class="rstat" id="rstat-level">
             <div class="rstat-val" id="rstat-level-val">—</div>
-            <div class="rstat-label">Best Level</div>
+            <div class="rstat-label">Levels Done</div>
           </div>
           <div class="rstat" id="rstat-time">
             <div class="rstat-val rstat-cyan" id="rstat-time-val">—</div>
@@ -188,9 +188,8 @@
         gradeEl.textContent = grade;
         gradeEl.className = 'rstat-val ' + gradeColorClass(grade);
 
-        var levelsCompleted = d.levelsCompleted || 0;
         var levelEl = document.getElementById('rstat-level-val');
-        levelEl.textContent = levelsCompleted + '/12';
+        levelEl.textContent = (d.levelsCompleted || 0) + '/12';
         levelEl.className = 'rstat-val rstat-gold';
 
         var timeEl = document.getElementById('rstat-time-val');

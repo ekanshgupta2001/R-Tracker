@@ -108,20 +108,20 @@
   <script>
     /* ── Level Definitions ──────────────────────────────────────────────────── */
     var LEVEL_DEFS = [
-      { id: 'l1', name: 'Forward March', tier: 'Rookie' },
-      { id: 'l2', name: 'Strafe Step', tier: 'Rookie' },
-      { id: 'l3', name: 'Square Dance', tier: 'Rookie' },
-      { id: 'l4', name: 'Diagonal Dash', tier: 'Intermediate' },
-      { id: 'l5', name: 'Figure Eight', tier: 'Intermediate' },
-      { id: 'l6', name: 'Slalom Run', tier: 'Intermediate' },
-      { id: 'l7', name: 'Precision Park', tier: 'Advanced' },
-      { id: 'l8', name: 'Speed Circuit', tier: 'Advanced' },
-      { id: 'l9', name: 'Obstacle Weave', tier: 'Advanced' },
-      { id: 'l10', name: 'Full Field Sprint', tier: 'Expert' },
-      { id: 'l11', name: 'Mirror Match', tier: 'Expert' },
-      { id: 'l12', name: 'The Gauntlet', tier: 'Expert' },
+      { id: '1',  name: 'Straight Shot', tier: 'Beginner' },
+      { id: '2',  name: 'Side Step', tier: 'Beginner' },
+      { id: '3',  name: 'L-Shape', tier: 'Beginner' },
+      { id: '4',  name: 'The Square', tier: 'Intermediate' },
+      { id: '5',  name: 'Zigzag', tier: 'Intermediate' },
+      { id: '6',  name: 'Diamond', tier: 'Intermediate' },
+      { id: '7',  name: 'Specimen Run', tier: 'Advanced' },
+      { id: '8',  name: 'Sample Collect', tier: 'Advanced' },
+      { id: '9',  name: 'Spiral In', tier: 'Advanced' },
+      { id: '10', name: 'Speed Demon', tier: 'Expert' },
+      { id: '11', name: 'Threading the Needle', tier: 'Expert' },
+      { id: '12', name: 'The Gauntlet', tier: 'Expert' },
     ];
-    var TIER_UNLOCK = { Rookie: 0, Intermediate: 3, Advanced: 6, Expert: 9 };
+    var TIER_UNLOCK = { Beginner: 0, Intermediate: 3, Advanced: 6, Expert: 9 };
 
     /* ── Helpers ────────────────────────────────────────────────────────────── */
     function esc(s) {
@@ -364,20 +364,37 @@
     async function loadAllTimeStats(uid) {
       var el = document.getElementById('alltime-content');
       try {
+        console.log('Firestore READ path: users/' + uid + '/stats/driverStats');
         var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
-        if (!doc.exists) {
+
+        // Also read levels to get accurate counts
+        console.log('Firestore READ path: users/' + uid + '/levels/ (for alltime stats)');
+        var lvlSnap = await rtDb.collection('users').doc(uid).collection('levels').get();
+        var levelsDone = 0;
+        var bestLevel = 0;
+        lvlSnap.forEach(function(ldoc) {
+          var ld = ldoc.data();
+          if (ld.bestStars && ld.bestStars >= 1) {
+            levelsDone++;
+            var n = parseInt(ldoc.id);
+            if (!isNaN(n) && n > bestLevel) bestLevel = n;
+          }
+        });
+
+        if (!doc.exists && levelsDone === 0) {
           el.innerHTML = '<div class="rpt-empty">No stats yet.</div>';
           return;
         }
-        var d = doc.data();
+        var d = doc.exists ? doc.data() : {};
         var score = d.overallRating || 0;
+        var cs = d.curriculumScore || {};
         var stats = [
           { val: fmtTime(d.totalPracticeMs || 0), label: 'Practice Time', cls: 'clr-cyan' },
-          { val: (d.levelsCompleted || 0) + '/12', label: 'Levels Completed', cls: 'clr-gold' },
+          { val: levelsDone + '/12', label: 'Levels Done', cls: 'clr-gold' },
           { val: score, label: 'Best Score', cls: scoreColorClass(score) },
-          { val: d.totalDistanceFt ? Math.round(d.totalDistanceFt) + ' ft' : '—', label: 'Total Distance', cls: 'clr-purple' },
-          { val: d.totalSessions || 0, label: 'Total Sessions', cls: 'clr-cyan' },
-          { val: d.bestLevelRating || '—', label: 'Best Level Rating', cls: 'clr-gold' },
+          { val: bestLevel > 0 ? bestLevel : '—', label: 'Best Level', cls: 'clr-gold' },
+          { val: cs.phasesCompleted || 0, label: 'Curriculum Phases', cls: 'clr-green' },
+          { val: cs.averageAIScore ? cs.averageAIScore + '%' : '—', label: 'Avg AI Score', cls: 'clr-purple' },
         ];
 
         var html = '<div class="rpt-stats-grid">';
@@ -395,12 +412,24 @@
     async function loadLevelsGrid(uid) {
       var el = document.getElementById('levels-content');
       try {
+        console.log('Firestore READ path: users/' + uid + '/levels/');
         var snap = await rtDb.collection('users').doc(uid).collection('levels').get();
         var userLevels = {};
-        snap.forEach(function (doc) { userLevels[doc.id] = doc.data(); });
-        var completed = Object.values(userLevels).filter(function (l) { return l.completed; }).length;
+        snap.forEach(function (doc) {
+          userLevels[doc.id] = doc.data();
+          console.log('Level:', doc.id, 'data:', JSON.stringify(doc.data()));
+        });
+        console.log('LOADED levels:', snap.size, 'documents from path: users/' + uid + '/levels/');
+        var completed = Object.values(userLevels).filter(function (l) { return l.bestStars && l.bestStars >= 1; }).length;
 
-        var html = '<div class="rpt-levels-grid">';
+        var bestLevel = 0;
+        Object.keys(userLevels).forEach(function(id) {
+          var n = parseInt(id);
+          if (!isNaN(n) && userLevels[id].bestStars >= 1 && n > bestLevel) bestLevel = n;
+        });
+
+        var html = '<div class="rlg-summary">' + completed + '/12 LEVELS DONE</div>';
+        html += '<div class="rpt-levels-grid">';
         LEVEL_DEFS.forEach(function (def, i) {
           var lvl = userLevels[def.id];
           var unlockReq = TIER_UNLOCK[def.tier] || 0;
@@ -409,31 +438,28 @@
 
           if (isLocked) {
             html += '<div class="rlg-cell locked">';
-            html += '<div class="rlg-num">' + num + '</div>';
+            html += '<div class="rlg-lock">&#128274;</div>';
             html += '<div class="rlg-name">' + esc(def.name) + '</div>';
             html += '</div>';
           } else {
             var cls = '';
-            if (lvl && lvl.bestGrade) {
-              if (lvl.bestGrade === 'S' || lvl.bestGrade === 'A') cls = 'gold';
-              else if (lvl.bestGrade === 'B') cls = 'silver';
-              else if (lvl.bestGrade === 'C' || lvl.bestGrade === 'D') cls = 'bronze';
-              else cls = 'attempted';
+            var stars = 0;
+            if (lvl && lvl.bestStars) {
+              stars = lvl.bestStars;
+              if (stars === 3) cls = 'gold';
+              else if (stars === 2) cls = 'silver';
+              else if (stars >= 1) cls = 'bronze';
             }
+            var ratingLabel = stars === 3 ? 'Gold' : stars === 2 ? 'Silver' : stars >= 1 ? 'Bronze' : '';
 
-            html += '<div class="rlg-cell' + (cls ? ' ' + cls : '') + '" onclick="toggleLevelDetail(this)">';
+            html += '<div class="rlg-cell' + (cls ? ' ' + cls : '') + '" onclick="toggleLevelDetail(this, event)" data-name="' + esc(def.name) + '" data-time="' + (lvl && lvl.bestTime ? lvl.bestTime.toFixed(2) : '') + '" data-rating="' + ratingLabel + '" data-attempts="' + (lvl ? (lvl.attempts || 0) : 0) + '" data-num="' + num + '">';
             html += '<div class="rlg-num">' + num + '</div>';
-            html += '<div class="rlg-name">' + esc(def.name) + '</div>';
-            if (lvl && lvl.bestGrade) {
-              html += '<div class="rlg-grade" style="color:' + gradeColor(lvl.bestGrade) + '">' + lvl.bestGrade + '</div>';
-            }
-            if (lvl) {
-              html += '<div class="rlg-detail" style="display:none">';
-              html += '<div class="rlg-detail-row"><span>Best Time</span><span class="clr-cyan">' + (lvl.bestTime ? (Math.round(lvl.bestTime / 1000) + 's') : '—') + '</span></div>';
-              html += '<div class="rlg-detail-row"><span>Best Accuracy</span><span class="clr-green">' + (lvl.bestAccuracy !== undefined ? lvl.bestAccuracy + '%' : '—') + '</span></div>';
-              html += '<div class="rlg-detail-row"><span>Best Rating</span><span class="clr-gold">' + (lvl.bestGrade || '—') + '</span></div>';
-              html += '<div class="rlg-detail-row"><span>Attempts</span><span>' + (lvl.attempts || 0) + '</span></div>';
-              html += '</div>';
+            if (stars > 0) {
+              var starHtml = '';
+              for (var s = 1; s <= 3; s++) {
+                starHtml += '<span class="rlg-star' + (s <= stars ? ' lit' : '') + '">' + (s <= stars ? '★' : '☆') + '</span>';
+              }
+              html += '<div class="rlg-stars">' + starHtml + '</div>';
             }
             html += '</div>';
           }
@@ -441,16 +467,32 @@
         html += '</div>';
         el.innerHTML = html;
       } catch (e) {
+        console.error('Failed to load levels:', e);
         el.innerHTML = '<div class="rpt-empty">Failed to load levels</div>';
       }
     }
 
-    function toggleLevelDetail(cell) {
-      var detail = cell.querySelector('.rlg-detail');
-      if (!detail) return;
-      var isVisible = detail.style.display !== 'none';
-      document.querySelectorAll('.rlg-detail').forEach(function (d) { d.style.display = 'none'; });
-      detail.style.display = isVisible ? 'none' : 'block';
+    function toggleLevelDetail(cell, e) {
+      if (e) e.stopPropagation();
+      var existing = document.querySelector('.rlg-tooltip');
+      if (existing) { existing.remove(); return; }
+      var num = cell.getAttribute('data-num');
+      var name = cell.getAttribute('data-name');
+      var time = cell.getAttribute('data-time');
+      var rating = cell.getAttribute('data-rating');
+      var attempts = cell.getAttribute('data-attempts');
+      if (!name) return;
+      var tip = document.createElement('div');
+      tip.className = 'rlg-tooltip';
+      tip.innerHTML = '<div class="rlg-tip-title">Level ' + esc(num) + ': ' + esc(name) + '</div>'
+        + '<div class="rlg-tip-row"><span>Best Time:</span><span class="clr-cyan">' + (time ? time + 's' : '—') + '</span></div>'
+        + '<div class="rlg-tip-row"><span>Rating:</span><span class="clr-gold">' + (rating || 'Not completed') + '</span></div>'
+        + '<div class="rlg-tip-row"><span>Attempts:</span><span>' + (attempts || '0') + '</span></div>';
+      cell.appendChild(tip);
+      document.addEventListener('click', function dismiss() {
+        tip.remove();
+        document.removeEventListener('click', dismiss);
+      }, { once: true });
     }
 
     /* ── Section 6: Session History ────────────────────────────────────────── */
@@ -459,6 +501,7 @@
       try {
         var items = [];
         if (teamId) {
+          console.log('Firestore READ path: teams/' + teamId + '/activity');
           var snap = await rtDb.collection('teams').doc(teamId).collection('activity')
             .orderBy('timestamp', 'desc').limit(20).get();
           snap.forEach(function (doc) {

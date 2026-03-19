@@ -247,7 +247,9 @@ async function saveCoachReportToFirestore(report) {
       });
 
     const name = rtUser.displayName || rtUser.email.split('@')[0];
-    await rtDb.collection('teams').doc('team27502').collection('activity').doc(String(ts)).set({
+    var teamId = window.rtUserTeamId;
+    if (!teamId) { console.warn('No teamId, skipping activity write'); return; }
+    await rtDb.collection('teams').doc(teamId).collection('activity').doc(String(ts)).set({
       userName: name,
       action: `generated a new AI driver report`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()

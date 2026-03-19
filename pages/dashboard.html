@@ -730,6 +730,7 @@
                     document.getElementById('ov-golds').textContent = '0';
                     return;
                 }
+                console.log('Firestore READ path: teams/' + teamId + '/members');
                 const memSnap = await window.rtDb.collection('teams').doc(teamId).collection('members').get();
                 teamMembers = [];
                 let totalScore = 0;
@@ -776,6 +777,7 @@
                 }
 
                 // Load Activity
+                console.log('Firestore READ path: teams/' + teamId + '/activity');
                 const actSnap = await window.rtDb.collection('teams').doc(teamId).collection('activity')
                     .orderBy('timestamp', 'desc').limit(20).get();
 

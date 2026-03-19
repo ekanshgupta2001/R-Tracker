@@ -70,8 +70,6 @@
 
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_API_KEY;
 
-    console.log('Sending to Gemini, code length:', studentCode.length);
-
     var response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,7 +89,6 @@
     }
 
     var data = await response.json();
-    console.log('Gemini raw response:', JSON.stringify(data).substring(0, 500));
 
     // Extract text from all parts (Gemini 2.5 may have thinking + response parts)
     var text = '';
@@ -105,11 +102,9 @@
     }
 
     if (!text) {
-      console.error('No text in Gemini response:', data);
+      console.error('Gemini review: no text in response');
       return null;
     }
-
-    console.log('Gemini text response:', text.substring(0, 500));
 
     // Clean the text: remove markdown fences, extra whitespace, and find the JSON object
     var clean = text;
@@ -117,7 +112,7 @@
     var firstBrace = clean.indexOf('{');
     var lastBrace = clean.lastIndexOf('}');
     if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-      console.error('No JSON object found in response:', clean);
+      console.error('Gemini review: no JSON object found in response');
       return null;
     }
     clean = clean.substring(firstBrace, lastBrace + 1);
@@ -125,7 +120,7 @@
     try {
       return JSON.parse(clean);
     } catch (parseError) {
-      console.error('JSON parse failed:', parseError, 'Clean text:', clean.substring(0, 300));
+      console.error('Gemini review: JSON parse failed');
       return null;
     }
   };
