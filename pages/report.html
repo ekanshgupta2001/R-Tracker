@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <meta name="description" content="Driver Report — R-Tracker performance analysis and AI coaching.">
+  <title>Driver Report — R-Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/login.css">
+  <link rel="stylesheet" href="../css/report.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../config.js"></script>
+  <script src="../js/firebase-init.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+</head>
+
+<body class="sidebar-open">
+  <div class="topbar">
+    <div class="topbar-left"><a href="../index.html">← Home</a></div>
+    <div class="topbar-right">Driver Report</div>
+  </div>
+
+  <div class="main-wrap">
+    <div class="report-content">
+
+      <!-- Section 1: Driver Overview -->
+      <div class="rpt-card" id="rpt-overview">
+        <div class="rpt-card-title">Driver Overview</div>
+        <div id="overview-content">
+          <div class="rpt-skel-row">
+            <div class="skeleton" style="width:80px;height:60px;border-radius:8px"></div>
+            <div style="flex:1">
+              <div class="skeleton skel-line" style="width:50%;height:14px"></div>
+              <div class="skeleton skel-line" style="width:70%;height:12px;margin-top:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Skill Breakdown -->
+      <div class="rpt-card rpt-animate" id="rpt-skills">
+        <div class="rpt-card-title">Skill Breakdown</div>
+        <div id="skills-content">
+          <div class="skeleton skel-bar"></div>
+          <div class="skeleton skel-bar"></div>
+          <div class="skeleton skel-bar"></div>
+          <div class="skeleton skel-bar"></div>
+          <div class="skeleton skel-bar"></div>
+          <div class="skeleton skel-bar"></div>
+        </div>
+      </div>
+
+      <!-- Section 3: AI Coach Analysis -->
+      <div class="rpt-card rpt-animate" id="rpt-ai">
+        <div class="rpt-card-title">AI Coach Analysis</div>
+        <div id="ai-content">
+          <div class="skeleton skel-line" style="width:40%;height:14px"></div>
+          <div class="skeleton skel-line" style="width:90%;height:12px;margin-top:12px"></div>
+          <div class="skeleton skel-line" style="width:80%;height:12px;margin-top:6px"></div>
+          <div class="skeleton skel-line" style="width:85%;height:12px;margin-top:6px"></div>
+        </div>
+      </div>
+
+      <!-- Section 4: All-Time Stats -->
+      <div class="rpt-card rpt-animate" id="rpt-alltime">
+        <div class="rpt-card-title">All-Time Stats</div>
+        <div id="alltime-content">
+          <div class="rpt-stats-grid">
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+            <div class="rpt-stat skeleton" style="height:80px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Levels Progress -->
+      <div class="rpt-card rpt-animate" id="rpt-levels">
+        <div class="rpt-card-title">Levels Progress</div>
+        <div id="levels-content">
+          <div class="rpt-levels-grid">
+            <div class="skeleton" style="width:100%;height:50px;border-radius:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 6: Session History -->
+      <div class="rpt-card rpt-animate" id="rpt-history">
+        <div class="rpt-card-title">Session History</div>
+        <div id="history-content">
+          <div class="skeleton skel-line" style="width:80%;height:12px"></div>
+          <div class="skeleton skel-line" style="width:60%;height:12px;margin-top:8px"></div>
+          <div class="skeleton skel-line" style="width:70%;height:12px;margin-top:8px"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ── Level Definitions ──────────────────────────────────────────────────── */
+    var LEVEL_DEFS = [
+      { id: 'l1', name: 'Forward March', tier: 'Rookie' },
+      { id: 'l2', name: 'Strafe Step', tier: 'Rookie' },
+      { id: 'l3', name: 'Square Dance', tier: 'Rookie' },
+      { id: 'l4', name: 'Diagonal Dash', tier: 'Intermediate' },
+      { id: 'l5', name: 'Figure Eight', tier: 'Intermediate' },
+      { id: 'l6', name: 'Slalom Run', tier: 'Intermediate' },
+      { id: 'l7', name: 'Precision Park', tier: 'Advanced' },
+      { id: 'l8', name: 'Speed Circuit', tier: 'Advanced' },
+      { id: 'l9', name: 'Obstacle Weave', tier: 'Advanced' },
+      { id: 'l10', name: 'Full Field Sprint', tier: 'Expert' },
+      { id: 'l11', name: 'Mirror Match', tier: 'Expert' },
+      { id: 'l12', name: 'The Gauntlet', tier: 'Expert' },
+    ];
+    var TIER_UNLOCK = { Rookie: 0, Intermediate: 3, Advanced: 6, Expert: 9 };
+
+    /* ── Helpers ────────────────────────────────────────────────────────────── */
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function fmtTime(ms) {
+      if (!ms || ms <= 0) return '0m';
+      var m = Math.floor(ms / 60000);
+      if (m < 60) return m + 'm';
+      return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+    }
+
+    function skillClass(v) { return v >= 70 ? 'good' : v >= 40 ? 'ok' : 'poor'; }
+
+    function gradeColor(g) {
+      var map = { S: '#ffd700', A: '#4aff88', B: '#4a9eff', C: '#ffdd44', D: '#ff8844', F: '#ff4455' };
+      return map[g] || '#888';
+    }
+
+    function scoreColorClass(v) {
+      if (v >= 70) return 'clr-green';
+      if (v >= 40) return 'clr-orange';
+      return 'clr-red';
+    }
+
+    function fmtDate(date) {
+      return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    /* ── IntersectionObserver for scroll-triggered animations ──────────────── */
+    var skillBarsLoaded = false;
+    var aiTypingTriggered = false;
+
+    var scrollObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+
+        // Trigger skill bar animation
+        if (id === 'rpt-skills' && !skillBarsLoaded) {
+          skillBarsLoaded = true;
+          requestAnimationFrame(function () {
+            document.querySelectorAll('.sk-bar').forEach(function (bar) {
+              bar.style.width = bar.style.getPropertyValue('--target-width');
+            });
+          });
+        }
+
+        // Trigger AI typing animation
+        if (id === 'rpt-ai' && !aiTypingTriggered) {
+          aiTypingTriggered = true;
+          var summary = document.querySelector('.ai-summary');
+          if (summary) {
+            summary.classList.add('ai-typing');
+          }
+        }
+      });
+    }, { threshold: 0.2 });
+
+    /* ── Section 1: Driver Overview ────────────────────────────────────────── */
+    async function loadOverview(uid) {
+      var el = document.getElementById('overview-content');
+      try {
+        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
+        if (!doc.exists) {
+          el.innerHTML = '<div class="rpt-empty">Start practicing to see your stats here. <a href="teleop.html">Go to TeleOp Practice</a></div>';
+          return null;
+        }
+        var d = doc.data();
+        var g = d.grade || 'F';
+        var score = d.overallRating || 0;
+        var percentile = d.percentile || null;
+
+        var profileName = 'Driver';
+        try {
+          var rpSnap = await rtDb.collection('users').doc(uid)
+            .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
+          if (!rpSnap.empty) {
+            var rp = rpSnap.docs[0].data();
+            if (rp.driverProfile) {
+              profileName = rp.driverProfile.split(' — ')[0] || 'Driver';
+            }
+          }
+        } catch (_) {}
+
+        var html = '<div class="ov-row">';
+        html += '<div class="ov-score-wrap">';
+        html += '<span class="ov-score ' + scoreColorClass(score) + '">' + score + '</span>';
+        html += '<span class="ov-grade" style="color:' + gradeColor(g) + '">' + g + '</span>';
+        html += '</div>';
+        html += '<div class="ov-info">';
+        html += '<div class="ov-badge">' + esc(profileName).toUpperCase() + '</div>';
+        if (percentile) {
+          html += '<div class="ov-percentile">Top ' + percentile + '% of drivers</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        el.innerHTML = html;
+        return d;
+      } catch (e) {
+        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load overview</div>';
+        return null;
+      }
+    }
+
+    /* ── Section 2: Skill Breakdown ────────────────────────────────────────── */
+    function loadSkills(stats) {
+      var el = document.getElementById('skills-content');
+      if (!stats) {
+        el.innerHTML = '<div class="rpt-empty">No skill data yet.</div>';
+        return;
+      }
+
+      var skills = [
+        { label: 'Smoothness', val: stats.smoothness || 0 },
+        { label: 'Stability', val: stats.stability || 0 },
+        { label: 'Strafe', val: stats.strafe || 0 },
+        { label: 'Turn', val: stats.turn || 0 },
+        { label: 'Recovery', val: stats.recovery || 0 },
+        { label: 'Reaction Time', val: stats.reactionTime || 0 },
+      ];
+
+      var html = '<div class="sk-list">';
+      skills.forEach(function (s, i) {
+        var cls = skillClass(s.val);
+        html += '<div class="sk-row" style="animation-delay:' + (i * 80) + 'ms">';
+        html += '<span class="sk-label">' + s.label + '</span>';
+        html += '<div class="sk-bar-wrap"><div class="sk-bar sk-' + cls + '" style="--target-width:' + s.val + '%"></div></div>';
+        html += '<span class="sk-val ' + scoreColorClass(s.val) + '">' + s.val + '</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
+
+      // Observe skills section for scroll-triggered animation
+      var skillsCard = document.getElementById('rpt-skills');
+      if (skillsCard) scrollObserver.observe(skillsCard);
+    }
+
+    /* ── Section 3: AI Coach Analysis ──────────────────────────────────────── */
+    async function loadAICoach(uid) {
+      var el = document.getElementById('ai-content');
+      try {
+        var snap = await rtDb.collection('users').doc(uid)
+          .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
+
+        if (snap.empty) {
+          el.innerHTML = '<div class="rpt-empty">Complete some practice sessions to unlock AI coaching insights. <a href="teleop.html">Start Practicing</a></div>';
+          return;
+        }
+
+        var rp = snap.docs[0].data();
+        var profileName = rp.driverProfile ? rp.driverProfile.split(' — ')[0] : 'Driver';
+        var profileDesc = rp.driverProfile && rp.driverProfile.includes(' — ') ? rp.driverProfile.split(' — ')[1] : '';
+        var strengths = rp.strengths || [];
+        var weaknesses = rp.weaknesses || [];
+        var plan = rp.trainingPlan || [];
+        var summary = rp.summary || rp.overallSummary || '';
+        var detailed = rp.detailedAnalysis || '';
+
+        var prevScore = rp.previousScore;
+        var curScore = rp.currentScore || rp.overallRating;
+
+        var html = '';
+
+        html += '<div class="ai-profile-badge">' + esc(profileName) + '</div>';
+        if (profileDesc) {
+          html += '<div class="ai-profile-desc">' + esc(profileDesc) + '</div>';
+        }
+
+        if (prevScore !== undefined && curScore !== undefined) {
+          var delta = curScore - prevScore;
+          var deltaStr = delta > 0 ? '+' + delta : '' + delta;
+          var deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
+          html += '<div class="ai-comparison"><span class="ai-comp-label">Score:</span> ' + prevScore + ' → ' + curScore + ' <span class="ai-delta ' + deltaClass + '">(' + deltaStr + ')</span></div>';
+        }
+
+        if (summary) {
+          html += '<div class="ai-summary">' + esc(summary) + '</div>';
+        }
+
+        if (strengths.length) {
+          html += '<div class="ai-section-label">Strengths</div>';
+          html += '<div class="ai-list">';
+          strengths.forEach(function (s) {
+            html += '<div class="ai-item ai-strength"><span class="ai-icon">✓</span> ' + esc(s) + '</div>';
+          });
+          html += '</div>';
+        }
+
+        if (weaknesses.length) {
+          html += '<div class="ai-section-label">Areas to Improve</div>';
+          html += '<div class="ai-list">';
+          weaknesses.forEach(function (w) {
+            html += '<div class="ai-item ai-weakness"><span class="ai-icon">△</span> ' + esc(w) + '</div>';
+          });
+          html += '</div>';
+        }
+
+        if (detailed) {
+          html += '<div class="ai-section-label">Detailed Analysis</div>';
+          html += '<div class="ai-detailed">' + esc(detailed) + '</div>';
+        }
+
+        if (plan.length) {
+          html += '<div class="ai-section-label">Training Plan</div>';
+          html += '<ol class="ai-plan">';
+          plan.forEach(function (p) {
+            html += '<li>' + esc(p) + '</li>';
+          });
+          html += '</ol>';
+        }
+
+        html += '<button class="ai-generate-btn" onclick="regenerateReport()">Generate New Report</button>';
+
+        el.innerHTML = html;
+
+        // Observe AI section for typing animation
+        var aiCard = document.getElementById('rpt-ai');
+        if (aiCard) scrollObserver.observe(aiCard);
+      } catch (e) {
+        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load AI coach data</div>';
+        console.warn('loadAICoach:', e.message);
+      }
+    }
+
+    async function regenerateReport() {
+      var btn = document.querySelector('.ai-generate-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+      }
+      if (window.rtUser) {
+        await loadAICoach(window.rtUser.uid);
+      }
+    }
+
+    /* ── Section 4: All-Time Stats ─────────────────────────────────────────── */
+    async function loadAllTimeStats(uid) {
+      var el = document.getElementById('alltime-content');
+      try {
+        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
+        if (!doc.exists) {
+          el.innerHTML = '<div class="rpt-empty">No stats yet.</div>';
+          return;
+        }
+        var d = doc.data();
+        var score = d.overallRating || 0;
+        var stats = [
+          { val: fmtTime(d.totalPracticeMs || 0), label: 'Practice Time', cls: 'clr-cyan' },
+          { val: (d.levelsCompleted || 0) + '/12', label: 'Levels Completed', cls: 'clr-gold' },
+          { val: score, label: 'Best Score', cls: scoreColorClass(score) },
+          { val: d.totalDistanceFt ? Math.round(d.totalDistanceFt) + ' ft' : '—', label: 'Total Distance', cls: 'clr-purple' },
+          { val: d.totalSessions || 0, label: 'Total Sessions', cls: 'clr-cyan' },
+          { val: d.bestLevelRating || '—', label: 'Best Level Rating', cls: 'clr-gold' },
+        ];
+
+        var html = '<div class="rpt-stats-grid">';
+        stats.forEach(function (s) {
+          html += '<div class="rpt-stat"><div class="rpt-stat-val ' + s.cls + '">' + esc(String(s.val)) + '</div><div class="rpt-stat-label">' + s.label + '</div></div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load stats</div>';
+      }
+    }
+
+    /* ── Section 5: Levels Progress ────────────────────────────────────────── */
+    async function loadLevelsGrid(uid) {
+      var el = document.getElementById('levels-content');
+      try {
+        var snap = await rtDb.collection('users').doc(uid).collection('levels').get();
+        var userLevels = {};
+        snap.forEach(function (doc) { userLevels[doc.id] = doc.data(); });
+        var completed = Object.values(userLevels).filter(function (l) { return l.completed; }).length;
+
+        var html = '<div class="rpt-levels-grid">';
+        LEVEL_DEFS.forEach(function (def, i) {
+          var lvl = userLevels[def.id];
+          var unlockReq = TIER_UNLOCK[def.tier] || 0;
+          var isLocked = completed < unlockReq;
+          var num = i + 1;
+
+          if (isLocked) {
+            html += '<div class="rlg-cell locked">';
+            html += '<div class="rlg-num">' + num + '</div>';
+            html += '<div class="rlg-name">' + esc(def.name) + '</div>';
+            html += '</div>';
+          } else {
+            var cls = '';
+            if (lvl && lvl.bestGrade) {
+              if (lvl.bestGrade === 'S' || lvl.bestGrade === 'A') cls = 'gold';
+              else if (lvl.bestGrade === 'B') cls = 'silver';
+              else if (lvl.bestGrade === 'C' || lvl.bestGrade === 'D') cls = 'bronze';
+              else cls = 'attempted';
+            }
+
+            html += '<div class="rlg-cell' + (cls ? ' ' + cls : '') + '" onclick="toggleLevelDetail(this)">';
+            html += '<div class="rlg-num">' + num + '</div>';
+            html += '<div class="rlg-name">' + esc(def.name) + '</div>';
+            if (lvl && lvl.bestGrade) {
+              html += '<div class="rlg-grade" style="color:' + gradeColor(lvl.bestGrade) + '">' + lvl.bestGrade + '</div>';
+            }
+            if (lvl) {
+              html += '<div class="rlg-detail" style="display:none">';
+              html += '<div class="rlg-detail-row"><span>Best Time</span><span class="clr-cyan">' + (lvl.bestTime ? (Math.round(lvl.bestTime / 1000) + 's') : '—') + '</span></div>';
+              html += '<div class="rlg-detail-row"><span>Best Accuracy</span><span class="clr-green">' + (lvl.bestAccuracy !== undefined ? lvl.bestAccuracy + '%' : '—') + '</span></div>';
+              html += '<div class="rlg-detail-row"><span>Best Rating</span><span class="clr-gold">' + (lvl.bestGrade || '—') + '</span></div>';
+              html += '<div class="rlg-detail-row"><span>Attempts</span><span>' + (lvl.attempts || 0) + '</span></div>';
+              html += '</div>';
+            }
+            html += '</div>';
+          }
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<div class="rpt-empty">Failed to load levels</div>';
+      }
+    }
+
+    function toggleLevelDetail(cell) {
+      var detail = cell.querySelector('.rlg-detail');
+      if (!detail) return;
+      var isVisible = detail.style.display !== 'none';
+      document.querySelectorAll('.rlg-detail').forEach(function (d) { d.style.display = 'none'; });
+      detail.style.display = isVisible ? 'none' : 'block';
+    }
+
+    /* ── Section 6: Session History ────────────────────────────────────────── */
+    async function loadSessionHistory(uid, teamId) {
+      var el = document.getElementById('history-content');
+      try {
+        var items = [];
+        if (teamId) {
+          var snap = await rtDb.collection('teams').doc(teamId).collection('activity')
+            .orderBy('timestamp', 'desc').limit(20).get();
+          snap.forEach(function (doc) {
+            var d = doc.data();
+            if (d.userName && d.timestamp) items.push(d);
+          });
+          var userName = (window.rtUser.displayName || window.rtUser.email.split('@')[0]).toLowerCase().split(' ')[0];
+          var userItems = items.filter(function (i) {
+            return i.userName && i.userName.toLowerCase().indexOf(userName) !== -1;
+          });
+          items = userItems.length > 0 ? userItems.slice(0, 15) : items.slice(0, 15);
+        }
+
+        if (items.length === 0) {
+          el.innerHTML = '<div class="rpt-empty">No sessions yet. <a href="teleop.html">Start practicing</a></div>';
+          return;
+        }
+
+        var html = '<div class="sh-list">';
+        items.forEach(function (i) {
+          var date = i.timestamp ? i.timestamp.toDate() : new Date();
+          var duration = i.durationMs ? Math.round(i.durationMs / 60000) + 'min' : '';
+          var scoreChange = '';
+          if (i.scoreBefore !== undefined && i.scoreAfter !== undefined) {
+            var delta = i.scoreAfter - i.scoreBefore;
+            var deltaStr = delta > 0 ? '+' + delta : '' + delta;
+            var deltaCls = delta > 0 ? 'clr-green' : delta < 0 ? 'clr-red' : '';
+            scoreChange = ' · ' + i.scoreBefore + '→' + i.scoreAfter + ' <span class="' + deltaCls + '">(' + deltaStr + ')</span>';
+          }
+          html += '<div class="sh-item">';
+          html += '<span class="sh-text">' + fmtDate(date) + (duration ? ' · <span class="clr-cyan">' + duration + '</span>' : '') + scoreChange + '</span>';
+          html += '<span class="sh-action">' + esc(i.action) + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load history</div>';
+      }
+    }
+
+    /* ── Init ───────────────────────────────────────────────────────────────── */
+    initAuth(function onSignedIn(user) {
+      var uid = user.uid;
+      var teamId = window.rtUserTeamId || null;
+
+      loadOverview(uid).then(function (stats) {
+        loadSkills(stats);
+      });
+      loadAICoach(uid);
+      loadAllTimeStats(uid);
+      loadLevelsGrid(uid);
+      loadSessionHistory(uid, teamId);
+    });
+  </script>
+</body>
+</html>

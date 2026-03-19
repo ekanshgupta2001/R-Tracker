@@ -209,6 +209,15 @@
         if (doc.exists && doc.data().role) {
           window.rtUserRole   = doc.data().role;
           window.rtUserTeamId = doc.data().teamId || null;
+          // Sync theme from Firebase (overrides localStorage)
+          var savedTheme = doc.data().theme;
+          if (savedTheme === 'light' || savedTheme === 'dark') {
+            try { localStorage.setItem('rt-theme', savedTheme); } catch (e) {}
+            document.documentElement.classList.toggle('light', savedTheme === 'light');
+            // Update sidebar icon if available
+            var themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+          }
           onReady();
           return;
         }

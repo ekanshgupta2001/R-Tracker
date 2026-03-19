@@ -1,0 +1,618 @@
+/* ── R-Tracker Driver Report Page ───────────────────────────────────────────── */
+
+/* ── Main wrap — responds to sidebar ───────────────────────────────────── */
+.main-wrap {
+  margin-left: var(--sidebar-width);
+  padding-top: 48px;
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  animation: pageIn 0.35s ease-out both;
+}
+
+.page-leaving .main-wrap {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.sidebar-collapsed .main-wrap { margin-left: 0; }
+
+/* ── Centered content ──────────────────────────────────────────────────── */
+.report-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Report Card ───────────────────────────────────────────────────────── */
+.rpt-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  transition: border-color 0.3s ease, background 0.35s ease;
+}
+
+.rpt-card-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--burgundy);
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider);
+}
+
+/* ── Bright accent color classes ───────────────────────────────────────── */
+.clr-green { color: #22c55e; }
+.clr-orange { color: #f97316; }
+.clr-red { color: #ef4444; }
+.clr-cyan { color: #06b6d4; }
+.clr-gold { color: #eab308; }
+.clr-purple { color: #a855f7; }
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+.rpt-empty {
+  text-align: center;
+  padding: 24px 10px;
+  font-size: 13px;
+  color: #999;
+  line-height: 1.6;
+}
+
+.rpt-empty a {
+  color: var(--burgundy-light);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.rpt-empty a:hover { text-decoration: underline; }
+
+/* ── Skeleton loading ──────────────────────────────────────────────────── */
+.skeleton {
+  background: var(--divider);
+  border-radius: 4px;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.skel-line { height: 12px; margin-bottom: 8px; border-radius: 3px; }
+.skel-bar { height: 6px; width: 100%; margin-bottom: 10px; border-radius: 3px; }
+
+.rpt-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── Section 1: Driver Overview ────────────────────────────────────────── */
+.ov-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.ov-score-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ov-score {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ov-grade {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.ov-info {
+  flex: 1;
+}
+
+.ov-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(128, 0, 32, 0.15);
+  border: 1px solid rgba(128, 0, 32, 0.3);
+  color: var(--burgundy-light);
+  margin-bottom: 6px;
+}
+
+.ov-percentile {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ── Section 2: Skill Breakdown ────────────────────────────────────────── */
+.sk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sk-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeSlideIn 0.4s ease-out both;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.sk-label {
+  font-size: 13px;
+  color: #999;
+  width: 110px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.sk-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--divider);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sk-bar {
+  height: 100%;
+  border-radius: 3px;
+  width: 0;
+  transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.sk-good { background: #22c55e; }
+.sk-ok { background: #f97316; }
+.sk-poor { background: #ef4444; }
+
+.sk-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Inter', monospace;
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Section 3: AI Coach Analysis ──────────────────────────────────────── */
+.ai-profile-badge {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.ai-profile-desc {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.ai-comparison {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(128, 0, 32, 0.08);
+  border-radius: 6px;
+  border: 1px solid rgba(128, 0, 32, 0.15);
+}
+
+.ai-comp-label { color: #999; }
+.ai-delta.up { color: #22c55e; font-weight: 700; }
+.ai-delta.down { color: #ef4444; font-weight: 700; }
+.ai-delta.neutral { color: #999; }
+
+.ai-summary {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+/* Typing animation for AI summary */
+.ai-summary.ai-typing {
+  animation: typingReveal 1.5s ease-out both;
+}
+
+@keyframes typingReveal {
+  from { max-height: 0; opacity: 0; }
+  to { max-height: 500px; opacity: 1; }
+}
+
+.ai-section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #999;
+  margin: 16px 0 8px;
+  font-weight: 700;
+}
+
+.ai-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-item {
+  font-size: 13px;
+  color: #ccc;
+  padding: 4px 0;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ai-icon { flex-shrink: 0; font-size: 14px; }
+.ai-strength .ai-icon { color: #22c55e; }
+.ai-weakness .ai-icon { color: #f97316; }
+
+.ai-detailed {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.ai-plan {
+  padding-left: 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-plan li {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.ai-generate-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: var(--burgundy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.ai-generate-btn:hover {
+  background: #9a0028;
+  transform: translateY(-1px);
+}
+
+.ai-generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Section 4: All-Time Stats ─────────────────────────────────────────── */
+.rpt-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.rpt-stat {
+  padding: 16px;
+  background: #1e1e1e;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.rpt-stat-val {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.rpt-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #999;
+}
+
+/* ── Section 5: Levels Progress ────────────────────────────────────────── */
+.rpt-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.rlg-cell {
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  cursor: pointer;
+  border: 1px solid #2a2a2a;
+  background: #1e1e1e;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  position: relative;
+}
+
+.rlg-cell:hover {
+  border-color: rgba(128, 0, 32, 0.5);
+  box-shadow: 0 0 12px rgba(128, 0, 32, 0.15);
+  transform: scale(1.04);
+}
+
+.rlg-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: #666;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.rlg-name {
+  font-size: 9px;
+  color: #999;
+  text-align: center;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.rlg-grade {
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.rlg-cell.gold .rlg-num { color: #eab308; }
+.rlg-cell.silver .rlg-num { color: #c0c0c0; }
+.rlg-cell.bronze .rlg-num { color: #cd7f32; }
+.rlg-cell.attempted .rlg-num { color: #fff; }
+.rlg-cell.gold { background: rgba(234, 179, 8, 0.06); }
+.rlg-cell.silver { background: rgba(192, 192, 192, 0.06); }
+.rlg-cell.bronze { background: rgba(205, 127, 50, 0.06); }
+
+.rlg-cell.locked {
+  background: #161616;
+  cursor: default;
+}
+
+.rlg-cell.locked .rlg-num { color: #444; }
+.rlg-cell.locked .rlg-name { color: #444; }
+
+.rlg-cell.locked:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+/* Level detail mini card */
+.rlg-detail {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  z-index: 50;
+  min-width: 160px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeSlideIn 0.15s ease;
+}
+
+.rlg-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 3px 0;
+  color: var(--text-dim);
+}
+
+.rlg-detail-row span:first-child {
+  color: #999;
+}
+
+.rlg-detail-row span:last-child {
+  font-weight: 700;
+}
+
+/* ── Section 6: Session History ────────────────────────────────────────── */
+.sh-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--divider);
+  font-size: 13px;
+}
+
+.sh-item:last-child { border-bottom: none; }
+
+.sh-text {
+  color: var(--text-dim);
+}
+
+.sh-action {
+  color: #999;
+  font-size: 12px;
+  text-align: right;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main-wrap {
+    margin-left: 0;
+  }
+
+  .report-content {
+    padding: 16px 12px 32px;
+  }
+
+  .rpt-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rpt-levels-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .ov-score {
+    font-size: 36px;
+  }
+
+  .ov-grade {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rpt-levels-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .rpt-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Light Mode ────────────────────────────────────────────────────────── */
+html.light .rpt-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+html.light .rpt-stat {
+  background: #f5f5f5;
+}
+
+html.light .ai-profile-badge {
+  color: var(--text);
+}
+
+html.light .ai-item {
+  color: var(--text-dim);
+}
+
+html.light .rlg-cell {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+html.light .rlg-cell:hover {
+  background: #f8f8f8;
+  border-color: rgba(128, 0, 32, 0.4);
+}
+
+html.light .rlg-cell.locked {
+  background: #f5f5f5;
+}
+
+html.light .rlg-cell.locked:hover {
+  background: #f5f5f5;
+}
+
+html.light .rlg-detail {
+  background: #fff;
+  border-color: #ddd;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+html.light .sh-item {
+  border-bottom-color: #e0e0e0;
+}
+
+html.light .ai-comparison {
+  background: rgba(128, 0, 32, 0.05);
+  border-color: rgba(128, 0, 32, 0.1);
+}
+
+/* Light mode accent colors — darker saturated */
+html.light .clr-green { color: #16a34a; }
+html.light .clr-orange { color: #ea580c; }
+html.light .clr-red { color: #dc2626; }
+html.light .clr-cyan { color: #0891b2; }
+html.light .clr-gold { color: #ca8a04; }
+html.light .clr-purple { color: #9333ea; }
+
+html.light .sk-good { background: #16a34a; }
+html.light .sk-ok { background: #ea580c; }
+html.light .sk-poor { background: #dc2626; }
+
+html.light .rpt-stat-label {
+  color: #555;
+}
+
+html.light .rpt-empty {
+  color: #555;
+}
+
+html.light .ov-percentile {
+  color: #555;
+}
+
+html.light .ai-profile-desc {
+  color: #555;
+}
+
+html.light .ai-section-label {
+  color: #555;
+}
+
+html.light .ai-comp-label {
+  color: #555;
+}
+
+html.light .sk-label {
+  color: #555;
+}
+
+html.light .rlg-name {
+  color: #555;
+}
+
+html.light .sh-action {
+  color: #555;
+}

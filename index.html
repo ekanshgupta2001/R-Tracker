@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
+  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <meta name="description"
+    content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
   <title>R-Tracker — Rundle Robotics Visualizer</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/global.css">
@@ -20,264 +23,243 @@
 </head>
 
 <body class="sidebar-open">
+
+  <!-- ── Main Content ────────────────────────────────────────────────────── -->
   <div class="main-wrap">
-    <div class="content">
+    <div class="home-content">
 
-      <!-- ── Header ─────────────────────────────────────────────────────── -->
-      <div class="hero-title"><span class="brand-r">R-</span><span class="brand-t">Tracker</span></div>
-      <div class="hero-subtitle">Rundle Robotics Castle</div>
-      <div class="hero-greeting" id="hero-greeting" style="display:none">
-        Welcome back, <strong id="hero-name">there</strong>
+      <!-- Logo -->
+      <div class="home-hero">
+        <div class="home-logo"><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></div>
+        <div class="home-tagline">RUNDLE ROBOTICS PERSONALLY DESIGNED VISUALIZER</div>
+        <div class="home-welcome" id="home-welcome">Welcome back</div>
       </div>
 
-      <hr class="hero-divider">
-
-      <!-- ── Team status (shown ABOVE cards) ───────────────────────────── -->
-
-      <!-- Join Team Card — shown for players NOT yet on a team -->
-      <div class="join-team-card" id="join-team-card" style="display:none">
-        <div class="jtc-title">Join Your Team</div>
-        <div class="jtc-desc">Enter the invite code from your coach to join a team.</div>
-        <div class="jtc-row">
-          <input class="jtc-input" id="jtc-code" type="text" maxlength="6"
-                 placeholder="Invite code" autocomplete="off" spellcheck="false">
-          <button class="jtc-btn" id="jtc-btn" onclick="joinTeam()">Join</button>
-        </div>
-        <div class="jtc-msg" id="jtc-msg"></div>
-      </div>
-
-      <!-- Team Banner — shown for players already on a team -->
-      <div class="team-banner" id="team-banner" style="display:none">
-        <span class="team-banner-icon">🏆</span>
-        <span class="team-banner-name" id="team-banner-name">Your Team</span>
-        <a href="pages/teleop.html" class="team-banner-cta">Practice →</a>
-        <button class="team-banner-leave" onclick="leaveTeam()">Leave</button>
-      </div>
-
-      <!-- ── Main Cards ─────────────────────────────────────────────────── -->
-      <div class="cards">
-        <a href="pages/teleop.html" class="card active" id="card-teleop">
-          <div class="card-header">
-            <span class="card-icon">🎮</span>
-            <span class="card-title">TeleOp Practice</span>
-            <span class="card-arrow">→</span>
-          </div>
-          <p class="card-desc">Practice driving on the DECODE field with gamepad or keyboard. Mecanum and tank drivetrains, field-centric and robot-centric modes.</p>
+      <!-- Player Cards -->
+      <div class="home-cards" id="player-cards">
+        <a href="pages/teleop.html" class="home-card">
+          <div class="home-card-icon">🎮</div>
+          <div class="home-card-title">TeleOp Practice</div>
+          <div class="home-card-desc">Practice driving on the DECODE field with a real gamepad or keyboard. Supports field-centric and robot-centric drive modes with both mecanum and tank drivetrains. Tune speed, turn rate, and deadzone settings in real time.</div>
         </a>
-
-        <a href="pages/pathplanner.html" class="card active" id="card-pathplanner">
-          <div class="card-header">
-            <span class="card-icon">📐</span>
-            <span class="card-title">Path Planner</span>
-            <span class="card-arrow">→</span>
-          </div>
-          <p class="card-desc">Design waypoints, preview trajectories, and export Pedro Pathing Java code for autonomous paths.</p>
+        <a href="pages/pathplanner.html" class="home-card">
+          <div class="home-card-icon">📐</div>
+          <div class="home-card-title">Path Planner</div>
+          <div class="home-card-desc">Design autonomous paths on the DECODE field with Bezier curves and control points. Preview robot movement along your paths, export Pedro Pathing-compatible Java code, and save paths to your account.</div>
         </a>
       </div>
 
-      <!-- Driver Rating Card — shown for players with data -->
-      <a href="pages/teleop.html" class="driver-rating-card" id="driver-rating-card" style="display:none">
-        <div>
-          <div class="drc-label">Driver Rating</div>
-          <div class="drc-grade" id="drc-grade">B</div>
+      <!-- Coach Cards (hidden by default, shown for coaches) -->
+      <div class="home-cards" id="coach-cards" style="display:none;">
+        <a href="pages/manage-team.html" class="home-card">
+          <div class="home-card-icon">👥</div>
+          <div class="home-card-title">Manage Team</div>
+          <div class="home-card-desc">Create your team, generate invite codes, search for and add players. View your roster and manage team settings.</div>
+        </a>
+        <a href="pages/dashboard.html" class="home-card">
+          <div class="home-card-icon">📊</div>
+          <div class="home-card-title">Team Dashboard</div>
+          <div class="home-card-desc">View driver rankings and performance comparisons across your team. Get AI-powered recommendations for primary and secondary drivers.</div>
+        </a>
+      </div>
+
+      <!-- Coach Curriculum Bar (hidden by default) -->
+      <a href="pages/curriculum.html" class="home-report-btn home-curr-bar" id="coach-curriculum-bar" style="display:none;">
+        <div class="home-report-left">
+          <div class="home-report-icon">📚</div>
+          <div class="home-report-text">
+            <div class="home-report-title">Curriculum</div>
+            <div class="home-report-desc">Review student progress through the FTC programming learning path</div>
+          </div>
         </div>
-        <div class="drc-info">
-          <div class="drc-score" id="drc-score">— / 100</div>
-          <div class="drc-profile" id="drc-profile">Open Report Card to analyze</div>
-        </div>
-        <div class="drc-cta">Report Card →</div>
+        <div class="home-report-arrow">&rarr;</div>
       </a>
 
-      <!-- Coach Quick-Links — shown for coaches -->
-      <div class="coach-cards" id="coach-cards" style="display:none">
-        <a href="pages/dashboard.html" class="card active">
-          <div class="card-header">
-            <span class="card-icon">📊</span>
-            <span class="card-title">Team Dashboard</span>
-            <span class="card-arrow">→</span>
+      <!-- Curriculum Progress Bar (players) -->
+      <a href="pages/curriculum.html" class="home-report-btn home-curr-bar" id="curriculum-bar">
+        <div class="home-report-left">
+          <div class="home-report-icon">📚</div>
+          <div class="home-report-text">
+            <div class="home-report-title">Curriculum</div>
+            <div class="home-report-desc" id="curr-bar-desc">FTC Programming learning path — 6 phases from Java basics to competition code</div>
           </div>
-          <p class="card-desc">Driver rankings, performance comparisons, and AI recommendations for your team.</p>
-        </a>
-        <a href="pages/manage-team.html" class="card active">
-          <div class="card-header">
-            <span class="card-icon">👥</span>
-            <span class="card-title">Manage Team</span>
-            <span class="card-arrow">→</span>
+        </div>
+        <div class="home-report-stats" id="curr-bar-stats">
+          <div class="rstat">
+            <div class="rstat-val rstat-gold" id="curr-bar-phase">—</div>
+            <div class="rstat-label">Phase</div>
           </div>
-          <p class="card-desc">Create your team, generate an invite code, and manage players.</p>
-        </a>
+          <div class="rstat">
+            <div class="rstat-val rstat-green" id="curr-bar-completed">—</div>
+            <div class="rstat-label">Done</div>
+          </div>
+        </div>
+        <div class="home-report-arrow">&rarr;</div>
+      </a>
+
+      <!-- Driver Report Bar -->
+      <a href="pages/report.html" class="home-report-btn" id="report-bar">
+        <div class="home-report-left">
+          <div class="home-report-icon">📄</div>
+          <div class="home-report-text">
+            <div class="home-report-title">Driver Report</div>
+            <div class="home-report-desc">View your AI coaching analysis, driver stats, and performance history</div>
+          </div>
+        </div>
+        <div class="home-report-stats" id="report-stats">
+          <div class="rstat" id="rstat-score">
+            <div class="rstat-val" id="rstat-score-val">—</div>
+            <div class="rstat-label">Score</div>
+          </div>
+          <div class="rstat" id="rstat-grade">
+            <div class="rstat-val" id="rstat-grade-val">—</div>
+            <div class="rstat-label">Grade</div>
+          </div>
+          <div class="rstat" id="rstat-level">
+            <div class="rstat-val" id="rstat-level-val">—</div>
+            <div class="rstat-label">Best Level</div>
+          </div>
+          <div class="rstat" id="rstat-time">
+            <div class="rstat-val rstat-cyan" id="rstat-time-val">—</div>
+            <div class="rstat-label">Practice</div>
+          </div>
+        </div>
+        <div class="home-report-arrow">→</div>
+      </a>
+
+      <!-- Footer -->
+      <div class="home-footer-line">
+        Built for FTC teams competing in the 2025–2026 DECODE season.
       </div>
 
-      <section class="about-section" id="about">
-        <h2>About <span>R-Tracker</span></h2>
-        <p>
-          A browser-based driver practice and path planning tool for FTC teams competing
-          in the 2025–2026 DECODE season. Practice with a real gamepad or keyboard, tune your
-          robot config, and prepare for competition — no robot required.
-        </p>
-        <p>Built with HTML, CSS, and JavaScript. No installation needed.</p>
-      </section>
     </div>
-
-    <footer class="page-footer">Built for FTC teams &nbsp;<span class="accent">♦</span></footer>
   </div>
 
   <script>
-    initAuth(function onSignedIn(user) {
-      // Personalized greeting — prefer display name, fall back to email prefix
-      const name = user.displayName
-        ? user.displayName.split(' ')[0]
-        : user.email.split('@')[0];
-      document.getElementById('hero-name').textContent = name;
-      document.getElementById('hero-greeting').style.display = 'block';
+    /* ── Helpers ────────────────────────────────────────────────────────────── */
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
-      const role = window.rtUserRole;
-      if (role === 'coach') {
-        document.getElementById('coach-cards').style.display = 'grid';
-      } else {
-        loadDriverRatingCard(user);
-        loadTeamStatus(user);
-      }
+    function fmtTime(ms) {
+      if (!ms || ms <= 0) return '0m';
+      var m = Math.floor(ms / 60000);
+      if (m < 60) return m + 'm';
+      return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+    }
+
+    function scoreColorClass(v) {
+      if (v >= 70) return 'rstat-green';
+      if (v >= 40) return 'rstat-orange';
+      return 'rstat-red';
+    }
+
+    function gradeColorClass(g) {
+      if (g === 'S' || g === 'A') return 'rstat-green';
+      if (g === 'B' || g === 'C') return 'rstat-orange';
+      return 'rstat-red';
+    }
+
+    /* ── Page Transitions ──────────────────────────────────────────────────── */
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
+      e.preventDefault();
+      document.body.classList.add('page-leaving');
+      setTimeout(function () { window.location.href = href; }, 180);
     });
 
-    async function loadDriverRatingCard(user) {
+    /* ── Load report bar stats ─────────────────────────────────────────────── */
+    async function loadReportBarStats(uid) {
       try {
-        const doc = await rtDb.collection('users').doc(user.uid)
-          .collection('stats').doc('driverStats').get();
+        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
         if (!doc.exists) return;
-        const d = doc.data();
-        const grade = d.grade || 'F';
-        const score = d.overallRating || 0;
+        var d = doc.data();
+        var score = d.overallRating || 0;
+        var grade = d.grade || 'F';
 
-        let profileName = 'Open Report Card to analyze';
-        try {
-          const rpSnap = await rtDb.collection('users').doc(user.uid)
-            .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
-          if (!rpSnap.empty) {
-            const rp = rpSnap.docs[0].data();
-            if (rp.driverProfile) profileName = rp.driverProfile.split(' — ')[0];
-          }
-        } catch (_) {}
+        var scoreEl = document.getElementById('rstat-score-val');
+        scoreEl.textContent = score;
+        scoreEl.className = 'rstat-val ' + scoreColorClass(score);
 
-        const gradeEl = document.getElementById('drc-grade');
+        var gradeEl = document.getElementById('rstat-grade-val');
         gradeEl.textContent = grade;
-        gradeEl.className = 'drc-grade g' + grade.toLowerCase();
-        document.getElementById('drc-score').textContent = score + ' / 100';
-        document.getElementById('drc-profile').textContent = profileName;
-        document.getElementById('driver-rating-card').style.display = 'flex';
+        gradeEl.className = 'rstat-val ' + gradeColorClass(grade);
+
+        var levelsCompleted = d.levelsCompleted || 0;
+        var levelEl = document.getElementById('rstat-level-val');
+        levelEl.textContent = levelsCompleted + '/12';
+        levelEl.className = 'rstat-val rstat-gold';
+
+        var timeEl = document.getElementById('rstat-time-val');
+        timeEl.textContent = fmtTime(d.totalPracticeMs || 0);
       } catch (e) {
-        console.warn('Could not load driver rating:', e.message);
+        console.warn('loadReportBarStats:', e.message);
       }
     }
 
-    async function loadTeamStatus(user) {
-      try {
-        const doc = await rtDb.collection('users').doc(user.uid).get();
-        const teamId = doc.exists ? doc.data().teamId : null;
+    /* ── Update Welcome / Cards ────────────────────────────────────────────── */
+    function updateHomeUser(user, role) {
+      var name = user.displayName || user.email.split('@')[0];
+      var welcome = document.getElementById('home-welcome');
+      if (welcome) welcome.textContent = 'Welcome back, ' + name.split(' ')[0];
 
-        if (teamId) {
-          const teamDoc = await rtDb.collection('teams').doc(teamId).get();
-          const name = teamDoc.exists ? (teamDoc.data().name || 'Your Team') : 'Your Team';
-          const num  = teamDoc.exists ? (teamDoc.data().number || '') : '';
-          document.getElementById('team-banner-name').textContent =
-            num ? `${name} — #${num}` : name;
-          document.getElementById('team-banner').style.display = 'flex';
-        } else {
-          document.getElementById('join-team-card').style.display = 'block';
-        }
-      } catch (e) {
-        console.warn('Could not load team status:', e.message);
+      if (role === 'coach') {
+        document.getElementById('player-cards').style.display = 'none';
+        document.getElementById('coach-cards').style.display = 'grid';
+        document.getElementById('report-bar').style.display = 'none';
+        document.getElementById('curriculum-bar').style.display = 'none';
+        document.getElementById('coach-curriculum-bar').style.display = 'flex';
+        document.body.classList.add('coach-view');
       }
     }
 
-    async function joinTeam() {
-      const raw = document.getElementById('jtc-code').value.trim().toUpperCase();
-      const msg = document.getElementById('jtc-msg');
-      const btn = document.getElementById('jtc-btn');
-
-      msg.textContent = '';
-      msg.className = 'jtc-msg';
-
-      if (!raw || raw.length !== 6) {
-        msg.textContent = 'Enter a valid 6-character code.';
-        msg.className = 'jtc-msg error';
-        return;
-      }
-      if (!window.rtUser) return;
-
-      btn.disabled = true;
-      btn.classList.add('loading');
-
+    /* ── Load curriculum bar stats ──────────────────────────────────────────── */
+    async function loadCurriculumBarStats(uid) {
       try {
-        const snap = await rtDb.collection('teams').where('inviteCode', '==', raw).limit(1).get();
-        if (snap.empty) {
-          msg.textContent = 'Invalid invite code. Check with your coach and try again.';
-          msg.className = 'jtc-msg error';
-          btn.disabled = false;
-          btn.classList.remove('loading');
-          return;
-        }
+        var snap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
+        var data = {};
+        snap.forEach(function(doc) { data[doc.id] = doc.data(); });
 
-        const teamDoc  = snap.docs[0];
-        const teamId   = teamDoc.id;
-        const teamData = teamDoc.data();
-        const user     = window.rtUser;
-        const name     = user.displayName || user.email.split('@')[0];
-
-        await rtDb.collection('teams').doc(teamId).collection('members').doc(user.uid).set({
-          displayName: name,
-          email:       user.email,
-          role:        'player',
-          joinedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+        var verified = 0;
+        var currentPhase = null;
+        var phases = ['phase0','phase1','phase2','phase3','phase4','phase5'];
+        phases.forEach(function(pid, i) {
+          var d = data[pid];
+          if (d && d.status === 'verified') verified++;
+          if (!currentPhase && (!d || d.status !== 'verified')) {
+            currentPhase = i;
+          }
         });
+        if (currentPhase === null) currentPhase = 6;
 
-        await rtDb.collection('users').doc(user.uid).set(
-          { teamId: teamId },
-          { merge: true }
-        );
-        window.rtUserTeamId = teamId;
+        var phaseEl = document.getElementById('curr-bar-phase');
+        var compEl = document.getElementById('curr-bar-completed');
+        var descEl = document.getElementById('curr-bar-desc');
 
-        const teamName = teamData.number
-          ? `${teamData.name} — #${teamData.number}`
-          : teamData.name;
-        msg.textContent = `You've joined ${teamData.name}!`;
-        msg.className = 'jtc-msg success';
-
-        setTimeout(() => {
-          document.getElementById('join-team-card').style.display = 'none';
-          document.getElementById('team-banner-name').textContent = teamName;
-          document.getElementById('team-banner').style.display = 'flex';
-        }, 1200);
-
-      } catch (e) {
-        msg.textContent = 'Failed to join: ' + e.message;
-        msg.className = 'jtc-msg error';
-        btn.disabled = false;
-        btn.classList.remove('loading');
-      }
-    }
-
-    async function leaveTeam() {
-      if (!window.rtUser) return;
-      if (!confirm('Leave this team? You can rejoin with an invite code.')) return;
-
-      try {
-        const uid    = window.rtUser.uid;
-        const teamId = window.rtUserTeamId;
-        if (teamId) {
-          await rtDb.collection('teams').doc(teamId).collection('members').doc(uid).delete();
+        if (phaseEl) phaseEl.textContent = currentPhase > 5 ? 'Done' : currentPhase;
+        if (compEl) compEl.textContent = verified + '/6';
+        if (descEl && currentPhase <= 5) {
+          var names = ['Java Readiness','Make It Move','Make It Structured','Make It Smart','Make It Precise','Make It Robust'];
+          var status = data['phase' + currentPhase] ? data['phase' + currentPhase].status : 'not_started';
+          var label = status === 'in_progress' ? 'In Progress' : status === 'submitted' ? 'Submitted' : 'Not Started';
+          descEl.textContent = 'Phase ' + currentPhase + ' — ' + names[currentPhase] + ' (' + label + ')';
         }
-        await rtDb.collection('users').doc(uid).set({ teamId: null }, { merge: true });
-        window.rtUserTeamId = null;
-
-        document.getElementById('team-banner').style.display = 'none';
-        document.getElementById('join-team-card').style.display = 'block';
-        document.getElementById('jtc-code').value = '';
-        document.getElementById('jtc-msg').textContent = '';
       } catch (e) {
-        alert('Failed to leave team: ' + e.message);
+        console.warn('loadCurriculumBarStats:', e.message);
       }
     }
+
+    /* ── Init ───────────────────────────────────────────────────────────────── */
+    initAuth(function onSignedIn(user) {
+      var role = window.rtUserRole || 'player';
+      updateHomeUser(user, role);
+      loadReportBarStats(user.uid);
+      loadCurriculumBarStats(user.uid);
+    });
   </script>
 </body>
+
 </html>

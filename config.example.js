@@ -8,3 +8,5 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
+
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";

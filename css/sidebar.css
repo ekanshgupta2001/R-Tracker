@@ -422,6 +422,129 @@ html.light .rt-popover-divider { background: #eee; }
 
 .rt-popover-signout:hover { color: #ff5544; background: rgba(255, 85, 68, 0.08); }
 
+/* ── Sidebar Team Section ──────────────────────────────────────────────── */
+.sidebar-team-section {
+  padding: 0 16px 8px;
+  border-top: 1px solid var(--divider);
+  margin-top: auto;
+}
+
+.sb-team-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+
+.sb-team-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sb-team-name {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.sb-team-leave {
+  font-size: 11px;
+  color: #ff5544;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.sb-team-leave:hover { text-decoration: underline; }
+
+.sb-team-create {
+  display: block;
+  padding: 10px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--burgundy-light);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.sb-team-create:hover { opacity: 0.7; }
+
+/* Join Team in Sidebar */
+.sb-join-team {
+  padding: 10px 0 4px;
+}
+
+.sb-join-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sb-join-input {
+  flex: 1;
+  padding: 6px 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+
+.sb-join-input:focus {
+  outline: none;
+  border-color: var(--burgundy);
+}
+
+.sb-join-input::placeholder {
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+.sb-join-btn {
+  padding: 6px 12px;
+  background: var(--burgundy);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.sb-join-btn:hover { background: #9a0028; }
+
+.sb-join-msg {
+  font-size: 10px;
+  margin-top: 4px;
+  min-height: 12px;
+}
+
+.sb-join-msg.error { color: #ff5544; }
+.sb-join-msg.success { color: #44cc88; }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 /* ── Light Mode — sidebar right border for separation ─────────────────── */
 html.light .sidebar { border-right-color: #e0e0e0; }

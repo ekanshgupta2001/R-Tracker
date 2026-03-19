@@ -13,22 +13,22 @@
   --burgundy: #800020;
   --burgundy-light: #a0334a;
   --burgundy-glow: rgba(128, 0, 32, 0.45);
-  --bg: #1a1a1a;
-  --bg-sidebar: #222222;
-  --card: #222222;
-  --card-hover: #2a2a2a;
-  --card-border: #333333;
+  --bg: #111111;
+  --bg-sidebar: #1a1a1a;
+  --card: #1a1a1a;
+  --card-hover: #1e1e1e;
+  --card-border: #2a2a2a;
   --text: #ffffff;
   --text-dim: #e0e0e0;
   --text-muted: #999999;
   --divider: #2a2a2a;
-  --topbar-bg: #222222;
+  --topbar-bg: #1a1a1a;
   --toggle-bg: #2a2a2a;
   --toggle-border: #444444;
   --grid-line: rgba(128, 0, 32, 0.03);
   --sidebar-width: 260px;
   --card-shadow: none;
-  --card-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --card-shadow-hover: none;
   --input-bg: #111111;
   --input-border: #333333;
   --scrollbar-thumb: #444444;
@@ -37,8 +37,8 @@
 
 /* ── CSS Variables — Light Mode ─────────────────────────────────────────── */
 :root.light {
-  --bg: #f5f5f5;
-  --bg-sidebar: #f0f0f0;
+  --bg: #f0f0f0;
+  --bg-sidebar: #ffffff;
   --card: #ffffff;
   --card-hover: #fafafa;
   --card-border: #e0e0e0;
@@ -50,7 +50,7 @@
   --toggle-bg: #e8e8e8;
   --toggle-border: #cccccc;
   --grid-line: rgba(128, 0, 32, 0.04);
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
   --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
   --input-bg: #ffffff;
   --input-border: #e0e0e0;

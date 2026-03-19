@@ -65,15 +65,10 @@
   document.head.appendChild(earlyStyle);
 
   // ── Firebase init ─────────────────────────────────────────────────────────
-  const FIREBASE_CONFIG = {
-    apiKey: "***REMOVED***",
-    authDomain: "r-tracker-646c3.firebaseapp.com",
-    projectId: "r-tracker-646c3",
-    storageBucket: "r-tracker-646c3.firebasestorage.app",
-    messagingSenderId: "***REMOVED***",
-    appId: "1:***REMOVED***:web:***REMOVED***"
-  };
-
+  // FIREBASE_CONFIG is loaded from config.js (see config.example.js for template)
+  if (typeof FIREBASE_CONFIG === 'undefined') {
+    console.error('FIREBASE_CONFIG not found — make sure config.js is loaded before firebase-auth.js');
+  }
   if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
   window.rtAuth = firebase.auth();
   window.rtDb   = firebase.firestore();

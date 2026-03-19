@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <meta name="description" content="FTC Programming Curriculum — R-Tracker structured learning path.">
+  <title>Curriculum — R-Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/login.css">
+  <link rel="stylesheet" href="../css/curriculum.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../config.js"></script>
+  <script src="../js/firebase-init.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/curriculum/gemini.js"></script>
+</head>
+
+<body class="sidebar-open">
+  <div class="topbar">
+    <div class="topbar-left"><a href="../index.html">&larr; Home</a></div>
+    <div class="topbar-right">FTC Programming Curriculum</div>
+  </div>
+
+  <div class="curr-wrap">
+    <!-- Left: Phase Timeline -->
+    <div class="curr-timeline" id="timeline">
+      <div class="tl-title">Learning Path</div>
+      <div class="tl-nodes" id="tl-nodes">
+        <div class="tl-progress-line" id="tl-progress"></div>
+        <!-- Nodes injected by JS -->
+      </div>
+    </div>
+
+    <!-- Right: Content Area -->
+    <div class="curr-content" id="curr-content">
+      <div class="curr-empty">
+        <div class="curr-empty-icon">📚</div>
+        <div>Select a phase from the timeline to begin.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════════════════
+       PHASE DEFINITIONS
+       ══════════════════════════════════════════════════════════════════════ */
+    var PHASES = [
+      {
+        id: 'phase0', num: 0, name: 'Java Readiness',
+        desc: 'Pass the diagnostic quiz',
+        unlockReq: null, // always unlocked
+        section: 'core'
+      },
+      {
+        id: 'phase1', num: 1, name: 'Make It Move',
+        desc: 'FTC ecosystem and motor control',
+        unlockReq: 'phase0',
+        section: 'core'
+      },
+      {
+        id: 'phase2', num: 2, name: 'Make It Structured',
+        desc: 'Subsystems and architecture',
+        unlockReq: 'phase1',
+        section: 'core'
+      },
+      {
+        id: 'phase3', num: 3, name: 'Make It Smart',
+        desc: 'Sensors and basic autonomous',
+        unlockReq: 'phase2',
+        section: 'core'
+      },
+      {
+        id: 'phase4', num: 4, name: 'Make It Precise',
+        desc: 'PID, odometry, and pathing',
+        unlockReq: 'phase3',
+        section: 'core'
+      },
+      {
+        id: 'phase5', num: 5, name: 'Make It Robust',
+        desc: 'Debugging and competition prep',
+        unlockReq: 'phase4',
+        section: 'core'
+      },
+      {
+        id: 'advanced_command', num: 'A1', name: 'Command-Based Programming',
+        desc: 'Optional advanced module',
+        unlockReq: 'phase5',
+        section: 'advanced'
+      },
+      {
+        id: 'advanced_strategy', num: 'A2', name: 'Competition Strategy',
+        desc: 'Optional advanced module',
+        unlockReq: 'phase5',
+        section: 'advanced'
+      },
+      {
+        id: 'capstone', num: 'C', name: 'Full Competition Autonomous',
+        desc: 'Capstone project',
+        unlockReq: 'phase5',
+        section: 'capstone'
+      }
+    ];
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       QUIZ QUESTIONS (Phase 0)
+       ══════════════════════════════════════════════════════════════════════ */
+    var QUIZ = [
+      {
+        q: 'What does this code output?',
+        code: '<span class="syn-kw">public class</span> <span class="syn-type">Dog</span> {\n  <span class="syn-type">String</span> name;\n  <span class="syn-kw">public</span> <span class="syn-fn">Dog</span>(<span class="syn-type">String</span> n) { name = n; }\n}\n<span class="syn-cm">// In main:</span>\n<span class="syn-type">Dog</span> d = <span class="syn-kw">new</span> <span class="syn-fn">Dog</span>(<span class="syn-str">"Rex"</span>);\nSystem.out.<span class="syn-fn">println</span>(d.name);',
+        opts: ['null', 'Rex', 'Dog', 'Error'],
+        correct: 1,
+        explain: 'The constructor assigns n to name, so d.name is "Rex".'
+      },
+      {
+        q: 'Which keyword creates a new object instance?',
+        opts: ['new', 'class', 'void', 'static'],
+        correct: 0,
+        explain: 'The <code>new</code> keyword allocates memory and calls the constructor.'
+      },
+      {
+        q: 'What is wrong with this code?',
+        code: '<span class="syn-kw">for</span> (<span class="syn-kw">int</span> i = <span class="syn-num">0</span>; i <= arr.length; i++) {\n  System.out.<span class="syn-fn">println</span>(arr[i]);\n}',
+        opts: [
+          'Should use i < arr.length (off-by-one)',
+          'Missing semicolons',
+          'arr is not declared',
+          'println needs a cast'
+        ],
+        correct: 0,
+        explain: 'Arrays are 0-indexed, so the last valid index is arr.length - 1. Using <= causes an ArrayIndexOutOfBoundsException.'
+      },
+      {
+        q: 'What does this method return when called with x = 7?',
+        code: '<span class="syn-kw">int</span> <span class="syn-fn">check</span>(<span class="syn-kw">int</span> x) {\n  <span class="syn-kw">if</span> (x > <span class="syn-num">10</span>) <span class="syn-kw">return</span> <span class="syn-num">1</span>;\n  <span class="syn-kw">else if</span> (x > <span class="syn-num">5</span>) <span class="syn-kw">return</span> <span class="syn-num">2</span>;\n  <span class="syn-kw">else return</span> <span class="syn-num">3</span>;\n}',
+        opts: ['1', '2', '3', 'Error'],
+        correct: 1,
+        explain: '7 is not > 10, but 7 > 5 is true, so it returns 2.'
+      },
+      {
+        q: 'Which data type stores true/false?',
+        opts: ['boolean', 'int', 'String', 'double'],
+        correct: 0,
+        explain: '<code>boolean</code> is Java\'s primitive type for true/false values.'
+      },
+      {
+        q: 'What does this ArrayList code produce?',
+        code: 'ArrayList&lt;<span class="syn-type">String</span>&gt; list = <span class="syn-kw">new</span> ArrayList&lt;&gt;();\nlist.<span class="syn-fn">add</span>(<span class="syn-str">"A"</span>);\nlist.<span class="syn-fn">add</span>(<span class="syn-str">"B"</span>);\nlist.<span class="syn-fn">add</span>(<span class="syn-str">"C"</span>);\nlist.<span class="syn-fn">remove</span>(<span class="syn-num">1</span>);\nSystem.out.<span class="syn-fn">println</span>(list);',
+        opts: ['[A, C]', '[B, C]', '[A, B]', '[A, B, C]'],
+        correct: 0,
+        explain: 'remove(1) removes the element at index 1 ("B"), leaving [A, C].'
+      },
+      {
+        q: 'Which version correctly fixes this code?',
+        code: '<span class="syn-kw">public class</span> <span class="syn-type">Motor</span> {\n  <span class="syn-kw">double</span> power\n  <span class="syn-kw">public void</span> <span class="syn-fn">setPower</span>(<span class="syn-kw">double</span> p) { power = p; }\n}',
+        opts: [
+          'Add semicolon after "double power"',
+          'Change double to int',
+          'Add return type to class',
+          'Remove the method parameter'
+        ],
+        correct: 0,
+        explain: 'Java statements must end with a semicolon. <code>double power;</code> is the fix.'
+      },
+      {
+        q: 'What is encapsulation?',
+        opts: [
+          'Hiding internal details behind methods',
+          'Creating multiple objects from one class',
+          'Inheriting from a parent class',
+          'Overloading method parameters'
+        ],
+        correct: 0,
+        explain: 'Encapsulation means bundling data with methods and restricting direct access to internal state.'
+      },
+      {
+        q: 'What does <code>this</code> refer to in a constructor?',
+        opts: [
+          'The current object being created',
+          'The parent class',
+          'The method caller',
+          'A static variable'
+        ],
+        correct: 0,
+        explain: '<code>this</code> refers to the current instance of the class — the object being constructed.'
+      },
+      {
+        q: 'What does this code print?',
+        code: '<span class="syn-kw">int</span> count = <span class="syn-num">0</span>;\n<span class="syn-kw">while</span> (count < <span class="syn-num">3</span>) {\n  count++;\n}\nSystem.out.<span class="syn-fn">println</span>(count);',
+        opts: ['3', '2', '4', '0'],
+        correct: 0,
+        explain: 'The loop runs while count < 3. After iterations (0->1, 1->2, 2->3), count is 3 when the loop exits.'
+      }
+    ];
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       LESSON CONTENT (HTML strings per phase)
+       ══════════════════════════════════════════════════════════════════════ */
+    var LESSONS = {};
+
+    LESSONS.phase0 = `
+      <h2>Java Fundamentals Review</h2>
+      <p>Before writing FTC robot code, you need a solid foundation in Java. This phase reviews the core concepts you'll use every day: classes, objects, methods, control flow, and data structures.</p>
+
+      <h3>Classes and Objects</h3>
+      <p>A <strong>class</strong> is a blueprint; an <strong>object</strong> is an instance of that blueprint. In FTC, your OpMode is a class, and the runtime creates an object from it.</p>
+      <div class="curr-code-block"><span class="syn-kw">public class</span> <span class="syn-type">MyRobot</span> {
+  <span class="syn-type">String</span> name;
+  <span class="syn-kw">double</span> speed;
+
+  <span class="syn-kw">public</span> <span class="syn-fn">MyRobot</span>(<span class="syn-type">String</span> name, <span class="syn-kw">double</span> speed) {
+    <span class="syn-kw">this</span>.name = name;
+    <span class="syn-kw">this</span>.speed = speed;
+  }
+}</div>
+
+      <h3>Methods</h3>
+      <p>Methods define behavior. They have a return type, a name, and parameters. Use <code>void</code> when nothing is returned.</p>
+      <div class="curr-code-block"><span class="syn-kw">public double</span> <span class="syn-fn">clampPower</span>(<span class="syn-kw">double</span> power) {
+  <span class="syn-kw">return</span> Math.<span class="syn-fn">max</span>(-<span class="syn-num">1.0</span>, Math.<span class="syn-fn">min</span>(<span class="syn-num">1.0</span>, power));
+}</div>
+
+      <h3>Control Flow</h3>
+      <p>Use <code>if/else</code> for decisions and <code>for</code>/<code>while</code> loops for repetition.</p>
+      <div class="curr-code-block"><span class="syn-kw">if</span> (distance < <span class="syn-num">5.0</span>) {
+  <span class="syn-fn">stopMotors</span>();
+} <span class="syn-kw">else</span> {
+  <span class="syn-fn">driveForward</span>(<span class="syn-num">0.5</span>);
+}
+
+<span class="syn-kw">for</span> (<span class="syn-kw">int</span> i = <span class="syn-num">0</span>; i < motors.length; i++) {
+  motors[i].<span class="syn-fn">setPower</span>(<span class="syn-num">0</span>);
+}</div>
+
+      <h3>Arrays and ArrayLists</h3>
+      <p>Arrays have a fixed size. <code>ArrayList</code> can grow dynamically. Both are indexed starting at 0.</p>
+
+      <table>
+        <tr><th>Feature</th><th>Array</th><th>ArrayList</th></tr>
+        <tr><td>Size</td><td>Fixed at creation</td><td>Grows dynamically</td></tr>
+        <tr><td>Syntax</td><td><code>int[] a = new int[4];</code></td><td><code>ArrayList&lt;Integer&gt; a = new ArrayList&lt;&gt;();</code></td></tr>
+        <tr><td>Access</td><td><code>a[0]</code></td><td><code>a.get(0)</code></td></tr>
+      </table>
+
+      <blockquote><strong>Mentor Note:</strong> If you're comfortable with all of these concepts, take the quiz below. You need 80% to unlock Phase 1.</blockquote>
+    `;
+
+    LESSONS.phase1 = `
+      <h2>The FTC Ecosystem</h2>
+      <p>FTC robots run on Android phones using the FTC SDK. Your code lives in <strong>OpModes</strong> — either <code>LinearOpMode</code> (sequential) or <code>OpMode</code> (iterative loop).</p>
+
+      <h3>Hardware Map</h3>
+      <p>The <strong>hardwareMap</strong> connects your code to physical devices. Names must match the robot configuration on the Driver Station.</p>
+      <div class="curr-code-block"><span class="syn-type">DcMotor</span> frontLeft = hardwareMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"frontLeft"</span>);
+<span class="syn-type">Servo</span> claw = hardwareMap.<span class="syn-fn">get</span>(<span class="syn-type">Servo</span>.<span class="syn-kw">class</span>, <span class="syn-str">"claw"</span>);</div>
+
+      <h3>Motor Control</h3>
+      <p>Motors accept power from <strong>-1.0</strong> (full reverse) to <strong>1.0</strong> (full forward). Always set direction so positive = intuitive.</p>
+      <div class="curr-code-block">frontLeft.<span class="syn-fn">setDirection</span>(DcMotor.Direction.REVERSE);
+frontLeft.<span class="syn-fn">setPower</span>(<span class="syn-num">0.75</span>); <span class="syn-cm">// 75% forward</span></div>
+
+      <h3>Gamepad Input</h3>
+      <p>The <code>gamepad1</code> and <code>gamepad2</code> objects give you access to joysticks, buttons, and triggers in real time.</p>
+      <div class="curr-code-block"><span class="syn-kw">double</span> drive = -gamepad1.left_stick_y; <span class="syn-cm">// Y is inverted!</span>
+<span class="syn-kw">double</span> turn  = gamepad1.right_stick_x;
+
+frontLeft.<span class="syn-fn">setPower</span>(drive + turn);
+frontRight.<span class="syn-fn">setPower</span>(drive - turn);</div>
+
+      <h3>Telemetry</h3>
+      <p>Use <code>telemetry</code> to display debug info on the Driver Station screen.</p>
+      <div class="curr-code-block">telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Drive"</span>, drive);
+telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Turn"</span>, turn);
+telemetry.<span class="syn-fn">update</span>();</div>
+
+      <div class="curr-activity">
+        <div class="curr-activity-header">&#10067; Check Your Understanding</div>
+        <p>Why is <code>gamepad1.left_stick_y</code> negated? What would happen if you forgot to negate it?</p>
+      </div>
+
+      <blockquote><strong>Mentor Note:</strong> The deliverable for this phase is a working TeleOp with drivetrain control, at least one mechanism (servo or second motor), and telemetry output.</blockquote>
+    `;
+
+    LESSONS.phase2 = `
+      <h2>Subsystems and Architecture</h2>
+      <p>As your code grows, a single OpMode file becomes unmanageable. <strong>Subsystems</strong> let you organize code by responsibility — drivetrain, intake, lift, etc.</p>
+
+      <h3>The Subsystem Pattern</h3>
+      <div class="curr-code-block"><span class="syn-kw">public class</span> <span class="syn-type">Drivetrain</span> {
+  <span class="syn-kw">private</span> <span class="syn-type">DcMotor</span> fl, fr, bl, br;
+
+  <span class="syn-kw">public</span> <span class="syn-fn">Drivetrain</span>(<span class="syn-type">HardwareMap</span> hwMap) {
+    fl = hwMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"fl"</span>);
+    fr = hwMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"fr"</span>);
+    bl = hwMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"bl"</span>);
+    br = hwMap.<span class="syn-fn">get</span>(<span class="syn-type">DcMotor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"br"</span>);
+    fl.<span class="syn-fn">setDirection</span>(DcMotor.Direction.REVERSE);
+    bl.<span class="syn-fn">setDirection</span>(DcMotor.Direction.REVERSE);
+  }
+
+  <span class="syn-kw">public void</span> <span class="syn-fn">drive</span>(<span class="syn-kw">double</span> fwd, <span class="syn-kw">double</span> str, <span class="syn-kw">double</span> rot) {
+    fl.<span class="syn-fn">setPower</span>(fwd + str + rot);
+    fr.<span class="syn-fn">setPower</span>(fwd - str - rot);
+    bl.<span class="syn-fn">setPower</span>(fwd - str + rot);
+    br.<span class="syn-fn">setPower</span>(fwd + str - rot);
+  }
+
+  <span class="syn-kw">public void</span> <span class="syn-fn">stop</span>() { <span class="syn-fn">drive</span>(<span class="syn-num">0</span>, <span class="syn-num">0</span>, <span class="syn-num">0</span>); }
+}</div>
+
+      <h3>Enums and State Machines</h3>
+      <p>Use <strong>enums</strong> to define discrete states and a <strong>state machine</strong> to manage transitions.</p>
+      <div class="curr-code-block"><span class="syn-kw">enum</span> <span class="syn-type">LiftState</span> { GROUND, LOW, MID, HIGH }
+
+<span class="syn-type">LiftState</span> state = <span class="syn-type">LiftState</span>.GROUND;
+
+<span class="syn-kw">switch</span> (state) {
+  <span class="syn-kw">case</span> GROUND: target = <span class="syn-num">0</span>; <span class="syn-kw">break</span>;
+  <span class="syn-kw">case</span> LOW:    target = <span class="syn-num">400</span>; <span class="syn-kw">break</span>;
+  <span class="syn-kw">case</span> MID:    target = <span class="syn-num">800</span>; <span class="syn-kw">break</span>;
+  <span class="syn-kw">case</span> HIGH:   target = <span class="syn-num">1200</span>; <span class="syn-kw">break</span>;
+}</div>
+
+      <h3>The Robot Class</h3>
+      <p>Create a central <code>Robot</code> class that holds all subsystems. Your OpMode becomes clean and short.</p>
+      <div class="curr-code-block"><span class="syn-kw">public class</span> <span class="syn-type">Robot</span> {
+  <span class="syn-kw">public</span> <span class="syn-type">Drivetrain</span> drive;
+  <span class="syn-kw">public</span> <span class="syn-type">Intake</span> intake;
+  <span class="syn-kw">public</span> <span class="syn-type">Lift</span> lift;
+
+  <span class="syn-kw">public</span> <span class="syn-fn">Robot</span>(<span class="syn-type">HardwareMap</span> hwMap) {
+    drive  = <span class="syn-kw">new</span> <span class="syn-fn">Drivetrain</span>(hwMap);
+    intake = <span class="syn-kw">new</span> <span class="syn-fn">Intake</span>(hwMap);
+    lift   = <span class="syn-kw">new</span> <span class="syn-fn">Lift</span>(hwMap);
+  }
+}</div>
+
+      <blockquote><strong>Mentor Note:</strong> Refactor your Phase 1 code into proper subsystems. Every hardware device should live inside a subsystem class, not in the OpMode directly.</blockquote>
+    `;
+
+    LESSONS.phase3 = `
+      <h2>Sensors and Autonomous Basics</h2>
+      <p>Sensors let your robot perceive the world. Combined with motor control, they enable autonomous operation.</p>
+
+      <h3>Common FTC Sensors</h3>
+      <table>
+        <tr><th>Sensor</th><th>What It Measures</th><th>Use Case</th></tr>
+        <tr><td>Color/Distance (Rev)</td><td>Color, distance (cm)</td><td>Detecting game elements</td></tr>
+        <tr><td>Touch Sensor</td><td>Pressed/not pressed</td><td>Limit switches</td></tr>
+        <tr><td>IMU (BNO055)</td><td>Heading, orientation</td><td>Straight driving, turning</td></tr>
+        <tr><td>Encoder (built-in)</td><td>Motor rotation (ticks)</td><td>Distance tracking</td></tr>
+      </table>
+
+      <h3>Reading Sensors</h3>
+      <div class="curr-code-block"><span class="syn-type">ColorRangeSensor</span> sensor = hardwareMap.<span class="syn-fn">get</span>(
+  <span class="syn-type">ColorRangeSensor</span>.<span class="syn-kw">class</span>, <span class="syn-str">"colorSensor"</span>);
+
+<span class="syn-kw">double</span> dist = sensor.<span class="syn-fn">getDistance</span>(DistanceUnit.CM);
+<span class="syn-kw">if</span> (dist < <span class="syn-num">5.0</span>) {
+  <span class="syn-cm">// Object detected!</span>
+  intake.<span class="syn-fn">grab</span>();
+}</div>
+
+      <h3>Basic Autonomous Structure</h3>
+      <div class="curr-code-block"><span class="syn-ann">@Autonomous</span>(name = <span class="syn-str">"Simple Auto"</span>)
+<span class="syn-kw">public class</span> <span class="syn-type">SimpleAuto</span> <span class="syn-kw">extends</span> <span class="syn-type">LinearOpMode</span> {
+  <span class="syn-ann">@Override</span>
+  <span class="syn-kw">public void</span> <span class="syn-fn">runOpMode</span>() {
+    <span class="syn-type">Robot</span> robot = <span class="syn-kw">new</span> <span class="syn-fn">Robot</span>(hardwareMap);
+    <span class="syn-fn">waitForStart</span>();
+
+    <span class="syn-cm">// Drive forward for 2 seconds</span>
+    robot.drive.<span class="syn-fn">drive</span>(<span class="syn-num">0.5</span>, <span class="syn-num">0</span>, <span class="syn-num">0</span>);
+    <span class="syn-fn">sleep</span>(<span class="syn-num">2000</span>);
+    robot.drive.<span class="syn-fn">stop</span>();
+
+    <span class="syn-cm">// Check for game element</span>
+    <span class="syn-kw">if</span> (robot.intake.<span class="syn-fn">detectsObject</span>()) {
+      robot.intake.<span class="syn-fn">grab</span>();
+    }
+  }
+}</div>
+
+      <div class="curr-activity">
+        <div class="curr-activity-header">&#10067; Think About It</div>
+        <p>Why is time-based autonomous unreliable? What happens if the battery is at 11V vs 13V?</p>
+      </div>
+
+      <blockquote><strong>Mentor Note:</strong> Your deliverable should use at least one sensor to make a decision during autonomous. Time-based driving is acceptable for movement, but the decision logic must be sensor-driven.</blockquote>
+    `;
+
+    LESSONS.phase4 = `
+      <h2>Precision Control</h2>
+      <p>Time-based driving is inaccurate. This phase introduces <strong>PID control</strong>, <strong>encoders</strong>, and <strong>odometry</strong> for precise, repeatable movement.</p>
+
+      <h3>Encoders</h3>
+      <p>Encoders count motor shaft rotations in "ticks." Convert ticks to distance using your wheel circumference and gear ratio.</p>
+      <div class="curr-code-block"><span class="syn-kw">double</span> TICKS_PER_REV = <span class="syn-num">537.7</span>; <span class="syn-cm">// goBILDA 312 RPM</span>
+<span class="syn-kw">double</span> WHEEL_DIAMETER = <span class="syn-num">96</span>; <span class="syn-cm">// mm</span>
+<span class="syn-kw">double</span> TICKS_PER_MM = TICKS_PER_REV / (WHEEL_DIAMETER * Math.PI);</div>
+
+      <h3>PID Control</h3>
+      <p>A <strong>PID controller</strong> adjusts motor power based on the <em>error</em> between where you are and where you want to be.</p>
+      <div class="curr-code-block"><span class="syn-kw">double</span> kP = <span class="syn-num">0.005</span>, kI = <span class="syn-num">0.0001</span>, kD = <span class="syn-num">0.002</span>;
+<span class="syn-kw">double</span> integral = <span class="syn-num">0</span>, prevError = <span class="syn-num">0</span>;
+
+<span class="syn-kw">double</span> <span class="syn-fn">pidPower</span>(<span class="syn-kw">double</span> target, <span class="syn-kw">double</span> current) {
+  <span class="syn-kw">double</span> error = target - current;
+  integral += error;
+  <span class="syn-kw">double</span> derivative = error - prevError;
+  prevError = error;
+  <span class="syn-kw">return</span> kP * error + kI * integral + kD * derivative;
+}</div>
+
+      <h3>Odometry and Pedro Pathing</h3>
+      <p>Dead-wheel odometry tracks your robot's position on the field using separate encoder wheels. <strong>Pedro Pathing</strong> uses this position data to follow complex curves autonomously.</p>
+
+      <div class="curr-activity">
+        <div class="curr-activity-header">&#10067; Tuning Challenge</div>
+        <p>Start with kP only. Increase until the robot oscillates, then reduce by 30%. Add kD to dampen oscillation. Only add kI if there's steady-state error.</p>
+      </div>
+
+      <blockquote><strong>Mentor Note:</strong> The deliverable requires a multi-waypoint autonomous path that the robot can complete consistently across 5 runs. Use FTC Dashboard for live tuning.</blockquote>
+    `;
+
+    LESSONS.phase5 = `
+      <h2>Debugging and Competition Readiness</h2>
+      <p>Your code works on the bench. Now make it survive a competition. This phase covers debugging methodology, failure modes, and code review practices.</p>
+
+      <h3>Systematic Debugging</h3>
+      <ol>
+        <li><strong>Reproduce</strong> — Can you trigger the bug reliably?</li>
+        <li><strong>Isolate</strong> — Which subsystem? Which method? Which line?</li>
+        <li><strong>Hypothesize</strong> — What do you think is wrong?</li>
+        <li><strong>Test</strong> — Add telemetry, change one thing, observe</li>
+        <li><strong>Fix and verify</strong> — Does the fix work? Did it break anything else?</li>
+      </ol>
+
+      <h3>Common Competition Failures</h3>
+      <table>
+        <tr><th>Failure</th><th>Cause</th><th>Prevention</th></tr>
+        <tr><td>Robot doesn't move</td><td>Wrong hardware names</td><td>Always test config first</td></tr>
+        <tr><td>Autonomous drifts</td><td>Low battery, wheel slip</td><td>Odometry, PID, battery check</td></tr>
+        <tr><td>App crashes on start</td><td>Null reference</td><td>Null checks, try/catch in init</td></tr>
+        <tr><td>Servo jitters</td><td>Wiring issue or power</td><td>External servo power hub</td></tr>
+      </table>
+
+      <h3>Telemetry as Logging</h3>
+      <div class="curr-code-block"><span class="syn-cm">// Create a telemetry dashboard for competition debugging</span>
+telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"State"</span>, currentState);
+telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Loop ms"</span>, loopTimer.<span class="syn-fn">milliseconds</span>());
+telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Battery"</span>, <span class="syn-str">"%.1fV"</span>, voltageSensor.<span class="syn-fn">getVoltage</span>());
+telemetry.<span class="syn-fn">addData</span>(<span class="syn-str">"Pose"</span>, <span class="syn-str">"(%.1f, %.1f) @ %.1f°"</span>, x, y, heading);
+telemetry.<span class="syn-fn">update</span>();</div>
+
+      <div class="curr-activity">
+        <div class="curr-activity-header">&#10067; Pressure Test</div>
+        <p>Your mentor will give you a deliberately broken codebase. You have 20 minutes to find and fix all bugs. This simulates a real competition pit scenario.</p>
+      </div>
+
+      <blockquote><strong>Mentor Note:</strong> For the deliverable, prepare a broken codebase (3-5 bugs) and give the student 20 minutes to diagnose and fix under pressure. Evaluate their debugging process, not just whether they found all bugs.</blockquote>
+    `;
+
+    LESSONS.advanced_command = `
+      <h2>Command-Based Programming</h2>
+      <p>The command-based paradigm separates <em>what</em> the robot does (Commands) from <em>what</em> it uses (Subsystems). This pattern, used in FRC and supported by FTC libraries like FTCLib, scales well for complex robots.</p>
+
+      <h3>Core Concepts</h3>
+      <ul>
+        <li><strong>Subsystem</strong> — Owns hardware, provides capabilities</li>
+        <li><strong>Command</strong> — Uses a subsystem to perform an action</li>
+        <li><strong>Scheduler</strong> — Manages which commands run and when</li>
+        <li><strong>Trigger</strong> — Binds gamepad buttons to commands</li>
+      </ul>
+
+      <h3>Example</h3>
+      <div class="curr-code-block"><span class="syn-kw">public class</span> <span class="syn-type">GrabCommand</span> <span class="syn-kw">extends</span> <span class="syn-type">CommandBase</span> {
+  <span class="syn-kw">private</span> <span class="syn-type">ClawSubsystem</span> claw;
+
+  <span class="syn-kw">public</span> <span class="syn-fn">GrabCommand</span>(<span class="syn-type">ClawSubsystem</span> claw) {
+    <span class="syn-kw">this</span>.claw = claw;
+    <span class="syn-fn">addRequirements</span>(claw);
+  }
+
+  <span class="syn-ann">@Override</span>
+  <span class="syn-kw">public void</span> <span class="syn-fn">execute</span>() { claw.<span class="syn-fn">close</span>(); }
+
+  <span class="syn-ann">@Override</span>
+  <span class="syn-kw">public boolean</span> <span class="syn-fn">isFinished</span>() { <span class="syn-kw">return true</span>; }
+}</div>
+
+      <blockquote><strong>Mentor Note:</strong> This module is optional. It's most valuable for teams with complex robots that need parallel command scheduling.</blockquote>
+    `;
+
+    LESSONS.advanced_strategy = `
+      <h2>Competition Strategy Engineering</h2>
+      <p>Great code isn't enough — you need a strategy. This module covers match analysis, alliance coordination, and autonomous selection.</p>
+
+      <h3>Key Topics</h3>
+      <ul>
+        <li><strong>Scouting data analysis</strong> — Identify opponents' weaknesses</li>
+        <li><strong>Autonomous selection</strong> — Choose your auto based on alliance partner</li>
+        <li><strong>Cycle time optimization</strong> — Measure and improve your scoring rate</li>
+        <li><strong>Endgame planning</strong> — When to transition from cycling to endgame</li>
+        <li><strong>Driver communication protocol</strong> — Standardized callouts during matches</li>
+      </ul>
+
+      <div class="curr-activity">
+        <div class="curr-activity-header">&#10067; Strategy Exercise</div>
+        <p>Watch 3 match recordings. For each, identify: (1) What the winning alliance did better, (2) Where the losing alliance left points on the field, (3) What autonomous strategy would counter the top-seeded team.</p>
+      </div>
+    `;
+
+    LESSONS.capstone = `
+      <h2>Full Competition Autonomous</h2>
+      <p>Your capstone project: build a complete competition-ready autonomous that scores maximum points in the DECODE season.</p>
+
+      <h3>Requirements</h3>
+      <ul>
+        <li>Start from either alliance position</li>
+        <li>Score at least 2 game elements autonomously</li>
+        <li>Navigate using odometry (no time-based driving)</li>
+        <li>Handle at least one sensor-based decision</li>
+        <li>End parked in the correct zone</li>
+        <li>Complete reliably in under 30 seconds</li>
+      </ul>
+
+      <h3>Evaluation Criteria</h3>
+      <table>
+        <tr><th>Criteria</th><th>Weight</th></tr>
+        <tr><td>Consistency (5/5 runs)</td><td>30%</td></tr>
+        <tr><td>Points scored</td><td>25%</td></tr>
+        <tr><td>Code quality</td><td>20%</td></tr>
+        <tr><td>Error handling</td><td>15%</td></tr>
+        <tr><td>Documentation</td><td>10%</td></tr>
+      </table>
+
+      <blockquote><strong>Mentor Note:</strong> This is the culmination of the curriculum. The student should be able to explain every line of their code and justify their design decisions.</blockquote>
+    `;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       DELIVERABLE DEFINITIONS
+       ══════════════════════════════════════════════════════════════════════ */
+    var DELIVERABLES = {
+      phase1: {
+        title: 'Build a Working TeleOp',
+        req: 'Write a TeleOp OpMode with drivetrain control, at least one mechanism, and telemetry output.',
+        checklist: [
+          'Motors configured with correct names from hardwareMap',
+          'Drivetrain responds to gamepad joysticks',
+          'At least one mechanism (servo or additional motor) controlled by buttons',
+          'Telemetry displays at least 3 data points',
+          'Code compiles and runs without crashes'
+        ]
+      },
+      phase2: {
+        title: 'Refactored Subsystem Architecture',
+        req: 'Refactor your TeleOp code into proper subsystems with a Robot class.',
+        checklist: [
+          'Drivetrain subsystem class with drive() and stop() methods',
+          'At least one additional subsystem (Intake, Lift, Claw, etc.)',
+          'Robot class that initializes all subsystems',
+          'OpMode uses Robot class — no direct hardware references',
+          'All fields are private with public methods (encapsulation)'
+        ]
+      },
+      phase3: {
+        title: 'Sensor-Driven Autonomous',
+        req: 'Build an autonomous that drives to a position and reacts to sensor input.',
+        checklist: [
+          'Uses LinearOpMode with waitForStart()',
+          'Drives to at least one position',
+          'Reads from at least one sensor (color, distance, IMU)',
+          'Makes a decision based on sensor reading',
+          'Stops all motors when finished'
+        ]
+      },
+      phase4: {
+        title: 'Multi-Waypoint Autonomous Path',
+        req: 'Create an autonomous using PID and odometry that completes 5 consecutive consistent runs.',
+        checklist: [
+          'PID controller for at least heading correction',
+          'Encoder-based distance tracking OR odometry',
+          'At least 3 waypoints in the path',
+          'Consistent completion (5/5 runs with < 2in variance)',
+          'FTC Dashboard integration for tuning'
+        ]
+      },
+      phase5: {
+        title: 'Debug Under Pressure',
+        req: 'Diagnose and fix a deliberately broken codebase within 20 minutes.',
+        checklist: [
+          'Found and fixed at least 3 of 5 bugs',
+          'Used systematic debugging (not random guessing)',
+          'Added telemetry to isolate issues',
+          'Documented what each bug was and how you fixed it',
+          'Completed within 20 minutes'
+        ]
+      },
+      capstone: {
+        title: 'Full Competition Autonomous',
+        req: 'Build a complete competition-ready autonomous for the DECODE season.',
+        checklist: [
+          'Works from either alliance starting position',
+          'Scores at least 2 game elements',
+          'Uses odometry for navigation (no time-based driving)',
+          'At least one sensor-based decision',
+          'Ends parked in the correct zone',
+          'Completes reliably in under 30 seconds'
+        ]
+      }
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       STATE
+       ══════════════════════════════════════════════════════════════════════ */
+    var currData = {};       // phase data from Firestore
+    var activePhase = null;  // currently selected phase id
+    var quizAnswers = {};    // { questionIndex: selectedOption }
+    var quizDone = false;
+    var currentUid = null;
+    var viewingUid = null;   // whose curriculum we're viewing (coach can view students)
+    var isCoach = false;
+    var teamMembers = [];    // [{uid, name, email}] for coach student selector
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       HELPERS
+       ══════════════════════════════════════════════════════════════════════ */
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getStatus(phaseId) {
+      var d = currData[phaseId];
+      if (!d) return isLocked(phaseId) ? 'locked' : 'not_started';
+      return d.status || 'not_started';
+    }
+
+    function isLocked(phaseId) {
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      if (!phase || !phase.unlockReq) return false;
+      var req = currData[phase.unlockReq];
+      return !req || req.status !== 'verified';
+    }
+
+    function savePhaseData(phaseId, data) {
+      var uid = viewingUid || currentUid;
+      if (!uid) return Promise.resolve();
+      console.log('[Curriculum] savePhaseData:', phaseId, JSON.stringify(data), 'for user:', uid);
+      return rtDb.collection('users').doc(uid)
+        .collection('curriculum').doc(phaseId)
+        .set(data, { merge: true });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       TIMELINE RENDERING
+       ══════════════════════════════════════════════════════════════════════ */
+    function renderTimeline() {
+      var container = document.getElementById('tl-nodes');
+      var html = '<div class="tl-progress-line" id="tl-progress"></div>';
+      var lastSection = '';
+
+      PHASES.forEach(function(phase, i) {
+        if (phase.section !== lastSection) {
+          if (phase.section === 'advanced') {
+            html += '<div class="tl-divider">Advanced Modules</div>';
+          } else if (phase.section === 'capstone') {
+            html += '<div class="tl-divider">Capstone</div>';
+          }
+          lastSection = phase.section;
+        }
+
+        var status = getStatus(phase.id);
+        var locked = status === 'locked';
+        var isActive = phase.id === activePhase;
+        var isCurrent = status === 'in_progress';
+
+        var cls = 'tl-node';
+        if (locked) cls += ' tl-locked';
+        if (isActive) cls += ' tl-active';
+        if (isCurrent) cls += ' tl-current';
+
+        var pillLabels = { locked: 'Locked', not_started: 'Not Started', in_progress: 'In Progress', submitted: 'Submitted', pending_mentor: 'Mentor Review', verified: 'Completed' };
+        var pillCls = 'tl-status-pill tl-pill-' + status.replace(/_/g, '-');
+
+        html += '<div class="' + cls + '" data-status="' + status + '" data-phase="' + phase.id + '" onclick="selectPhase(\'' + phase.id + '\')">';
+        html += '<div class="tl-dot"></div>';
+        html += '<div class="tl-phase-num">Phase ' + phase.num + '</div>';
+        html += '<div class="tl-phase-name">' + esc(phase.name) + '</div>';
+        html += '<span class="' + pillCls + '">' + (pillLabels[status] || status) + '</span>';
+        html += '<div class="tl-phase-desc">' + esc(phase.desc) + '</div>';
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+      updateProgressLine();
+    }
+
+    function updateProgressLine() {
+      var line = document.getElementById('tl-progress');
+      if (!line) return;
+
+      // Calculate how far the progress line should go
+      var lastVerified = -1;
+      PHASES.forEach(function(phase, i) {
+        if (getStatus(phase.id) === 'verified') lastVerified = i;
+      });
+
+      if (lastVerified < 0) {
+        line.style.height = '0px';
+        return;
+      }
+
+      var nodes = document.querySelectorAll('.tl-node');
+      if (nodes.length === 0) return;
+      var first = nodes[0];
+      var target = nodes[Math.min(lastVerified, nodes.length - 1)];
+      var parentTop = first.parentElement.getBoundingClientRect().top;
+      var h = target.getBoundingClientRect().top - parentTop + target.offsetHeight / 2;
+      line.style.height = Math.max(0, h) + 'px';
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PHASE SELECTION / CONTENT RENDERING
+       ══════════════════════════════════════════════════════════════════════ */
+    window.selectPhase = function(phaseId) {
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      if (!phase) return;
+      if (isLocked(phaseId)) return;
+
+      activePhase = phaseId;
+      renderTimeline();
+      renderContent(phase);
+    };
+
+    function renderContent(phase) {
+      var el = document.getElementById('curr-content');
+      var status = getStatus(phase.id);
+      var data = currData[phase.id] || {};
+
+      var html = '';
+
+      // Coach mentor tools bar
+      if (isCoach) {
+        html += renderCoachToolbar(phase.id, status, data);
+      }
+
+      // Coach feedback banner (if student was rejected with feedback)
+      if (!isCoach && data.coachFeedback && status === 'in_progress') {
+        html += '<div class="coach-feedback-banner">';
+        html += '<div class="coach-feedback-title">&#128172; Mentor Feedback</div>';
+        html += '<div class="coach-feedback-text">' + esc(data.coachFeedback) + '</div>';
+        html += '</div>';
+      }
+
+      // Header
+      html += '<div class="curr-phase-header">';
+      html += '<div class="curr-phase-num">Phase ' + phase.num + '</div>';
+      html += '<div class="curr-phase-title">' + esc(phase.name) + '</div>';
+      html += '<div class="curr-status-row">';
+      html += renderBadge(status);
+      html += renderActionButton(phase.id, status);
+      html += '</div>';
+      html += '</div>';
+
+      // Lesson content
+      html += '<div class="curr-lesson">';
+      html += LESSONS[phase.id] || '<p>Content coming soon.</p>';
+      html += '</div>';
+
+      // Quiz for Phase 0
+      if (phase.id === 'phase0') {
+        html += renderQuiz(data);
+      }
+
+      // Deliverable for phases 1-5 and capstone
+      if (DELIVERABLES[phase.id]) {
+        html += renderDeliverable(phase.id, data);
+      }
+
+      el.innerHTML = html;
+      el.scrollTop = 0;
+    }
+
+    function renderBadge(status) {
+      var labels = {
+        locked: '🔒 Locked',
+        not_started: 'Not Started',
+        in_progress: 'In Progress',
+        submitted: 'Submitted for Review',
+        pending_mentor: '🔍 Mentor Review Requested',
+        verified: '✓ Completed'
+      };
+      return '<span class="curr-badge curr-badge-' + status + '">' + (labels[status] || status) + '</span>';
+    }
+
+    function renderActionButton(phaseId, status) {
+      if (status === 'locked') return '';
+      if (status === 'not_started') {
+        return '<button class="curr-action-btn btn-start" onclick="startPhase(\'' + phaseId + '\')">Start This Phase</button>';
+      }
+      if (status === 'in_progress') {
+        if (phaseId === 'phase0') return ''; // quiz handles submission
+        return '<button class="curr-action-btn btn-submit" onclick="submitPhase(\'' + phaseId + '\')">Submit Deliverable</button>';
+      }
+      if (status === 'submitted' || status === 'pending_mentor') {
+        var waitLabel = status === 'pending_mentor' ? 'Awaiting mentor review (AI decision disputed)' : 'Waiting for mentor verification';
+        var html = '<span class="curr-waiting"><span class="curr-waiting-icon">⏱</span> ' + waitLabel + '</span>';
+        if (isCoach) {
+          html += '<button class="curr-action-btn btn-verify" onclick="verifyPhase(\'' + phaseId + '\')" style="margin-left:8px">Verify</button>';
+          html += '<button class="curr-action-btn btn-reject" onclick="rejectPhase(\'' + phaseId + '\')" style="margin-left:4px">Request Changes</button>';
+        }
+        return html;
+      }
+      if (status === 'verified') {
+        return '<span class="curr-completed">&#10003; Completed</span>';
+      }
+      return '';
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       QUIZ RENDERING
+       ══════════════════════════════════════════════════════════════════════ */
+    function renderQuiz(data) {
+      quizAnswers = {};
+      quizDone = false;
+
+      var html = '<div class="quiz-container" id="quiz-container">';
+      html += '<div class="quiz-title">Java Diagnostic Quiz</div>';
+      html += '<div class="quiz-subtitle">Score 80% or higher to unlock Phase 1. ' + (data.attempts ? '(Attempt ' + (data.attempts + 1) + ')' : '') + '</div>';
+
+      QUIZ.forEach(function(q, i) {
+        html += '<div class="quiz-question" id="quiz-q-' + i + '">';
+        html += '<div class="quiz-q-num">Question ' + (i + 1) + ' of ' + QUIZ.length + '</div>';
+        html += '<div class="quiz-q-text">' + q.q + '</div>';
+        if (q.code) {
+          html += '<div class="quiz-q-code">' + q.code + '</div>';
+        }
+        html += '<div class="quiz-options" id="quiz-opts-' + i + '">';
+        q.opts.forEach(function(opt, j) {
+          html += '<button class="quiz-opt" onclick="answerQuiz(' + i + ',' + j + ')">' + opt + '</button>';
+        });
+        html += '</div>';
+        html += '<div class="quiz-explanation" id="quiz-exp-' + i + '"></div>';
+        html += '</div>';
+      });
+
+      html += '<div class="quiz-results" id="quiz-results"></div>';
+      html += '</div>';
+      return html;
+    }
+
+    window.answerQuiz = function(qIdx, optIdx) {
+      if (quizAnswers[qIdx] !== undefined) return; // already answered
+      quizAnswers[qIdx] = optIdx;
+
+      var q = QUIZ[qIdx];
+      var opts = document.querySelectorAll('#quiz-opts-' + qIdx + ' .quiz-opt');
+      var expEl = document.getElementById('quiz-exp-' + qIdx);
+
+      opts.forEach(function(btn, j) {
+        btn.classList.add('quiz-answered');
+        if (j === q.correct) btn.classList.add('quiz-correct');
+        if (j === optIdx && j !== q.correct) btn.classList.add('quiz-wrong');
+      });
+
+      var isCorrect = optIdx === q.correct;
+      expEl.className = 'quiz-explanation show ' + (isCorrect ? 'correct' : 'wrong');
+      expEl.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Incorrect. ') + q.explain;
+
+      // Check if all questions answered
+      if (Object.keys(quizAnswers).length === QUIZ.length) {
+        setTimeout(showQuizResults, 500);
+      }
+    };
+
+    function showQuizResults() {
+      var correct = 0;
+      QUIZ.forEach(function(q, i) {
+        if (quizAnswers[i] === q.correct) correct++;
+      });
+
+      var pct = Math.round((correct / QUIZ.length) * 100);
+      var passed = pct >= 80;
+      var attempts = (currData.phase0 && currData.phase0.attempts) ? currData.phase0.attempts + 1 : 1;
+
+      var el = document.getElementById('quiz-results');
+      var html = '';
+      html += '<div class="quiz-score ' + (passed ? 'pass' : 'fail') + '">' + correct + '/' + QUIZ.length + '</div>';
+      html += '<div class="quiz-score-label">' + pct + '%</div>';
+
+      if (passed) {
+        html += '<div class="quiz-result-msg pass">Congratulations! Phase 0 complete. Phase 1 is now unlocked.</div>';
+      } else {
+        html += '<div class="quiz-result-msg fail">You need 80% to pass. Review the material and try again.</div>';
+        html += '<button class="quiz-retry-btn" onclick="retryQuiz()">Retry Quiz</button>';
+      }
+
+      el.innerHTML = html;
+      el.classList.add('show');
+
+      // Save to Firestore
+      var saveData = {
+        status: passed ? 'verified' : (currData.phase0 && currData.phase0.status === 'in_progress' ? 'in_progress' : 'not_started'),
+        score: pct,
+        passed: passed,
+        attempts: attempts,
+        lastAttempt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (passed) {
+        saveData.verifiedAt = firebase.firestore.FieldValue.serverTimestamp();
+        saveData.verifiedBy = null; // auto-verified
+      }
+
+      currData.phase0 = Object.assign(currData.phase0 || {}, saveData);
+      console.log('[Curriculum] Quiz results: score:', pct + '%', 'passed:', passed, 'attempts:', attempts);
+      savePhaseData('phase0', saveData).then(function() {
+        if (passed) {
+          // Unlock Phase 1
+          var phase1Data = currData.phase1 || {};
+          if (!phase1Data.status || phase1Data.status === 'locked') {
+            phase1Data.status = 'not_started';
+            currData.phase1 = phase1Data;
+            console.log('[Curriculum] Phase 0 verified, unlocking phase 1');
+            savePhaseData('phase1', { status: 'not_started' });
+          }
+
+          // Re-render header to show completed badge
+          var phase = PHASES[0];
+          var headerEl = document.querySelector('.curr-phase-header');
+          if (headerEl) {
+            var hHtml = '<div class="curr-phase-num">Phase 0</div>';
+            hHtml += '<div class="curr-phase-title">Java Readiness</div>';
+            hHtml += '<div class="curr-status-row">';
+            hHtml += renderBadge('verified');
+            hHtml += '<span class="curr-completed">&#10003; Completed</span>';
+            hHtml += '</div>';
+            headerEl.innerHTML = hHtml;
+          }
+
+          // Celebration
+          showCelebration('phase0');
+        }
+        renderTimeline();
+      });
+    }
+
+    window.retryQuiz = function() {
+      var container = document.getElementById('quiz-container');
+      if (!container) return;
+      quizAnswers = {};
+      quizDone = false;
+      // Re-render just the quiz
+      container.outerHTML = renderQuiz(currData.phase0 || {});
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       DELIVERABLE RENDERING
+       ══════════════════════════════════════════════════════════════════════ */
+    function renderDeliverable(phaseId, data) {
+      var def = DELIVERABLES[phaseId];
+      if (!def) return '';
+
+      var status = getStatus(phaseId);
+
+      // Don't show deliverable section at all for locked phases
+      if (status === 'locked') return '';
+
+      var checklist = data.checklist || def.checklist.map(function() { return false; });
+      var notes = data.notes || '';
+      var savedCode = data.submittedCode || '';
+      var bestScore = data.bestScore || data.aiScore || data.lastAIScore;
+
+      var html = '<div class="curr-deliverable">';
+
+      // Best score banner for verified phases
+      if (status === 'verified' && bestScore) {
+        html += '<div class="best-score-banner">';
+        html += '<span class="best-score-check">&#10003;</span>';
+        html += '<span>Completed — Best Score: <strong>' + bestScore + '/100</strong></span>';
+        html += '</div>';
+      }
+
+      html += '<div class="curr-deliv-title">Phase Deliverable</div>';
+      html += '<div class="curr-deliv-req">' + esc(def.req) + '</div>';
+      html += '<ul class="curr-checklist">';
+      def.checklist.forEach(function(item, i) {
+        var checked = checklist[i] ? ' checked' : '';
+        html += '<li class="curr-check-item">';
+        html += '<input type="checkbox"' + checked + ' onchange="updateChecklist(\'' + phaseId + '\',' + i + ',this.checked)">';
+        html += '<span>' + esc(item) + '</span>';
+        html += '</li>';
+      });
+      html += '</ul>';
+
+      // Code editor
+      html += '<div class="code-editor-section">';
+      html += '<div class="code-editor-label">Your Code</div>';
+      html += '<textarea class="code-editor" id="code-editor-' + phaseId + '" placeholder="Paste your Java code here..." spellcheck="false">' + esc(savedCode) + '</textarea>';
+      html += '</div>';
+
+      // Action buttons — show on all unlocked phases including verified
+      html += '<div class="code-actions">';
+      if (status !== 'submitted' && status !== 'pending_mentor') {
+        if (status === 'verified') {
+          // Verified: resubmit button with confirmation
+          html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="confirmResubmit(\'' + phaseId + '\')">Submit for AI Review</button>';
+          html += '<div class="resubmit-note">Your completion status is safe — resubmitting can only improve your score</div>';
+        } else {
+          // Not started or in progress: normal submit
+          html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="submitForAIReview(\'' + phaseId + '\')">Submit for AI Review</button>';
+        }
+      }
+      html += '</div>';
+
+      // AI review loading state (hidden)
+      html += '<div class="ai-review-loading" id="ai-loading-' + phaseId + '" style="display:none">';
+      html += '<div class="ai-loading-spinner"></div>';
+      html += '<div class="ai-loading-text">AI mentor is reading your code<span class="ai-dots"></span></div>';
+      html += '</div>';
+
+      // AI review result container (hidden)
+      html += '<div id="ai-result-' + phaseId + '"></div>';
+
+      // Notes
+      html += '<textarea class="curr-notes-area" placeholder="Notes for your mentor..." onblur="saveNotes(\'' + phaseId + '\',this.value)">' + esc(notes) + '</textarea>';
+
+      // Review history
+      html += '<div class="review-history" id="review-history-' + phaseId + '">';
+      html += '<button class="review-history-toggle" onclick="toggleReviewHistory(\'' + phaseId + '\')">Previous Reviews <span class="review-history-arrow" id="rh-arrow-' + phaseId + '">&#9656;</span></button>';
+      html += '<div class="review-history-list" id="rh-list-' + phaseId + '" style="display:none"></div>';
+      html += '</div>';
+
+      html += '</div>';
+      return html;
+    }
+
+    // After content renders, load review history
+    var _origRenderContent = renderContent;
+    renderContent = function(phase) {
+      _origRenderContent(phase);
+      if (DELIVERABLES[phase.id]) {
+        loadReviewHistory(phase.id);
+      }
+    };
+
+    window.updateChecklist = function(phaseId, idx, checked) {
+      var data = currData[phaseId] || {};
+      var def = DELIVERABLES[phaseId];
+      if (!def) return;
+      var cl = data.checklist || def.checklist.map(function() { return false; });
+      cl[idx] = checked;
+      data.checklist = cl;
+      currData[phaseId] = data;
+      savePhaseData(phaseId, { checklist: cl });
+    };
+
+    window.saveNotes = function(phaseId, val) {
+      var data = currData[phaseId] || {};
+      data.notes = val;
+      currData[phaseId] = data;
+      savePhaseData(phaseId, { notes: val });
+    };
+
+    // Tab key inserts spaces in code editor
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('code-editor') && e.key === 'Tab') {
+        e.preventDefault();
+        var ta = e.target;
+        var start = ta.selectionStart;
+        var end = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + '    ' + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+      }
+    });
+
+    // Auto-save code on blur
+    document.addEventListener('focusout', function(e) {
+      if (e.target.classList.contains('code-editor')) {
+        var phaseId = e.target.id.replace('code-editor-', '');
+        var data = currData[phaseId] || {};
+        data.submittedCode = e.target.value;
+        currData[phaseId] = data;
+        savePhaseData(phaseId, { submittedCode: e.target.value });
+      }
+    });
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       RESUBMIT CONFIRMATION MODAL
+       ══════════════════════════════════════════════════════════════════════ */
+    window.confirmResubmit = function(phaseId) {
+      var data = currData[phaseId] || {};
+      var prevScore = data.bestScore || data.aiScore || data.lastAIScore || '—';
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      var phaseNum = phase ? phase.num : phaseId;
+
+      // Remove existing modal if any
+      var old = document.getElementById('resubmit-modal');
+      if (old) old.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'resubmit-modal';
+      modal.className = 'resubmit-modal-overlay';
+      modal.innerHTML =
+        '<div class="resubmit-modal-card">' +
+          '<div class="resubmit-modal-title">Resubmit Phase ' + phaseNum + '?</div>' +
+          '<div class="resubmit-modal-text">' +
+            'You\'ve already completed this phase with a score of <strong>' + prevScore + '/100</strong>. ' +
+            'Submitting again will update your score if the new result is higher. ' +
+            'Your completion status won\'t be lost.' +
+          '</div>' +
+          '<div class="resubmit-modal-actions">' +
+            '<button class="resubmit-modal-btn resubmit-cancel" onclick="closeResubmitModal()">Cancel</button>' +
+            '<button class="resubmit-modal-btn resubmit-confirm" onclick="closeResubmitModal(); submitForAIReview(\'' + phaseId + '\', true)">Resubmit</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+      // Close on backdrop click
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeResubmitModal();
+      });
+    };
+
+    window.closeResubmitModal = function() {
+      var modal = document.getElementById('resubmit-modal');
+      if (modal) modal.remove();
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       AI REVIEW
+       ══════════════════════════════════════════════════════════════════════ */
+    var aiReviewCooldown = false;
+
+    window.submitForAIReview = async function(phaseId, isResubmit) {
+      if (aiReviewCooldown) return;
+
+      var codeEl = document.getElementById('code-editor-' + phaseId);
+      var code = codeEl ? codeEl.value.trim() : '';
+      if (!code) {
+        alert('Please paste your Java code before submitting for review.');
+        return;
+      }
+      if (code.length < 30) {
+        alert('Your code seems too short. Please paste your full implementation.');
+        return;
+      }
+
+      // Rate limit
+      aiReviewCooldown = true;
+      var btn = document.getElementById('ai-review-btn-' + phaseId);
+      if (btn) { btn.disabled = true; btn.textContent = 'Reviewing...'; }
+      setTimeout(function() { aiReviewCooldown = false; }, 5000);
+
+      // Show loading
+      var loadingEl = document.getElementById('ai-loading-' + phaseId);
+      var resultEl = document.getElementById('ai-result-' + phaseId);
+      if (loadingEl) loadingEl.style.display = 'flex';
+      if (resultEl) resultEl.innerHTML = '';
+
+      // Save code to Firestore
+      var data = currData[phaseId] || {};
+      data.submittedCode = code;
+      currData[phaseId] = data;
+      savePhaseData(phaseId, { submittedCode: code });
+
+      try {
+        console.log('[Curriculum] Submitting code for AI review, phase:', phaseId, 'code length:', code.length);
+        var review = await window.reviewStudentCode(phaseId, code);
+        if (!review) throw new Error('No review returned');
+        console.log('[Curriculum] AI review result:', JSON.stringify({ passed: review.passed, score: review.score, summary: review.summary }));
+
+        // Save review to Firestore
+        var uid = viewingUid || currentUid;
+        var reviewDoc = {
+          code: code,
+          review: review,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await rtDb.collection('users').doc(uid)
+          .collection('curriculum').doc(phaseId)
+          .collection('reviews').add(reviewDoc);
+        console.log('[Curriculum] Review saved to Firestore');
+
+        // Track whether this submission auto-verified the phase
+        var autoVerified = false;
+
+        // Determine previous best score and current status
+        var wasAlreadyVerified = data.status === 'verified';
+        var prevBest = data.bestScore || data.aiScore || data.lastAIScore || 0;
+        var newBest = Math.max(prevBest, review.score);
+
+        // Update phase data with AI result
+        data.aiPassed = review.passed;
+        data.lastAIScore = review.score;
+        data.bestScore = newBest;
+        currData[phaseId] = data;
+
+        var saveObj = { aiPassed: review.passed, lastAIScore: review.score, bestScore: newBest };
+        console.log('Phase', phaseId, 'review complete, passed=' + review.passed + ', score=' + review.score + ', bestScore=' + newBest + ', updating Firestore...');
+
+        // If resubmitting a verified phase: NEVER downgrade status
+        if (wasAlreadyVerified) {
+          // Keep status as verified, just update score if higher
+          console.log('Phase', phaseId, 'was already verified — keeping verified status, bestScore:', newBest);
+          savePhaseData(phaseId, saveObj);
+          // Show review result (no auto-verify celebration since already verified)
+          if (resultEl) resultEl.innerHTML = renderAIReviewCard(review, phaseId, false, newBest, prevBest);
+        } else {
+          savePhaseData(phaseId, saveObj);
+
+          // Auto-verify if score >= 75 AND passed (first-time verification)
+          if (review.passed && review.score >= 75) {
+            autoVerified = true;
+            console.log('[Curriculum] Score >= 75 and passed, auto-verifying phase:', phaseId);
+            await autoVerifyPhase(phaseId, review);
+            // Save bestScore after verify
+            data.bestScore = newBest;
+            currData[phaseId] = data;
+            savePhaseData(phaseId, { bestScore: newBest });
+          } else {
+            console.log('[Curriculum] Not auto-verifying. passed:', review.passed, 'score:', review.score, '(need passed=true AND score>=75)');
+          }
+
+          // Render result
+          if (resultEl) resultEl.innerHTML = renderAIReviewCard(review, phaseId, autoVerified);
+
+          // Celebration animation for first-time verification
+          if (autoVerified) {
+            showCelebration(phaseId);
+            console.log('AI PASSED — verifying phase', phaseId, 'unlocking next phase');
+          }
+        }
+
+        // Refresh review history
+        loadReviewHistory(phaseId);
+      } catch (err) {
+        console.error('AI review FAILED:', err);
+        if (resultEl) {
+          resultEl.innerHTML = '<div class="ai-error"><span class="ai-error-icon">&#9888;</span> AI review unavailable. Please try again in a moment.<div class="ai-error-detail">' + esc(err.message) + '</div></div>';
+        }
+      } finally {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for AI Review'; }
+      }
+    };
+
+    function renderAIReviewCard(review, phaseId, autoVerified, newBest, prevBest) {
+      var scoreClass = review.score >= 80 ? 'ai-score-green' : (review.score >= 60 ? 'ai-score-orange' : 'ai-score-red');
+      var didAutoPass = autoVerified === true;
+      var isResub = prevBest !== undefined && prevBest > 0;
+      var passClass = didAutoPass ? 'ai-pass ai-auto-verified' : (review.passed ? 'ai-pass' : 'ai-fail');
+      var passBadge;
+      if (didAutoPass) {
+        passBadge = '<span class="ai-badge ai-badge-verified">VERIFIED &#10003;</span>';
+      } else if (review.passed) {
+        passBadge = '<span class="ai-badge ai-badge-pass">PASSED &#10003;</span>';
+      } else {
+        passBadge = '<span class="ai-badge ai-badge-fail">NEEDS WORK</span>';
+      }
+
+      var html = '<div class="ai-review-card ' + passClass + '">';
+
+      // Header
+      html += '<div class="ai-review-header">';
+      html += '<div class="ai-review-title">AI Code Review</div>';
+      html += passBadge;
+      html += '</div>';
+
+      // Score
+      html += '<div class="ai-score-section">';
+      html += '<div class="ai-score ' + scoreClass + '">' + review.score + '</div>';
+      html += '<div class="ai-score-label">/ 100</div>';
+      html += '</div>';
+
+      // Score comparison for resubmissions
+      if (isResub) {
+        if (review.score > prevBest) {
+          html += '<div class="score-compare score-improved">&#9650; New best! Score improved from ' + prevBest + ' to ' + newBest + '</div>';
+        } else if (review.score === prevBest) {
+          html += '<div class="score-compare score-same">Same as your best score (' + prevBest + '/100). Your record is unchanged.</div>';
+        } else {
+          html += '<div class="score-compare score-lower">Your best score of ' + prevBest + '/100 is preserved. This attempt: ' + review.score + '/100</div>';
+        }
+      }
+
+      // Congratulations banner for auto-verified
+      if (didAutoPass) {
+        var phase = PHASES.find(function(p) { return p.id === phaseId; });
+        var phaseIdx = PHASES.indexOf(phase);
+        var nextPhase = (phaseIdx >= 0 && phaseIdx < PHASES.length - 1) ? PHASES[phaseIdx + 1] : null;
+
+        html += '<div class="ai-congrats">';
+        html += '<div class="ai-congrats-icon">&#127881;</div>';
+        html += '<div class="ai-congrats-title">Phase ' + (phase ? phase.num : '') + ' Complete!</div>';
+        if (nextPhase && !isLocked(nextPhase.id)) {
+          html += '<div class="ai-congrats-msg">Phase ' + nextPhase.num + ' is now unlocked.</div>';
+          html += '<button class="curr-action-btn btn-verify ai-next-phase-btn" onclick="selectPhase(\'' + nextPhase.id + '\')">Start Next Phase &#8594;</button>';
+        } else {
+          html += '<div class="ai-congrats-msg">Great work!</div>';
+        }
+        html += '</div>';
+      }
+
+      // Summary
+      html += '<div class="ai-summary">' + esc(review.summary) + '</div>';
+
+      // Strengths
+      if (review.strengths && review.strengths.length > 0) {
+        html += '<div class="ai-section ai-strengths">';
+        html += '<div class="ai-section-title"><span class="ai-icon-check">&#10003;</span> Strengths</div>';
+        review.strengths.forEach(function(s) {
+          html += '<div class="ai-strength-item">' + esc(s) + '</div>';
+        });
+        html += '</div>';
+      }
+
+      // Issues
+      if (review.issues && review.issues.length > 0) {
+        html += '<div class="ai-section ai-issues">';
+        html += '<div class="ai-section-title"><span class="ai-icon-warn">&#9888;</span> Issues</div>';
+        review.issues.forEach(function(issue) {
+          var sevClass = 'ai-sev-' + (issue.severity || 'WARNING').toLowerCase();
+          html += '<div class="ai-issue ' + sevClass + '">';
+          html += '<span class="ai-sev-badge">' + esc(issue.severity) + '</span>';
+          html += '<div class="ai-issue-desc">' + esc(issue.description) + '</div>';
+          if (issue.line) {
+            html += '<div class="ai-issue-code">' + esc(issue.line) + '</div>';
+          }
+          if (issue.fix) {
+            html += '<div class="ai-issue-fix"><strong>Fix:</strong> ' + esc(issue.fix) + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      // Requirements met
+      if (review.requirements_met && review.requirements_met.length > 0) {
+        html += '<div class="ai-section ai-reqs">';
+        html += '<div class="ai-section-title">Requirements</div>';
+        review.requirements_met.forEach(function(r) {
+          var icon = r.met ? '<span class="ai-req-pass">&#10003;</span>' : '<span class="ai-req-fail">&#10007;</span>';
+          html += '<div class="ai-req-item">' + icon + '<div><div class="ai-req-text">' + esc(r.requirement) + '</div><div class="ai-req-exp">' + esc(r.explanation) + '</div></div></div>';
+        });
+        html += '</div>';
+      }
+
+      // Next steps
+      if (review.next_steps && review.next_steps.length > 0) {
+        html += '<div class="ai-section ai-next">';
+        html += '<div class="ai-section-title">Next Steps</div>';
+        html += '<ol class="ai-next-list">';
+        review.next_steps.forEach(function(s) {
+          html += '<li>' + esc(s) + '</li>';
+        });
+        html += '</ol>';
+        html += '</div>';
+      }
+
+      // Bottom actions — depend on outcome
+      html += '<div class="ai-review-actions">';
+      if (didAutoPass) {
+        // Already verified — no action buttons needed beyond "Start Next Phase" above
+      } else if (!review.passed || review.score < 75) {
+        // Failed or score too low — Revise & Resubmit + optional mentor disagree
+        html += '<button class="curr-action-btn btn-start" onclick="clearReviewAndRevise(\'' + phaseId + '\')">Revise &amp; Resubmit</button>';
+        html += '<button class="curr-action-btn btn-mentor-disagree" onclick="submitMentorDisagree(\'' + phaseId + '\')">Disagree? Request Mentor Review</button>';
+        if (review.score < 75 && review.passed) {
+          html += '<div class="ai-threshold-note">Score of 75+ required for auto-verification. Current: ' + review.score + '/100</div>';
+        }
+      }
+      html += '</div>';
+
+      html += '</div>';
+      return html;
+    }
+
+    /* ── Verify phase and unlock next (shared by AI auto-verify and coach verify) */
+    async function verifyAndUnlockNext(phaseId, verifiedBy, extraData) {
+      var data = currData[phaseId] || {};
+      data.status = 'verified';
+      data.verifiedBy = verifiedBy;
+      currData[phaseId] = Object.assign(data, extraData || {});
+
+      var saveObj = Object.assign({
+        status: 'verified',
+        verifiedBy: verifiedBy,
+        verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, extraData || {});
+
+      console.log('[Curriculum] Verifying phase:', phaseId, 'by:', verifiedBy);
+      console.log('Saving phase', phaseId, 'as verified to Firestore...');
+      await savePhaseData(phaseId, saveObj);
+      console.log('Phase', phaseId, 'saved as verified');
+
+      // Unlock next phase
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      var phaseIdx = PHASES.indexOf(phase);
+      if (phaseIdx >= 0 && phaseIdx < PHASES.length - 1) {
+        var nextPhase = PHASES[phaseIdx + 1];
+        if (nextPhase.unlockReq === phaseId) {
+          var nextData = currData[nextPhase.id] || {};
+          if (!nextData.status || nextData.status === 'locked') {
+            nextData.status = 'not_started';
+            currData[nextPhase.id] = nextData;
+            console.log('AI PASSED — verifying phase', phaseId, 'unlocking phase', nextPhase.id);
+            await savePhaseData(nextPhase.id, { status: 'not_started' });
+            console.log('Phase', nextPhase.id, 'unlocked (status: not_started)');
+          }
+        }
+      }
+
+      // Update timeline UI
+      renderTimeline();
+
+      // Update header badge in content area
+      var headerEl = document.querySelector('.curr-phase-header');
+      if (headerEl && phase) {
+        var hHtml = '<div class="curr-phase-num">Phase ' + phase.num + '</div>';
+        hHtml += '<div class="curr-phase-title">' + esc(phase.name) + '</div>';
+        hHtml += '<div class="curr-status-row">';
+        hHtml += renderBadge('verified');
+        hHtml += '<span class="curr-completed">&#10003; Completed</span>';
+        hHtml += '</div>';
+        headerEl.innerHTML = hHtml;
+      }
+    }
+
+    /* ── Auto-verify phase (AI passed with score >= 75) ─────────────────────── */
+    async function autoVerifyPhase(phaseId, review) {
+      console.log('[Curriculum] Auto-verifying phase:', phaseId, 'score:', review.score);
+      await verifyAndUnlockNext(phaseId, 'ai_reviewer', { aiScore: review.score });
+    }
+
+    /* ── Celebration animation ──────────────────────────────────────────────── */
+    function showCelebration(phaseId) {
+      // Green flash on the timeline node
+      var node = document.querySelector('.tl-node[data-phase="' + phaseId + '"]');
+      if (node) {
+        node.classList.add('tl-celebrate');
+        setTimeout(function() { node.classList.remove('tl-celebrate'); }, 1200);
+      }
+
+      // Confetti burst
+      var container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+
+      var colors = ['#22c55e', '#800020', '#f59e0b', '#3b82f6', '#fff'];
+      for (var i = 0; i < 40; i++) {
+        var piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = (Math.random() * 100) + '%';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.5) + 's';
+        piece.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+        container.appendChild(piece);
+      }
+
+      setTimeout(function() { container.remove(); }, 3000);
+    }
+
+    /* ── Clear review and let student revise ────────────────────────────────── */
+    window.clearReviewAndRevise = function(phaseId) {
+      var resultEl = document.getElementById('ai-result-' + phaseId);
+      if (resultEl) resultEl.innerHTML = '';
+      var codeEl = document.getElementById('code-editor-' + phaseId);
+      if (codeEl) codeEl.focus();
+    };
+
+    /* ── Disagree with AI — request mentor review ───────────────────────────── */
+    window.submitMentorDisagree = function(phaseId) {
+      var codeEl = document.getElementById('code-editor-' + phaseId);
+      var code = codeEl ? codeEl.value.trim() : '';
+      var data = currData[phaseId] || {};
+
+      data.status = 'pending_mentor';
+      data.submittedCode = code;
+      currData[phaseId] = data;
+
+      savePhaseData(phaseId, {
+        status: 'pending_mentor',
+        submittedCode: code,
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        aiPassed: data.aiPassed,
+        lastAIScore: data.lastAIScore,
+        mentorRequestReason: 'student_disagrees_with_ai'
+      }).then(function() {
+        renderTimeline();
+        var resultEl = document.getElementById('ai-result-' + phaseId);
+        if (resultEl) {
+          resultEl.innerHTML = '<div class="ai-mentor-pending">' +
+            '<span class="ai-mentor-pending-icon">&#128269;</span>' +
+            '<div class="ai-mentor-pending-title">Mentor Review Requested</div>' +
+            '<div class="ai-mentor-pending-msg">Your submission and AI review have been sent to your mentor for manual review. You\'ll be notified when they respond.</div>' +
+            '</div>';
+        }
+      });
+    };
+
+    window.submitToMentor = function(phaseId) {
+      var codeEl = document.getElementById('code-editor-' + phaseId);
+      var code = codeEl ? codeEl.value.trim() : '';
+      var data = currData[phaseId] || {};
+
+      data.status = 'submitted';
+      data.submittedCode = code;
+      currData[phaseId] = data;
+
+      savePhaseData(phaseId, {
+        status: 'submitted',
+        submittedCode: code,
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        renderTimeline();
+        var phase = PHASES.find(function(p) { return p.id === phaseId; });
+        if (phase) renderContent(phase);
+      });
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       REVIEW HISTORY
+       ══════════════════════════════════════════════════════════════════════ */
+    async function loadReviewHistory(phaseId) {
+      var listEl = document.getElementById('rh-list-' + phaseId);
+      var uid = viewingUid || currentUid;
+      if (!listEl || !uid) return;
+
+      try {
+        var snap = await rtDb.collection('users').doc(uid)
+          .collection('curriculum').doc(phaseId)
+          .collection('reviews')
+          .orderBy('timestamp', 'desc')
+          .limit(10)
+          .get();
+
+        if (snap.empty) {
+          listEl.innerHTML = '<div class="rh-empty">No previous reviews yet.</div>';
+          return;
+        }
+
+        var html = '';
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          var r = d.review || {};
+          var ts = d.timestamp ? d.timestamp.toDate() : new Date();
+          var dateStr = ts.toLocaleDateString() + ' ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          var scoreClass = r.score >= 80 ? 'ai-score-green' : (r.score >= 60 ? 'ai-score-orange' : 'ai-score-red');
+          var passLabel = r.passed ? 'Passed' : 'Failed';
+          var passClass = r.passed ? 'rh-pass' : 'rh-fail';
+
+          html += '<div class="rh-item" onclick="this.querySelector(\'.rh-detail\').style.display=this.querySelector(\'.rh-detail\').style.display===\'none\'?\'block\':\'none\'">';
+          html += '<div class="rh-item-header">';
+          html += '<span class="rh-date">' + dateStr + '</span>';
+          html += '<span class="rh-score ' + scoreClass + '">' + (r.score || 0) + '/100</span>';
+          html += '<span class="rh-pass-label ' + passClass + '">' + passLabel + '</span>';
+          html += '</div>';
+          html += '<div class="rh-detail" style="display:none">';
+          html += '<div class="rh-summary">' + esc(r.summary || '') + '</div>';
+          if (r.issues && r.issues.length > 0) {
+            html += '<div class="rh-issues">' + r.issues.length + ' issue' + (r.issues.length > 1 ? 's' : '') + ': ';
+            html += r.issues.map(function(i) { return esc(i.description); }).join('; ');
+            html += '</div>';
+          }
+          html += '</div>';
+          html += '</div>';
+        });
+
+        listEl.innerHTML = html;
+      } catch (e) {
+        console.warn('Failed to load review history:', e.message);
+        listEl.innerHTML = '<div class="rh-empty">Could not load history.</div>';
+      }
+    }
+
+    window.toggleReviewHistory = function(phaseId) {
+      var list = document.getElementById('rh-list-' + phaseId);
+      var arrow = document.getElementById('rh-arrow-' + phaseId);
+      if (!list) return;
+      var showing = list.style.display !== 'none';
+      list.style.display = showing ? 'none' : 'block';
+      if (arrow) arrow.innerHTML = showing ? '&#9656;' : '&#9662;';
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PHASE ACTIONS
+       ══════════════════════════════════════════════════════════════════════ */
+    window.startPhase = function(phaseId) {
+      console.log('[Curriculum] Starting phase:', phaseId);
+      currData[phaseId] = Object.assign(currData[phaseId] || {}, { status: 'in_progress' });
+      savePhaseData(phaseId, { status: 'in_progress' }).then(function() {
+        renderTimeline();
+        var phase = PHASES.find(function(p) { return p.id === phaseId; });
+        if (phase) renderContent(phase);
+      });
+    };
+
+    window.submitPhase = function(phaseId) {
+      console.log('[Curriculum] Submitting phase:', phaseId);
+      var data = currData[phaseId] || {};
+      data.status = 'submitted';
+      data.submittedAt = firebase.firestore.FieldValue.serverTimestamp();
+      currData[phaseId] = data;
+      savePhaseData(phaseId, { status: 'submitted', submittedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function() {
+        renderTimeline();
+        var phase = PHASES.find(function(p) { return p.id === phaseId; });
+        if (phase) renderContent(phase);
+      });
+    };
+
+    window.verifyPhase = async function(phaseId) {
+      console.log('[Curriculum] Coach verifying phase:', phaseId);
+      await verifyAndUnlockNext(phaseId, currentUid, {});
+      showCelebration(phaseId);
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      if (phase) renderContent(phase);
+    };
+
+    window.rejectPhase = function(phaseId) {
+      // Prompt coach for feedback
+      var feedbackInput = document.getElementById('coach-feedback-' + phaseId);
+      var feedback = feedbackInput ? feedbackInput.value.trim() : '';
+      if (!feedback) {
+        feedback = prompt('Enter feedback for the student (what needs to change):');
+        if (!feedback) return; // cancelled
+      }
+
+      console.log('[Curriculum] Coach rejecting phase:', phaseId, 'feedback:', feedback);
+      var data = currData[phaseId] || {};
+      data.status = 'in_progress';
+      data.coachFeedback = feedback;
+      currData[phaseId] = data;
+      savePhaseData(phaseId, {
+        status: 'in_progress',
+        coachFeedback: feedback,
+        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        rejectedBy: currentUid
+      }).then(function() {
+        renderTimeline();
+        var phase = PHASES.find(function(p) { return p.id === phaseId; });
+        if (phase) renderContent(phase);
+      });
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       LOAD DATA FROM FIRESTORE
+       ══════════════════════════════════════════════════════════════════════ */
+    async function loadCurriculumData(uid, isStudentView) {
+      if (!isStudentView) currentUid = uid;
+      viewingUid = uid;
+      currData = {};
+      console.log('[Curriculum] loadCurriculumData for uid:', uid, isStudentView ? '(coach viewing student)' : '(own data)');
+      try {
+        var snap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
+        snap.forEach(function(doc) {
+          currData[doc.id] = doc.data();
+          console.log('Loading phase:', doc.id, 'status:', (doc.data().status || 'none'));
+        });
+      } catch (e) {
+        console.warn('[Curriculum] Failed to load curriculum data:', e.message);
+      }
+
+      // Ensure consistency: if a phase is verified, make sure the next phase is at least not_started
+      PHASES.forEach(function(phase, i) {
+        var data = currData[phase.id];
+        if (data && data.status === 'verified' && i < PHASES.length - 1) {
+          var nextPhase = PHASES[i + 1];
+          if (nextPhase.unlockReq === phase.id) {
+            var nextData = currData[nextPhase.id];
+            if (!nextData || !nextData.status || nextData.status === 'locked') {
+              currData[nextPhase.id] = Object.assign(nextData || {}, { status: 'not_started' });
+              // Persist fix to Firestore
+              savePhaseData(nextPhase.id, { status: 'not_started' });
+            }
+          }
+        }
+      });
+
+      // Phase 0 defaults to not_started (never locked)
+      if (!currData.phase0) {
+        currData.phase0 = { status: 'not_started' };
+      } else if (!currData.phase0.status) {
+        currData.phase0.status = 'not_started';
+      }
+
+      renderTimeline();
+
+      // Auto-select first unlocked phase that isn't verified, or first unlocked
+      var firstActive = PHASES.find(function(p) {
+        var s = getStatus(p.id);
+        return s === 'in_progress' || s === 'not_started';
+      });
+      if (firstActive) {
+        selectPhase(firstActive.id);
+      } else {
+        var first = PHASES.find(function(p) { return !isLocked(p.id); });
+        if (first) selectPhase(first.id);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       COACH / MENTOR TOOLS
+       ══════════════════════════════════════════════════════════════════════ */
+    function renderCoachToolbar(phaseId, status, data) {
+      var html = '<div class="coach-toolbar">';
+
+      // Student selector
+      html += '<div class="coach-selector-row">';
+      html += '<label class="coach-label">Viewing as:</label>';
+      html += '<select class="coach-student-select" id="coach-student-select" onchange="switchStudent(this.value)">';
+      html += '<option value="' + currentUid + '"' + (viewingUid === currentUid ? ' selected' : '') + '>My Progress (Coach)</option>';
+      teamMembers.forEach(function(m) {
+        var sel = viewingUid === m.uid ? ' selected' : '';
+        html += '<option value="' + m.uid + '"' + sel + '>' + esc(m.name || m.email) + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+
+      // Coach actions for this phase (only when viewing a student)
+      if (viewingUid !== currentUid) {
+        var canVerify = status === 'submitted' || status === 'pending_mentor' || status === 'in_progress';
+        if (canVerify && status !== 'verified') {
+          html += '<div class="coach-actions">';
+          html += '<button class="curr-action-btn btn-verify" onclick="verifyPhase(\'' + phaseId + '\')">Verify &amp; Pass</button>';
+          html += '<div class="coach-reject-group">';
+          html += '<input type="text" class="coach-feedback-input" id="coach-feedback-' + phaseId + '" placeholder="Feedback for student...">';
+          html += '<button class="curr-action-btn btn-reject" onclick="rejectPhase(\'' + phaseId + '\')">Request Changes</button>';
+          html += '</div>';
+          html += '</div>';
+        }
+
+        // Show student's submitted code if any
+        if (data.submittedCode) {
+          html += '<div class="coach-code-preview">';
+          html += '<div class="coach-code-label">Student\'s Submitted Code:</div>';
+          html += '<pre class="coach-code-block">' + esc(data.submittedCode) + '</pre>';
+          html += '</div>';
+        }
+
+        // Show last AI review summary
+        if (data.lastAIScore !== undefined) {
+          html += '<div class="coach-ai-summary">';
+          html += 'Last AI Score: <strong>' + data.lastAIScore + '/100</strong>';
+          html += ' — AI ' + (data.aiPassed ? '<span style="color:#22c55e">Passed</span>' : '<span style="color:#ef4444">Failed</span>');
+          html += '</div>';
+        }
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    window.switchStudent = async function(uid) {
+      console.log('[Curriculum] Coach switching to student:', uid);
+      activePhase = null;
+      await loadCurriculumData(uid, uid !== currentUid);
+    };
+
+    async function loadTeamMembers() {
+      if (!currentUid) return;
+      console.log('[Curriculum] Loading team members for coach');
+      try {
+        // Find teams where current user is a member
+        var teamsSnap = await rtDb.collection('teams')
+          .where('members', 'array-contains', currentUid)
+          .get();
+
+        if (teamsSnap.empty) {
+          // Try alternate structure: check user doc for teamId
+          var userDoc = await rtDb.collection('users').doc(currentUid).get();
+          var userData = userDoc.exists ? userDoc.data() : {};
+          if (userData.teamId) {
+            var teamDoc = await rtDb.collection('teams').doc(userData.teamId).get();
+            if (teamDoc.exists) {
+              teamsSnap = { forEach: function(fn) { fn(teamDoc); }, empty: false };
+            }
+          }
+        }
+
+        var memberUids = [];
+        teamsSnap.forEach(function(doc) {
+          var td = doc.data();
+          // Support both array of UIDs and subcollection
+          if (Array.isArray(td.members)) {
+            td.members.forEach(function(m) {
+              if (m !== currentUid && memberUids.indexOf(m) === -1) memberUids.push(m);
+            });
+          }
+          if (Array.isArray(td.memberList)) {
+            td.memberList.forEach(function(m) {
+              var mUid = typeof m === 'string' ? m : m.uid;
+              if (mUid && mUid !== currentUid && memberUids.indexOf(mUid) === -1) memberUids.push(mUid);
+            });
+          }
+        });
+
+        // Load user profiles for each member
+        teamMembers = [];
+        for (var i = 0; i < memberUids.length; i++) {
+          try {
+            var mDoc = await rtDb.collection('users').doc(memberUids[i]).get();
+            if (mDoc.exists) {
+              var md = mDoc.data();
+              teamMembers.push({
+                uid: memberUids[i],
+                name: md.displayName || md.name || '',
+                email: md.email || ''
+              });
+            }
+          } catch (e) {
+            console.warn('[Curriculum] Could not load member:', memberUids[i]);
+          }
+        }
+        console.log('[Curriculum] Loaded', teamMembers.length, 'team members');
+      } catch (e) {
+        console.warn('[Curriculum] Failed to load team members:', e.message);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════════════════════════════════ */
+    initAuth(async function onSignedIn(user) {
+      isCoach = window.rtUserRole === 'coach';
+      console.log('[Curriculum] Signed in:', user.uid, 'isCoach:', isCoach);
+
+      if (isCoach) {
+        await loadTeamMembers();
+      }
+
+      loadCurriculumData(user.uid);
+    });
+  </script>
+</body>
+</html>
