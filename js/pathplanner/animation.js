@@ -1,10 +1,10 @@
 // ── R-Tracker Path Planner — Animation ───────────────────────────────────
 
 const ANIM_SPEED_IPS = 60;
-let animRunning = false;
-let animT = 0;
-let animFrame = null;
-let animPathLength = 1;
+// animRunning declared in canvas.js (loaded first)
+var animT = 0;
+var animFrame = null;
+var animPathLength = 1;
 
 function computePathLength() {
   let total = 0;

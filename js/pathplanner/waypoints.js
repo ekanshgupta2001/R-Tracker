@@ -1,10 +1,7 @@
 // ── R-Tracker Path Planner — Waypoint State & Management ──────────────────
 
-let waypoints   = [];
-let segments    = [];
-let selectedIdx    = -1;
-let selectedSegIdx = -1;
-let showGrid = true;
+// waypoints, segments, selectedIdx, selectedSegIdx, showGrid, pathSettings
+// are declared in canvas.js (loaded first)
 
 let dragType   = null;
 let dragIdx    = -1;
@@ -14,7 +11,8 @@ let dragOffX = 0, dragOffY = 0;
 let mouseDownPos = null;
 let wasDragging  = false;
 
-let pathSettings = { speed: 1.0 };
+// pathSettings declared in canvas.js
+pathSettings.speed = 1.0;
 
 // ── Hit Testing ───────────────────────────────────────────────────────────
 function hitTestCP(cx, cy) {

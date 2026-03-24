@@ -1,5 +1,14 @@
 // ── R-Tracker Path Planner — Canvas & Drawing ─────────────────────────────
 
+// ── Shared state (declared here because canvas.js loads first) ────────────
+var waypoints   = [];
+var segments    = [];
+var selectedIdx    = -1;
+var selectedSegIdx = -1;
+var showGrid       = true;
+var animRunning    = false;
+var pathSettings   = { reversed: false, maxVel: 60, maxAccel: 40, maxAngVel: 180 };
+
 const fieldImg = new Image();
 fieldImg.src = '../../assets/decode.webp';
 fieldImg.onload = () => drawAll();
