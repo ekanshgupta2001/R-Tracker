@@ -13,13 +13,9 @@ async function saveLevelResult(levelId, starCount, time, accuracy) {
     const snap = await ref.get();
     const prevBest = snap.exists ? (snap.data().bestStars || 0) : 0;
     if (prevBest >= starCount) {
-      console.log('SAVING level result: level', levelId, '— existing bestStars', prevBest, '>= new', starCount, ', skipping');
       return;
     }
     var rating = starCount === 3 ? 'gold' : starCount === 2 ? 'silver' : 'bronze';
-    console.log('SAVING level result:', levelId, 'stars:', starCount, 'rating:', rating, 'time:', time, 'accuracy:', accuracy);
-    console.log('Firestore WRITE path: users/' + rtUser.uid + '/levels/' + levelId);
-    console.log('SAVED level', levelId, 'rating:', rating, 'to path: users/' + rtUser.uid + '/levels/' + levelId);
     await ref.set({
       bestStars: starCount,
       rating: rating,
@@ -34,7 +30,6 @@ async function saveLevelResult(levelId, starCount, time, accuracy) {
       const ts = Date.now();
       const name = rtUser.displayName || rtUser.email.split('@')[0];
       const starStr = starCount === 3 ? 'Gold' : (starCount === 2 ? 'Silver' : 'Bronze');
-      console.log('Firestore WRITE path: teams/' + teamId + '/activity/' + ts);
       await rtDb.collection('teams').doc(teamId).collection('activity').doc(String(ts)).set({
         userName: name,
         action: `completed Level ${levelId} with ${starStr}`,
@@ -57,7 +52,6 @@ async function saveDriverStats() {
     const levelCount = window.completedLevels ? Object.keys(window.completedLevels).length : driverMetrics.levelsCompleted;
     const goldCount = window.completedLevels ? Object.values(window.completedLevels).filter(c => c.stars && c.stars.filter(Boolean).length === 3).length : 0;
 
-    console.log('Firestore WRITE path: users/' + rtUser.uid + '/stats/driverStats');
     await rtDb.collection('users').doc(rtUser.uid).collection('stats').doc('driverStats').set({
       overallRating: rating,
       grade: gradeFromRating(rating),
@@ -80,7 +74,6 @@ async function saveDriverStats() {
         profileName = r.driverProfile.split(' — ')[0];
       }
 
-      console.log('Firestore WRITE path: teams/' + teamId + '/members/' + rtUser.uid);
       await rtDb.collection('teams').doc(teamId).collection('members').doc(rtUser.uid).set({
         displayName: rtUser.displayName || rtUser.email.split('@')[0],
         email: rtUser.email,
@@ -105,7 +98,6 @@ async function saveDriverStats() {
         const mins = Math.round(sessMs / 60000);
         const ts = Date.now();
         const name = rtUser.displayName || rtUser.email.split('@')[0];
-        console.log('Firestore WRITE path: teams/' + teamId + '/activity/' + ts);
         await rtDb.collection('teams').doc(teamId).collection('activity').doc(String(ts)).set({
           userName: name,
           action: `practiced ${mins} minutes today`,
@@ -115,14 +107,12 @@ async function saveDriverStats() {
 
       const reportTs = Date.now();
       const reportName = rtUser.displayName || rtUser.email.split('@')[0];
-      console.log('Firestore WRITE path: teams/' + teamId + '/activity/' + (reportTs + 1));
       await rtDb.collection('teams').doc(teamId).collection('activity').doc(String(reportTs + 1)).set({
         userName: reportName,
         action: `generated a driver report — Overall ${rating} (${gradeFromRating(rating)})`,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
-    console.log('Driver stats saved. rating:', rating, 'levels:', levelCount, 'gold:', goldCount, 'teamId:', teamId);
   } catch (e) {
     console.warn('Failed to save driver stats:', e.message);
   }
@@ -133,8 +123,6 @@ async function saveDriverStats() {
 async function saveCurriculumProgress(phasesCompleted, avgScore, highestPhase) {
   if (!rtUser) return;
   try {
-    console.log('Firestore WRITE path: users/' + rtUser.uid + '/stats/driverStats (curriculum sync)');
-    console.log('Curriculum sync: phases=' + phasesCompleted + ', avgScore=' + avgScore + ', highestPhase=' + highestPhase);
     await rtDb.collection('users').doc(rtUser.uid).collection('stats').doc('driverStats').set({
       curriculumScore: {
         phasesCompleted: phasesCompleted,

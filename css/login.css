@@ -19,12 +19,12 @@ html, body { background: var(--bg, #1a1a1a); }
 #rt-auth-card {
   background: #1e1e1e;
   border: 1px solid #333;
-  border-top: 2px solid #800020;
+  border-top: 2px solid #c73e5a;
   border-radius: 16px;
   padding: 40px 36px 32px;
   width: 380px;
   max-width: 95vw;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(128, 0, 32, 0.15);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(199, 62, 90, 0.15);
 }
 
 #rt-auth-logo {
@@ -37,7 +37,7 @@ html, body { background: var(--bg, #1a1a1a); }
   font-size: 38px;
   font-weight: 800;
   letter-spacing: -1.5px;
-  background: linear-gradient(135deg, #a0334a, #800020);
+  background: linear-gradient(135deg, #c73e5a, #a0334a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -117,7 +117,7 @@ html, body { background: var(--bg, #1a1a1a); }
   box-sizing: border-box;
 }
 
-.rt-auth-input:focus { outline: none; border-color: #800020; }
+.rt-auth-input:focus { outline: none; border-color: #c73e5a; box-shadow: 0 0 6px rgba(199, 62, 90, 0.3); }
 .rt-auth-input::placeholder { color: #444; }
 
 .rt-auth-btn-row { display: flex; gap: 8px; }
@@ -136,11 +136,11 @@ html, body { background: var(--bg, #1a1a1a); }
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
-.rt-auth-btn:hover { border-color: #800020; color: #fff; }
+.rt-auth-btn:hover { border-color: #c73e5a; color: #fff; }
 
 .rt-auth-btn.primary {
   background: #800020;
-  border-color: #800020;
+  border-color: #c73e5a;
   color: #fff;
 }
 
@@ -192,12 +192,12 @@ html, body { background: var(--bg, #1a1a1a); }
 #rt-role-card {
   background: #1e1e1e;
   border: 1px solid #333;
-  border-top: 2px solid #800020;
+  border-top: 2px solid #c73e5a;
   border-radius: 16px;
   padding: 40px 36px 32px;
   width: 540px;
   max-width: 95vw;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(128, 0, 32, 0.15);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(199, 62, 90, 0.15);
   text-align: center;
 }
 
@@ -238,10 +238,10 @@ html, body { background: var(--bg, #1a1a1a); }
 }
 
 .rt-role-btn:hover {
-  border-color: #800020;
+  border-color: #c73e5a;
   background: #1f0a10;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(128, 0, 32, 0.25);
+  box-shadow: 0 8px 24px rgba(199, 62, 90, 0.25);
 }
 
 .rt-role-btn:active { transform: translateY(0); }

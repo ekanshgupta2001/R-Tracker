@@ -97,7 +97,8 @@
   left: 7px;
   top: 6px;
   width: 2px;
-  background: #800020;
+  background: var(--burgundy-accent);
+  box-shadow: 0 0 6px rgba(199, 62, 90, 0.4);
   border-radius: 1px;
   transition: height 0.5s ease;
   z-index: 1;
@@ -121,13 +122,13 @@
 /* Active / selected phase: burgundy left border + subtle glow */
 .tl-node.tl-active {
   background: rgba(128, 0, 32, 0.1);
-  border-left-color: #800020;
-  box-shadow: 0 0 10px rgba(128, 0, 32, 0.15);
+  border-left-color: var(--burgundy-accent);
+  box-shadow: 0 0 16px rgba(199, 62, 90, 0.35);
 }
 
 /* Currently in-progress phase: subtle glow even when not active */
 .tl-node.tl-current:not(.tl-locked) {
-  box-shadow: 0 0 8px rgba(128, 0, 32, 0.12);
+  box-shadow: 0 0 8px rgba(199, 62, 90, 0.12);
 }
 
 .tl-node.tl-locked {
@@ -156,18 +157,21 @@
 
 /* Status dot variants */
 .tl-node[data-status="not_started"] .tl-dot {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   background: #111;
+  box-shadow: 0 0 6px rgba(199, 62, 90, 0.3);
 }
 
 .tl-node[data-status="in_progress"] .tl-dot {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   background: linear-gradient(to top, #800020 50%, #111 50%);
+  box-shadow: 0 0 8px rgba(199, 62, 90, 0.4);
 }
 
 .tl-node[data-status="submitted"] .tl-dot {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   background: #800020;
+  box-shadow: 0 0 8px rgba(199, 62, 90, 0.4);
 }
 
 .tl-node[data-status="submitted"] .tl-dot::after {
@@ -201,7 +205,8 @@
 .tl-phase-num {
   font-size: 10px;
   font-weight: 700;
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 1px;
@@ -292,7 +297,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   margin-bottom: 4px;
 }
 
@@ -344,19 +350,23 @@
 .curr-action-btn.btn-start {
   background: #800020;
   color: #fff;
+  border: 1px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-sm);
 }
 .curr-action-btn.btn-start:hover {
   background: #9c0027;
-  box-shadow: 0 0 12px rgba(128, 0, 32, 0.3);
+  box-shadow: 0 0 12px rgba(199, 62, 90, 0.3);
 }
 
 .curr-action-btn.btn-submit {
   background: #800020;
   color: #fff;
+  border: 1px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-sm);
 }
 .curr-action-btn.btn-submit:hover {
   background: #9c0027;
-  box-shadow: 0 0 12px rgba(128, 0, 32, 0.3);
+  box-shadow: 0 0 12px rgba(199, 62, 90, 0.3);
 }
 
 .curr-action-btn.btn-verify {
@@ -442,7 +452,7 @@
 }
 
 .curr-lesson li::marker {
-  color: #800020;
+  color: var(--burgundy-accent);
 }
 
 .curr-lesson strong {
@@ -512,7 +522,8 @@
 
 /* Blockquotes (mentor notes) */
 .curr-lesson blockquote {
-  border-left: 3px solid #800020;
+  border-left: 3px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-border-left);
   background: #1e1e1e;
   padding: 12px 16px;
   margin: 14px 0 16px;
@@ -573,6 +584,7 @@
 .les-progress-fill {
   height: 100%;
   background: #800020;
+  box-shadow: 0 0 6px rgba(199, 62, 90, 0.4);
   border-radius: 2px;
   transition: width 0.5s ease;
 }
@@ -594,7 +606,7 @@
 }
 
 .les-section.active {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
 }
 
 .les-section.done {
@@ -633,6 +645,8 @@
   height: 28px;
   border-radius: 50%;
   background: #800020;
+  border: 1px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-sm);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -705,7 +719,8 @@
 
 /* Learn block */
 .les-learn {
-  border-left: 3px solid #800020;
+  border-left: 3px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-border-left);
   background: #1a1a1a;
   padding: 16px;
   border-radius: 0 8px 8px 0;
@@ -816,7 +831,7 @@
 }
 
 .les-opt:hover {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   transform: translateX(2px);
 }
 
@@ -918,10 +933,11 @@
 .les-continue-btn {
   background: #800020;
   color: #fff;
-  border: none;
+  border: 1px solid var(--burgundy-accent);
   border-radius: 6px;
   padding: 8px 20px;
   font-size: 13px;
+  box-shadow: var(--burgundy-glow-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
@@ -929,6 +945,244 @@
 
 .les-continue-btn:hover {
   background: #a00028;
+}
+
+/* ── Theory sections ──────────────────────────────────────────────────── */
+.les-section.les-theory.active {
+  border-color: #4a90d9;
+}
+
+.les-sec-num-theory {
+  background: #1a3a5c !important;
+  border-color: #4a90d9 !important;
+  box-shadow: 0 0 8px rgba(74, 144, 217, 0.3) !important;
+}
+
+.les-theory-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4a90d9;
+  background: rgba(74, 144, 217, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.les-theory .les-learn {
+  border-left-color: #4a90d9;
+  box-shadow: -2px 0 12px rgba(74, 144, 217, 0.2);
+}
+
+.les-check-theory {
+  border-left-color: #4a90d9 !important;
+  background: rgba(10, 20, 40, 0.6) !important;
+}
+
+.les-theory .les-sec-header:hover {
+  background: rgba(74, 144, 217, 0.06);
+}
+
+/* ── Written answer ───────────────────────────────────────────────────── */
+.les-written-area {
+  width: 100%;
+  min-height: 120px;
+  background: #0d1117;
+  color: #e6edf3;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.les-written-area:focus {
+  outline: none;
+  border-color: var(--burgundy-accent);
+  box-shadow: 0 0 6px rgba(199, 62, 90, 0.3);
+}
+
+.les-written-area::placeholder {
+  color: #555;
+}
+
+.les-written-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 12px;
+}
+
+.les-written-count {
+  font-size: 12px;
+  color: #666;
+}
+
+.les-written-submit {
+  background: #800020;
+  color: #fff;
+  border: 1px solid var(--burgundy-accent);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.les-written-submit:hover:not(:disabled) {
+  background: #a00028;
+}
+
+.les-written-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.les-written-submitted {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+}
+
+.les-written-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ef4444;
+  line-height: 1.4;
+}
+
+.les-written-loading {
+  background: #333 !important;
+  border-color: #555 !important;
+  color: #aaa !important;
+  animation: theoryPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes theoryPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.les-written-revise {
+  margin-top: 10px;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid #eab308;
+  color: #eab308;
+}
+
+.les-written-revise:hover {
+  background: rgba(234, 179, 8, 0.25);
+}
+
+.les-written-attempts {
+  font-size: 11px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.les-written-done-detail {
+  margin-top: 8px;
+}
+
+.les-written-resubmit-link {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  transition: color 0.2s;
+}
+
+.les-written-resubmit-link:hover {
+  color: #999;
+}
+
+/* ── Theory AI Feedback Card ──────────────────────────────────────────── */
+.theory-feedback-wrap {
+  margin-top: 4px;
+}
+
+.theory-feedback {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 3px solid;
+  transition: opacity 0.3s;
+}
+
+.theory-feedback.passed {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.theory-feedback.failed {
+  border-color: #eab308;
+  background: rgba(234, 179, 8, 0.08);
+}
+
+.theory-feedback .score-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.theory-feedback.passed .score-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.theory-feedback.failed .score-badge {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+.theory-feedback .feedback-text {
+  font-size: 14px;
+  color: #d0d0d0;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.theory-feedback .strengths,
+.theory-feedback .misconceptions {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+}
+
+.theory-feedback .strengths li {
+  color: #22c55e;
+  font-size: 13px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.theory-feedback .misconceptions li {
+  color: #eab308;
+  font-size: 13px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.theory-feedback .suggestion {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  margin-top: 8px;
+  line-height: 1.5;
 }
 
 /* Mentor tip */
@@ -1129,7 +1383,8 @@ html.light .les-progress-bar {
 .adv-h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   margin: 32px 0 12px;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(128,0,32,0.2);
@@ -1154,7 +1409,7 @@ html.light .les-progress-bar {
 
 /* Blockquote (tips, scenario) */
 .adv-quote {
-  border-left: 3px solid #800020;
+  border-left: 3px solid var(--burgundy-accent);
   padding: 12px 16px;
   margin: 16px 0 20px;
   background: rgba(128,0,32,0.08);
@@ -1188,7 +1443,7 @@ html.light .les-progress-bar {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  border: 2px solid #800020;
+  border: 2px solid var(--burgundy-accent);
   border-radius: 4px;
   margin-top: 2px;
   background: rgba(128,0,32,0.1);
@@ -1219,7 +1474,7 @@ html.light .les-progress-bar {
   background: rgba(128,0,32,0.18);
   color: #d4a0b0;
   font-weight: 700;
-  border-bottom: 2px solid #800020;
+  border-bottom: 2px solid var(--burgundy-accent);
 }
 .adv-table td {
   padding: 10px 14px;
@@ -1237,7 +1492,7 @@ html.light .les-progress-bar {
 .adv-deliverable-section {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 2px solid rgba(128,0,32,0.3);
+  border-top: 2px solid rgba(199,62,90,0.3);
 }
 
 /* ── Light mode overrides ─────────────────────────────────────────────── */
@@ -1296,7 +1551,7 @@ html.light .adv-table tbody tr:hover td {
 .quiz-container {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 2px solid #800020;
+  border-top: 2px solid var(--burgundy-accent);
 }
 
 .quiz-title {
@@ -1328,7 +1583,7 @@ html.light .adv-table tbody tr:hover td {
 .quiz-q-num {
   font-size: 10px;
   font-weight: 700;
-  color: #800020;
+  color: var(--burgundy-accent);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 6px;
@@ -1375,7 +1630,7 @@ html.light .adv-table tbody tr:hover td {
 }
 
 .quiz-opt:hover:not(.quiz-answered) {
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   background: rgba(128, 0, 32, 0.06);
   transform: translateY(-1px);
 }
@@ -1464,18 +1719,19 @@ html.light .adv-table tbody tr:hover td {
 .quiz-retry-btn {
   padding: 10px 28px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid var(--burgundy-accent);
   background: #800020;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--burgundy-glow-sm);
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .quiz-retry-btn:hover {
   background: #9c0027;
-  box-shadow: 0 0 12px rgba(128, 0, 32, 0.3);
+  box-shadow: 0 0 12px rgba(199, 62, 90, 0.3);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1484,16 +1740,18 @@ html.light .adv-table tbody tr:hover td {
 .curr-deliverable {
   background: #151515;
   border: 1px solid #2a2a2a;
-  border-top: 3px solid #800020;
+  border-top: 3px solid var(--burgundy-accent);
   border-radius: 10px;
   padding: 22px 24px;
   margin-top: 28px;
+  box-shadow: 0 -2px 12px rgba(199, 62, 90, 0.3);
 }
 
 .curr-deliv-title {
   font-size: 14px;
   font-weight: 700;
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -1526,7 +1784,7 @@ html.light .adv-table tbody tr:hover td {
 .curr-check-item:last-child { border-bottom: none; }
 
 .curr-check-item input[type="checkbox"] {
-  accent-color: #800020;
+  accent-color: var(--burgundy-accent);
   width: 15px;
   height: 15px;
   cursor: pointer;
@@ -1554,8 +1812,8 @@ html.light .adv-table tbody tr:hover td {
 
 .curr-notes-area:focus {
   outline: none;
-  border-color: #800020;
-  box-shadow: 0 0 0 1px rgba(128, 0, 32, 0.2);
+  border-color: var(--burgundy-accent);
+  box-shadow: 0 0 0 1px rgba(199, 62, 90, 0.2);
 }
 
 /* ── Empty state ───────────────────────────────────────────────────────────── */
@@ -1623,7 +1881,7 @@ html.light .adv-table tbody tr:hover td {
 
   .tl-node.tl-active {
     border-left-color: transparent;
-    border-bottom-color: #800020;
+    border-bottom-color: var(--burgundy-accent);
   }
 
   .tl-dot { display: none; }
@@ -1763,7 +2021,8 @@ html.light .curr-empty { color: #999; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   margin-bottom: 6px;
 }
 
@@ -1788,8 +2047,8 @@ html.light .curr-empty { color: #999; }
 
 .code-editor:focus {
   outline: none;
-  border-color: #800020;
-  box-shadow: 0 0 0 2px rgba(128, 0, 32, 0.15);
+  border-color: var(--burgundy-accent);
+  box-shadow: 0 0 0 2px rgba(199, 62, 90, 0.15);
 }
 
 .code-actions {
@@ -1829,7 +2088,7 @@ html.light .curr-empty { color: #999; }
   width: 22px;
   height: 22px;
   border: 2px solid #333;
-  border-top-color: #800020;
+  border-top-color: var(--burgundy-accent);
   border-radius: 50%;
   animation: clockSpin 0.8s linear infinite;
   flex-shrink: 0;
@@ -1925,7 +2184,8 @@ html.light .curr-empty { color: #999; }
 /* Summary */
 .ai-summary {
   background: rgba(128, 0, 32, 0.06);
-  border-left: 3px solid #800020;
+  border-left: 3px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-border-left);
   padding: 12px 16px;
   border-radius: 0 6px 6px 0;
   font-size: 14px;
@@ -2056,7 +2316,7 @@ html.light .curr-empty { color: #999; }
 }
 
 .ai-next-list li { margin-bottom: 4px; }
-.ai-next-list li::marker { color: #800020; }
+.ai-next-list li::marker { color: var(--burgundy-accent); }
 
 /* Actions */
 .ai-review-actions {
@@ -2424,7 +2684,7 @@ html.light .ai-mentor-pending-msg { color: #666; }
 
 .coach-student-select:focus {
   outline: none;
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
 }
 
 .coach-actions {
@@ -2553,11 +2813,12 @@ html.light .coach-feedback-text { color: #555; }
 .resubmit-modal-card {
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
-  border-top: 3px solid #800020;
+  border-top: 3px solid var(--burgundy-accent);
   border-radius: 10px;
   padding: 28px 32px;
   max-width: 440px;
   width: 90%;
+  box-shadow: 0 -2px 12px rgba(199, 62, 90, 0.3);
   animation: modal-slide-in 0.2s ease;
 }
 
@@ -2614,6 +2875,8 @@ html.light .coach-feedback-text { color: #555; }
 .resubmit-confirm {
   background: #800020;
   color: #fff;
+  border: 1px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-sm);
 }
 
 .resubmit-confirm:hover {

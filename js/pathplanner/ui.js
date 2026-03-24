@@ -163,14 +163,14 @@ function drawAnglePicker(deg) {
   const cx = 20, cy = 20, r = 16;
   pctx.clearRect(0, 0, 40, 40);
   pctx.beginPath(); pctx.arc(cx, cy, r, 0, Math.PI * 2);
-  pctx.strokeStyle = '#800020'; pctx.lineWidth = 1.5; pctx.stroke();
+  pctx.strokeStyle = '#c73e5a'; pctx.lineWidth = 1.5; pctx.stroke();
   pctx.fillStyle = '#181818'; pctx.fill();
   const ang = (deg - 90) * Math.PI / 180;
   const ex = cx + Math.cos(ang) * (r - 3);
   const ey = cy + Math.sin(ang) * (r - 3);
   pctx.strokeStyle = '#a0334a'; pctx.lineWidth = 2; pctx.lineCap = 'round';
   pctx.beginPath(); pctx.moveTo(cx, cy); pctx.lineTo(ex, ey); pctx.stroke();
-  pctx.fillStyle = '#800020';
+  pctx.fillStyle = '#c73e5a';
   pctx.beginPath(); pctx.arc(ex, ey, 2.5, 0, Math.PI * 2); pctx.fill();
 }
 
@@ -288,7 +288,8 @@ async function renderCloudPaths() {
       container.appendChild(row);
     });
   } catch (e) {
-    container.innerHTML = `<div class="ppc-empty" style="color:#ff5544">Error: ${e.message}</div>`;
+    var msg = String(e.message || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    container.innerHTML = `<div class="ppc-empty" style="color:#ff5544">Error: ${msg}</div>`;
   }
 }
 

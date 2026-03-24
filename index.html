@@ -4,6 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description"
     content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
@@ -22,7 +28,7 @@
   <script src="js/sidebar.js"></script>
 </head>
 
-<body class="sidebar-open">
+<body>
 
   <!-- ── Main Content ────────────────────────────────────────────────────── -->
   <div class="main-wrap">
@@ -32,100 +38,104 @@
       <div class="home-hero">
         <div class="home-logo"><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></div>
         <div class="home-tagline">RUNDLE ROBOTICS PERSONALLY DESIGNED VISUALIZER</div>
-        <div class="home-welcome" id="home-welcome">Welcome back</div>
       </div>
 
-      <!-- Player Cards -->
-      <div class="home-cards" id="player-cards">
-        <a href="pages/teleop.html" class="home-card">
-          <div class="home-card-icon">🎮</div>
-          <div class="home-card-title">TeleOp Practice</div>
-          <div class="home-card-desc">Practice driving on the DECODE field with a real gamepad or keyboard. Supports field-centric and robot-centric drive modes with both mecanum and tank drivetrains. Tune speed, turn rate, and deadzone settings in real time.</div>
-        </a>
-        <a href="pages/pathplanner.html" class="home-card">
-          <div class="home-card-icon">📐</div>
-          <div class="home-card-title">Path Planner</div>
-          <div class="home-card-desc">Design autonomous paths on the DECODE field with Bezier curves and control points. Preview robot movement along your paths, export Pedro Pathing-compatible Java code, and save paths to your account.</div>
-        </a>
+      <!-- Player Carousel -->
+      <div class="carousel-section" id="player-carousel">
+        <div class="home-carousel-container">
+          <button class="carousel-arrow carousel-left">&#8249;</button>
+          <div class="home-carousel-track" id="player-track">
+            <a href="pages/teleop.html" class="carousel-card">
+              <div class="card-icon">🎮</div>
+              <div class="card-title">TeleOp Practice</div>
+              <div class="card-desc">Practice driving with gamepad or keyboard. Field-centric and robot-centric modes with mecanum and tank drivetrains.</div>
+            </a>
+            <a href="pages/pathplanner.html" class="carousel-card">
+              <div class="card-icon">📐</div>
+              <div class="card-title">Path Planner</div>
+              <div class="card-desc">Design autonomous paths with Bezier curves and control points. Export Pedro Pathing Java code.</div>
+            </a>
+            <a href="pages/strategy.html" class="carousel-card">
+              <div class="card-icon">📋</div>
+              <div class="card-title">Strategy Planner</div>
+              <div class="card-desc">Draw on the field to plan match strategy. Annotate with arrows, shapes, and waypoints.</div>
+            </a>
+            <a href="pages/curriculum.html" class="carousel-card">
+              <div class="card-icon">📚</div>
+              <div class="card-title">Curriculum</div>
+              <div class="card-desc">FTC programming learning path — 6 phases from Java basics to competition-ready code.</div>
+            </a>
+            <a href="pages/report.html" class="carousel-card">
+              <div class="card-icon">📄</div>
+              <div class="card-title">Driver Report</div>
+              <div class="card-desc">AI coaching analysis, driver stats, performance history, and improvement recommendations.</div>
+            </a>
+          </div>
+          <button class="carousel-arrow carousel-right">&#8250;</button>
+        </div>
+        <div class="carousel-dots" id="player-dots"></div>
       </div>
 
-      <!-- Coach Cards (hidden by default, shown for coaches) -->
-      <div class="home-cards" id="coach-cards" style="display:none;">
-        <a href="pages/manage-team.html" class="home-card">
-          <div class="home-card-icon">👥</div>
-          <div class="home-card-title">Manage Team</div>
-          <div class="home-card-desc">Create your team, generate invite codes, search for and add players. View your roster and manage team settings.</div>
-        </a>
-        <a href="pages/dashboard.html" class="home-card">
-          <div class="home-card-icon">📊</div>
-          <div class="home-card-title">Team Dashboard</div>
-          <div class="home-card-desc">View driver rankings and performance comparisons across your team. Get AI-powered recommendations for primary and secondary drivers.</div>
-        </a>
+      <!-- Coach Carousel (hidden by default) -->
+      <div class="carousel-section" id="coach-carousel" style="display:none;">
+        <div class="home-carousel-container">
+          <button class="carousel-arrow carousel-left">&#8249;</button>
+          <div class="home-carousel-track" id="coach-track">
+            <a href="pages/manage-team.html" class="carousel-card">
+              <div class="card-icon">👥</div>
+              <div class="card-title">Manage Team</div>
+              <div class="card-desc">Create your team, generate invite codes, add players, and manage your roster.</div>
+            </a>
+            <a href="pages/dashboard.html" class="carousel-card">
+              <div class="card-icon">📊</div>
+              <div class="card-title">Team Dashboard</div>
+              <div class="card-desc">View driver rankings and performance comparisons. Get AI-powered driver recommendations.</div>
+            </a>
+            <a href="pages/strategy.html" class="carousel-card">
+              <div class="card-icon">📋</div>
+              <div class="card-title">Strategy Planner</div>
+              <div class="card-desc">Draw on the field to plan match strategy with your team. Save and present strategies.</div>
+            </a>
+            <a href="pages/curriculum.html" class="carousel-card">
+              <div class="card-icon">📚</div>
+              <div class="card-title">Curriculum</div>
+              <div class="card-desc">Review student progress through the FTC programming learning path.</div>
+            </a>
+          </div>
+          <button class="carousel-arrow carousel-right">&#8250;</button>
+        </div>
+        <div class="carousel-dots" id="coach-dots"></div>
       </div>
 
-      <!-- Coach Curriculum Bar (hidden by default) -->
-      <a href="pages/curriculum.html" class="home-report-btn home-curr-bar" id="coach-curriculum-bar" style="display:none;">
-        <div class="home-report-left">
-          <div class="home-report-icon">📚</div>
-          <div class="home-report-text">
-            <div class="home-report-title">Curriculum</div>
-            <div class="home-report-desc">Review student progress through the FTC programming learning path</div>
+      <!-- Driver Report Bar (players only) -->
+      <div class="report-stats-bar" id="report-stats-bar">
+        <div class="report-bar-label">YOUR DRIVER RATING</div>
+        <a href="pages/report.html" class="report-bar-row">
+          <div class="report-bar-grade" id="rbar-main-grade">--</div>
+          <div class="report-bar-score"><span id="rbar-main-score">--</span>/100</div>
+          <div class="report-bar-divider"></div>
+          <div class="report-bar-stats">
+            <div class="report-bar-stat">
+              <span class="rbs-val rbs-red" id="rbar-score">--</span>
+              <span class="rbs-lbl">SCORE</span>
+            </div>
+            <div class="report-bar-stat">
+              <span class="rbs-val rbs-grade" id="rbar-grade">--</span>
+              <span class="rbs-lbl">GRADE</span>
+            </div>
+            <div class="report-bar-stat">
+              <span class="rbs-val rbs-green" id="rbar-level">--</span>
+              <span class="rbs-lbl">BEST LEVEL</span>
+            </div>
+            <div class="report-bar-stat">
+              <span class="rbs-val rbs-cyan" id="rbar-time">--</span>
+              <span class="rbs-lbl">PRACTICE</span>
+            </div>
           </div>
-        </div>
-        <div class="home-report-arrow">&rarr;</div>
-      </a>
-
-      <!-- Curriculum Progress Bar (players) -->
-      <a href="pages/curriculum.html" class="home-report-btn home-curr-bar" id="curriculum-bar">
-        <div class="home-report-left">
-          <div class="home-report-icon">📚</div>
-          <div class="home-report-text">
-            <div class="home-report-title">Curriculum</div>
-            <div class="home-report-desc" id="curr-bar-desc">FTC Programming learning path — 6 phases from Java basics to competition code</div>
-          </div>
-        </div>
-        <div class="home-report-stats" id="curr-bar-stats">
-          <div class="rstat">
-            <div class="rstat-val rstat-gold" id="curr-bar-phase">—</div>
-            <div class="rstat-label">Phase</div>
-          </div>
-          <div class="rstat">
-            <div class="rstat-val rstat-green" id="curr-bar-completed">—</div>
-            <div class="rstat-label">Done</div>
-          </div>
-        </div>
-        <div class="home-report-arrow">&rarr;</div>
-      </a>
-
-      <!-- Driver Report Bar -->
-      <a href="pages/report.html" class="home-report-btn" id="report-bar">
-        <div class="home-report-left">
-          <div class="home-report-icon">📄</div>
-          <div class="home-report-text">
-            <div class="home-report-title">Driver Report</div>
-            <div class="home-report-desc">View your AI coaching analysis, driver stats, and performance history</div>
-          </div>
-        </div>
-        <div class="home-report-stats" id="report-stats">
-          <div class="rstat" id="rstat-score">
-            <div class="rstat-val" id="rstat-score-val">—</div>
-            <div class="rstat-label">Score</div>
-          </div>
-          <div class="rstat" id="rstat-grade">
-            <div class="rstat-val" id="rstat-grade-val">—</div>
-            <div class="rstat-label">Grade</div>
-          </div>
-          <div class="rstat" id="rstat-level">
-            <div class="rstat-val" id="rstat-level-val">—</div>
-            <div class="rstat-label">Levels Done</div>
-          </div>
-          <div class="rstat" id="rstat-time">
-            <div class="rstat-val rstat-cyan" id="rstat-time-val">—</div>
-            <div class="rstat-label">Practice</div>
-          </div>
-        </div>
-        <div class="home-report-arrow">→</div>
-      </a>
+          <div class="report-bar-divider"></div>
+          <div class="report-bar-link">Open Report Card &#8594;</div>
+        </a>
+      </div>
 
       <!-- Footer -->
       <div class="home-footer-line">
@@ -135,31 +145,8 @@
     </div>
   </div>
 
+  <script src="js/utils/validators.js"></script>
   <script>
-    /* ── Helpers ────────────────────────────────────────────────────────────── */
-    function esc(s) {
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function fmtTime(ms) {
-      if (!ms || ms <= 0) return '0m';
-      var m = Math.floor(ms / 60000);
-      if (m < 60) return m + 'm';
-      return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
-    }
-
-    function scoreColorClass(v) {
-      if (v >= 70) return 'rstat-green';
-      if (v >= 40) return 'rstat-orange';
-      return 'rstat-red';
-    }
-
-    function gradeColorClass(g) {
-      if (g === 'S' || g === 'A') return 'rstat-green';
-      if (g === 'B' || g === 'C') return 'rstat-orange';
-      return 'rstat-red';
-    }
-
     /* ── Page Transitions ──────────────────────────────────────────────────── */
     document.addEventListener('click', function (e) {
       var a = e.target.closest('a[href]');
@@ -171,92 +158,316 @@
       setTimeout(function () { window.location.href = href; }, 180);
     });
 
-    /* ── Load report bar stats ─────────────────────────────────────────────── */
-    async function loadReportBarStats(uid) {
-      try {
-        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
-        if (!doc.exists) return;
-        var d = doc.data();
-        var score = d.overallRating || 0;
-        var grade = d.grade || 'F';
-
-        var scoreEl = document.getElementById('rstat-score-val');
-        scoreEl.textContent = score;
-        scoreEl.className = 'rstat-val ' + scoreColorClass(score);
-
-        var gradeEl = document.getElementById('rstat-grade-val');
-        gradeEl.textContent = grade;
-        gradeEl.className = 'rstat-val ' + gradeColorClass(grade);
-
-        var levelEl = document.getElementById('rstat-level-val');
-        levelEl.textContent = (d.levelsCompleted || 0) + '/12';
-        levelEl.className = 'rstat-val rstat-gold';
-
-        var timeEl = document.getElementById('rstat-time-val');
-        timeEl.textContent = fmtTime(d.totalPracticeMs || 0);
-      } catch (e) {
-        console.warn('loadReportBarStats:', e.message);
-      }
-    }
-
-    /* ── Update Welcome / Cards ────────────────────────────────────────────── */
+    /* ── Update User / Cards ─────────────────────────────────────────────── */
     function updateHomeUser(user, role) {
-      var name = user.displayName || user.email.split('@')[0];
-      var welcome = document.getElementById('home-welcome');
-      if (welcome) welcome.textContent = 'Welcome back, ' + name.split(' ')[0];
-
       if (role === 'coach') {
-        document.getElementById('player-cards').style.display = 'none';
-        document.getElementById('coach-cards').style.display = 'grid';
-        document.getElementById('report-bar').style.display = 'none';
-        document.getElementById('curriculum-bar').style.display = 'none';
-        document.getElementById('coach-curriculum-bar').style.display = 'flex';
+        document.getElementById('player-carousel').style.display = 'none';
+        document.getElementById('coach-carousel').style.display = 'block';
+        document.getElementById('report-stats-bar').style.display = 'none';
         document.body.classList.add('coach-view');
       }
+      // Load report stats for players
+      if (role !== 'coach') loadReportBarStats(user);
     }
 
-    /* ── Load curriculum bar stats ──────────────────────────────────────────── */
-    async function loadCurriculumBarStats(uid) {
-      try {
-        var snap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
-        var data = {};
-        snap.forEach(function(doc) { data[doc.id] = doc.data(); });
+    /* ── Report Bar Stats ─────────────────────────────────────────────────── */
+    function gradeColor(g) {
+      if (g === 'S' || g === 'A') return '#22c55e';
+      if (g === 'B') return '#3b82f6';
+      if (g === 'C') return '#eab308';
+      if (g === 'D') return '#f97316';
+      if (g === 'F') return '#ef4444';
+      return '#888';
+    }
 
-        var verified = 0;
-        var currentPhase = null;
-        var phases = ['phase0','phase1','phase2','phase3','phase4','phase5'];
-        phases.forEach(function(pid, i) {
-          var d = data[pid];
-          if (d && d.status === 'verified') verified++;
-          if (!currentPhase && (!d || d.status !== 'verified')) {
-            currentPhase = i;
+    function loadReportBarStats(user) {
+      if (!window.rtDb || !user) return;
+      window.rtDb.collection('users').doc(user.uid).get().then(function(doc) {
+        if (!doc.exists) return;
+        var d = doc.data();
+        var el = function(id) { return document.getElementById(id); };
+        if (d.driverScore != null) {
+          var score = Math.round(d.driverScore);
+          el('rbar-score').textContent = score;
+          el('rbar-main-score').textContent = score;
+        }
+        if (d.driverGrade) {
+          var g = d.driverGrade;
+          var gc = gradeColor(g);
+          el('rbar-grade').textContent = g;
+          el('rbar-grade').style.color = gc;
+          el('rbar-main-grade').textContent = g;
+          el('rbar-main-grade').style.color = gc;
+        }
+        if (d.bestLevel != null) el('rbar-level').textContent = d.bestLevel + '/12';
+        if (d.practiceMinutes != null) {
+          var mins = Math.round(d.practiceMinutes);
+          el('rbar-time').textContent = mins >= 60 ? Math.floor(mins/60) + 'h' : mins + 'm';
+        }
+      }).catch(function() {});
+    }
+
+    /* ── Circular Carousel (3-card, rubber-band drag, smooth transitions) ── */
+    function initCarousel(sectionId) {
+      var section = document.getElementById(sectionId);
+      if (!section) return;
+      var track = section.querySelector('.home-carousel-track');
+      var cards = Array.prototype.slice.call(track.querySelectorAll('.carousel-card'));
+      var dotsWrap = section.querySelector('.carousel-dots');
+      var container = section.querySelector('.home-carousel-container');
+      var n = cards.length;
+      if (n === 0) return;
+      var current = 0;
+      var transitioning = false;
+      var TRANSITION_MS = 400;
+      var MAX_DRAG = 350;
+      var AUTO_TRIGGER = 0.5;   // 50% auto-fires during drag
+      var RELEASE_TRIGGER = 0.3; // 30% completes on release
+      var SIDE_OFFSET = 380;
+      var RUBBER_BREAK = 0.6;   // rubber-band starts at 60%
+
+      // Prevent native drag
+      cards.forEach(function(card) {
+        card.setAttribute('draggable', 'false');
+        var imgs = card.querySelectorAll('img');
+        for (var k = 0; k < imgs.length; k++) imgs[k].setAttribute('draggable', 'false');
+      });
+
+      // Create dots
+      dotsWrap.innerHTML = '';
+      for (var i = 0; i < n; i++) {
+        var dot = document.createElement('button');
+        dot.className = 'carousel-dot';
+        dot.onclick = (function(idx) { return function() { goTo(idx); }; })(i);
+        dotsWrap.appendChild(dot);
+      }
+
+      function mod(a, b) { return ((a % b) + b) % b; }
+
+      // Rubber-band easing: 1:1 up to 60%, then 0.3x
+      function rubberBand(delta) {
+        var breakPx = MAX_DRAG * RUBBER_BREAK;
+        var abs = Math.abs(delta);
+        if (abs <= breakPx) return delta;
+        var extra = abs - breakPx;
+        return (delta > 0 ? 1 : -1) * (breakPx + extra * 0.3);
+      }
+
+      // Clear all inline styles
+      function clearInlineStyles() {
+        for (var i = 0; i < n; i++) {
+          cards[i].style.transform = '';
+          cards[i].style.opacity = '';
+          cards[i].style.transition = '';
+          cards[i].style.boxShadow = '';
+        }
+      }
+
+      // Update card classes and dots
+      function updateCards() {
+        clearInlineStyles();
+        var leftIdx = mod(current - 1, n);
+        var rightIdx = mod(current + 1, n);
+        for (var i = 0; i < n; i++) {
+          cards[i].classList.remove('cc-center', 'cc-left', 'cc-right');
+        }
+        cards[leftIdx].classList.add('cc-left');
+        cards[current].classList.add('cc-center');
+        cards[rightIdx].classList.add('cc-right');
+        var dots = dotsWrap.children;
+        for (var j = 0; j < dots.length; j++) {
+          dots[j].classList.toggle('active', j === current);
+        }
+      }
+
+      function goTo(idx) {
+        var next = mod(idx, n);
+        if (next === current || transitioning) return;
+        transitioning = true;
+        for (var i = 0; i < n; i++) {
+          cards[i].style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        }
+        current = next;
+        updateCards();
+        setTimeout(function() { transitioning = false; }, TRANSITION_MS + 20);
+      }
+
+      function nextCard() { goTo(current + 1); }
+      function prevCard() { goTo(current - 1); }
+
+      // Apply drag feedback to all 3 visible cards
+      function applyDragFeedback(rawDelta) {
+        var clamped = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, rawDelta));
+        var progress = Math.min(Math.abs(clamped) / MAX_DRAG, 1);
+        var shift = rubberBand(rawDelta);
+
+        var centerCard = cards[current];
+        var leftCard = cards[mod(current - 1, n)];
+        var rightCard = cards[mod(current + 1, n)];
+
+        // Center card: moves, shrinks, fades
+        var cScale = 1 - (progress * 0.15);
+        var cOpacity = 1 - (progress * 0.6);
+        centerCard.style.transform = 'translate(-50%, -50%) scale(' + cScale + ') translateX(' + shift + 'px)';
+        centerCard.style.opacity = cOpacity;
+
+        if (rawDelta < 0) {
+          // Dragging left → right card is incoming
+          var rScale = 0.85 + (progress * 0.15);
+          var rOpacity = 0.35 + (progress * 0.65);
+          rightCard.style.transform = 'translate(-50%, -50%) scale(' + rScale + ') translateX(' + (SIDE_OFFSET + shift) + 'px)';
+          rightCard.style.opacity = rOpacity;
+          rightCard.style.boxShadow = '0 0 ' + (20 * progress) + 'px rgba(199, 62, 90,' + (0.15 * progress) + ')';
+          // Left card just shifts along
+          leftCard.style.transform = 'translate(-50%, -50%) scale(0.8) translateX(' + (-SIDE_OFFSET + shift) + 'px)';
+        } else {
+          // Dragging right → left card is incoming
+          var lScale = 0.85 + (progress * 0.15);
+          var lOpacity = 0.35 + (progress * 0.65);
+          leftCard.style.transform = 'translate(-50%, -50%) scale(' + lScale + ') translateX(' + (-SIDE_OFFSET + shift) + 'px)';
+          leftCard.style.opacity = lOpacity;
+          leftCard.style.boxShadow = '0 0 ' + (20 * progress) + 'px rgba(199, 62, 90,' + (0.15 * progress) + ')';
+          // Right card just shifts along
+          rightCard.style.transform = 'translate(-50%, -50%) scale(0.8) translateX(' + (SIDE_OFFSET + shift) + 'px)';
+        }
+      }
+
+      // Snap back with elastic bounce
+      function snapBack() {
+        for (var i = 0; i < n; i++) {
+          cards[i].style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        }
+        requestAnimationFrame(function() {
+          clearInlineStyles();
+          setTimeout(function() {
+            for (var i = 0; i < n; i++) cards[i].style.transition = '';
+          }, 420);
+        });
+      }
+
+      // Fire the transition (from drag or auto-trigger)
+      function fireTransition(delta) {
+        dragSuppressClick = true;
+        clearInlineStyles();
+        if (delta < 0) nextCard(); else prevCard();
+        setTimeout(function() { dragSuppressClick = false; }, TRANSITION_MS + 50);
+      }
+
+      // Click side card → center; click center → navigate
+      var dragSuppressClick = false;
+      cards.forEach(function(card, i) {
+        card.addEventListener('click', function(e) {
+          if (dragSuppressClick) { e.preventDefault(); e.stopPropagation(); return; }
+          if (i !== current) {
+            e.preventDefault();
+            e.stopPropagation();
+            goTo(i);
           }
         });
-        if (currentPhase === null) currentPhase = 6;
+      });
 
-        var phaseEl = document.getElementById('curr-bar-phase');
-        var compEl = document.getElementById('curr-bar-completed');
-        var descEl = document.getElementById('curr-bar-desc');
+      // Arrow buttons
+      var leftBtn = section.querySelector('.carousel-left');
+      var rightBtn = section.querySelector('.carousel-right');
+      leftBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); prevCard(); });
+      rightBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); nextCard(); });
 
-        if (phaseEl) phaseEl.textContent = currentPhase > 5 ? 'Done' : currentPhase;
-        if (compEl) compEl.textContent = verified + '/6';
-        if (descEl && currentPhase <= 5) {
-          var names = ['Java Readiness','Make It Move','Make It Structured','Make It Smart','Make It Precise','Make It Robust'];
-          var status = data['phase' + currentPhase] ? data['phase' + currentPhase].status : 'not_started';
-          var label = status === 'in_progress' ? 'In Progress' : status === 'submitted' ? 'Submitted' : 'Not Started';
-          descEl.textContent = 'Phase ' + currentPhase + ' — ' + names[currentPhase] + ' (' + label + ')';
+      // ── Mouse drag ──
+      var isDragging = false, startX = 0, hasFired = false, lastDelta = 0;
+      container.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.carousel-arrow')) return;
+        if (transitioning) return;
+        isDragging = true;
+        hasFired = false;
+        lastDelta = 0;
+        startX = e.clientX;
+        container.classList.add('dragging');
+        for (var i = 0; i < n; i++) cards[i].style.transition = 'none';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!isDragging || hasFired) return;
+        var delta = e.clientX - startX;
+        lastDelta = delta;
+        applyDragFeedback(delta);
+
+        // Auto-trigger at 50%
+        if (Math.abs(delta) > MAX_DRAG * AUTO_TRIGGER) {
+          hasFired = true;
+          isDragging = false;
+          container.classList.remove('dragging');
+          fireTransition(delta);
         }
-      } catch (e) {
-        console.warn('loadCurriculumBarStats:', e.message);
-      }
+      });
+      document.addEventListener('mouseup', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        container.classList.remove('dragging');
+
+        if (Math.abs(lastDelta) > MAX_DRAG * RELEASE_TRIGGER) {
+          // Past 30% — complete the transition
+          fireTransition(lastDelta);
+        } else {
+          // Under 30% — elastic snap back
+          snapBack();
+        }
+      });
+
+      // ── Touch drag ──
+      var isTouching = false, touchStartX = 0, touchFired = false, lastTouchDelta = 0;
+      track.addEventListener('touchstart', function(e) {
+        if (transitioning) return;
+        isTouching = true;
+        touchFired = false;
+        lastTouchDelta = 0;
+        touchStartX = e.touches[0].clientX;
+        for (var i = 0; i < n; i++) cards[i].style.transition = 'none';
+      }, { passive: true });
+      document.addEventListener('touchmove', function(e) {
+        if (!isTouching || touchFired) return;
+        var delta = e.touches[0].clientX - touchStartX;
+        lastTouchDelta = delta;
+        applyDragFeedback(delta);
+
+        if (Math.abs(delta) > MAX_DRAG * AUTO_TRIGGER) {
+          touchFired = true;
+          isTouching = false;
+          fireTransition(delta);
+        }
+      }, { passive: true });
+      document.addEventListener('touchend', function() {
+        if (!isTouching) return;
+        isTouching = false;
+
+        if (Math.abs(lastTouchDelta) > MAX_DRAG * RELEASE_TRIGGER) {
+          fireTransition(lastTouchDelta);
+        } else {
+          snapBack();
+        }
+      });
+
+      // ── Keyboard arrows ──
+      var sectionHovered = false;
+      container.setAttribute('tabindex', '0');
+      container.style.outline = 'none';
+      container.addEventListener('mouseenter', function() { sectionHovered = true; });
+      container.addEventListener('mouseleave', function() { sectionHovered = false; });
+      document.addEventListener('keydown', function(e) {
+        if (!sectionHovered) return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevCard(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); nextCard(); }
+      });
+
+      updateCards();
     }
+
+    initCarousel('player-carousel');
+    initCarousel('coach-carousel');
 
     /* ── Init ───────────────────────────────────────────────────────────────── */
     initAuth(function onSignedIn(user) {
       var role = window.rtUserRole || 'player';
       updateHomeUser(user, role);
-      loadReportBarStats(user.uid);
-      loadCurriculumBarStats(user.uid);
     });
   </script>
 </body>

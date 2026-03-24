@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <title>Manage Team — R-Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -276,7 +282,7 @@
   </style>
 </head>
 
-<body class="sidebar-open">
+<body>
   <div class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">Manage Team</div>
@@ -350,6 +356,7 @@
     </div><!-- /mt-main -->
   </div><!-- /main-wrap -->
 
+  <script src="../js/utils/validators.js"></script>
   <script>
     let _teamId = null;
 
@@ -409,7 +416,7 @@
 
     function genCode() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
 
     // ── Save team info ───────────────────────────────────────────────────────

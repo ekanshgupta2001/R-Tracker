@@ -113,11 +113,9 @@
 
   // ── Dismiss the page loader (fade out then remove) ────────────────────────
   function dismissLoader(cb) {
-    console.log('[R-Tracker] Dismissing loader');
     loaderDismissed = true;
     const loader = document.getElementById('rt-page-loader');
     if (!loader) {
-      console.log('[R-Tracker] No loader element found — skipping dismiss');
       if (cb) cb();
       return;
     }
@@ -290,17 +288,18 @@
     const footer = document.querySelector('.sidebar-footer');
     if (!footer) return;
 
-    const name     = user.displayName || user.email.split('@')[0];
-    const email    = user.email || '';
+    var esc = function (s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    const name     = esc(user.displayName || user.email.split('@')[0]);
+    const email    = esc(user.email || '');
     const photo    = user.photoURL;
-    const letter   = name.charAt(0).toUpperCase();
+    const letter   = esc((user.displayName || user.email || '?').charAt(0).toUpperCase());
     const role     = window.rtUserRole || 'player';
     const roleOther = role === 'coach' ? 'player' : 'coach';
     const roleLbl   = role === 'coach' ? 'Coach' : 'Player';
     const roleOtherLbl = role === 'coach' ? 'Player' : 'Coach';
 
     const avatarHtml = photo
-      ? `<div class="rt-user-avatar"><img src="${photo}" referrerpolicy="no-referrer" alt="${letter}"></div>`
+      ? `<div class="rt-user-avatar"><img src="${esc(photo)}" referrerpolicy="no-referrer" alt="${letter}"></div>`
       : `<div class="rt-user-avatar">${letter}</div>`;
 
     // Popover (hidden by default)
@@ -360,6 +359,29 @@
     const btn = document.getElementById('rt-switch-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
 
+    // Prevent self-escalation to coach — must be verified by existing coach
+    if (newRole === 'coach' && window.rtUserRole === 'player') {
+      // Check if user is already a coach in their team's member list
+      var teamId = window.rtUserTeamId;
+      if (teamId) {
+        try {
+          var memberDoc = await window.rtDb.collection('teams').doc(teamId)
+            .collection('members').doc(window.rtUser.uid).get();
+          if (!memberDoc.exists || memberDoc.data().role !== 'coach') {
+            if (btn) { btn.disabled = false; btn.textContent = 'Coach role requires team coach approval'; }
+            return;
+          }
+        } catch (e) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Could not verify role'; }
+          return;
+        }
+      } else {
+        // No team — can't become coach without a team
+        if (btn) { btn.disabled = false; btn.textContent = 'Join a team first to become coach'; }
+        return;
+      }
+    }
+
     try {
       await window.rtDb.collection('users').doc(window.rtUser.uid).set(
         { role: newRole }, { merge: true }
@@ -386,14 +408,12 @@
     let firstFire = true;
 
     window.rtAuth.onAuthStateChanged(user => {
-      console.log('[R-Tracker] Auth state changed, user:', user ? user.email : 'null');
       const isFirst = firstFire;
       firstFire = false;
 
       if (user) {
         // Skip duplicate fired callbacks once auth has been handled for this session
         if (authHandled) {
-          console.log('[R-Tracker] Auth already handled — skipping duplicate callback');
           return;
         }
         authHandled = true;

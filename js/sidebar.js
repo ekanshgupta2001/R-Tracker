@@ -17,6 +17,7 @@
     { id: 'index', href: root + 'index.html', icon: '🏠', label: 'Home' },
     { id: 'teleop', href: root + 'pages/teleop.html', icon: '🎮', label: 'TeleOp Practice' },
     { id: 'pathplanner', href: root + 'pages/pathplanner.html', icon: '📐', label: 'Path Planner' },
+    { id: 'strategy', href: root + 'pages/strategy.html', icon: '📋', label: 'Strategy' },
     { id: 'curriculum', href: root + 'pages/curriculum.html', icon: '📚', label: 'Curriculum' },
     { id: 'report', href: root + 'pages/report.html', icon: '📄', label: 'Driver Report' },
     { id: 'dashboard', href: root + 'pages/dashboard.html', icon: '📊', label: 'Dashboard', coachOnly: true },
@@ -93,7 +94,7 @@
   };
 
   // ── Sidebar Toggle ─────────────────────────────────────────────────────────
-  let sidebarOpen = window.innerWidth > 820;
+  let sidebarOpen = false;
 
   window.toggleSidebar = function () {
     sidebarOpen = !sidebarOpen;
@@ -206,18 +207,37 @@
     msg.textContent = '';
     msg.className = 'sb-join-msg';
 
-    if (!raw || raw.length !== 6) {
-      msg.textContent = 'Enter a 6-character code.';
+    if (!raw || raw.length < 6 || raw.length > 8) {
+      msg.textContent = 'Enter a valid invite code (6\u20138 characters).';
       msg.className = 'sb-join-msg error';
       return;
     }
     if (!window.rtUser) return;
+
+    // Rate limit failed join attempts
+    var joinAttempts = parseInt(localStorage.getItem('rt-join-attempts') || '0');
+    var joinLockUntil = parseInt(localStorage.getItem('rt-join-lock-until') || '0');
+    if (Date.now() < joinLockUntil) {
+      var waitSec = Math.ceil((joinLockUntil - Date.now()) / 1000);
+      msg.textContent = 'Too many attempts. Try again in ' + waitSec + 's.';
+      msg.className = 'sb-join-msg error';
+      return;
+    }
+
     btn.disabled = true;
 
     try {
       const snap = await window.rtDb.collection('teams').where('inviteCode', '==', raw).limit(1).get();
       if (snap.empty) {
-        msg.textContent = 'Invalid code.';
+        joinAttempts++;
+        localStorage.setItem('rt-join-attempts', joinAttempts.toString());
+        if (joinAttempts >= 5) {
+          localStorage.setItem('rt-join-lock-until', (Date.now() + 60000).toString());
+          localStorage.setItem('rt-join-attempts', '0');
+          msg.textContent = 'Too many failed attempts. Locked for 60 seconds.';
+        } else {
+          msg.textContent = 'Invalid code.';
+        }
         msg.className = 'sb-join-msg error';
         btn.disabled = false;
         return;
@@ -234,6 +254,7 @@
       });
       await window.rtDb.collection('users').doc(user.uid).set({ teamId: teamId }, { merge: true });
       window.rtUserTeamId = teamId;
+      localStorage.setItem('rt-join-attempts', '0');
 
       msg.textContent = 'Joined ' + (teamData.name || 'team') + '!';
       msg.className = 'sb-join-msg success';
@@ -267,15 +288,12 @@
   window.initSidebar = function () {
     injectSidebar();
     syncThemeIcon();
-    if (window.innerWidth <= 820) {
-      sidebarOpen = false;
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) sidebar.classList.add('collapsed');
-      document.body.classList.remove('sidebar-open');
-      document.body.classList.add('sidebar-collapsed');
-    } else {
-      document.body.classList.add('sidebar-open');
-    }
+    // Always start collapsed
+    sidebarOpen = false;
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.add('sidebar-collapsed');
     animateNavItems();
     setupPageTransitions();
   };

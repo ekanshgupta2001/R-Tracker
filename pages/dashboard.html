@@ -4,6 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
     <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
     <title>Team Dashboard — R-Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +28,7 @@
         :root {
             --burgundy: #800020;
             --burgundy-light: #9c0027;
+            --burgundy-accent: #c73e5a;
             --matte-black: #1a1a1a;
             --matte-grey: #222222;
             --text-white: #ffffff;
@@ -70,7 +77,7 @@
         }
 
         .dash-header h1 span {
-            color: var(--burgundy);
+            color: var(--burgundy-accent);
         }
 
         .dash-header p {
@@ -92,7 +99,7 @@
             border-radius: 12px;
             padding: 20px;
             border: 1px solid var(--border-color);
-            border-top: 3px solid var(--burgundy);
+            border-top: 3px solid var(--burgundy-accent);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s, box-shadow 0.2s;
         }
@@ -217,7 +224,7 @@
 
         /* Row Highlights */
         .row-me {
-            border-left: 4px solid var(--burgundy) !important;
+            border-left: 4px solid var(--burgundy-accent) !important;
             background: rgba(128, 0, 32, 0.05) !important;
         }
 
@@ -298,7 +305,7 @@
         }
 
         .driver-sel:focus {
-            outline: 1px solid var(--burgundy);
+            outline: 1px solid var(--burgundy-accent);
         }
 
         .radar-wrap {
@@ -340,7 +347,7 @@
         }
 
         html.light .cmp-v-high {
-            color: var(--burgundy);
+            color: var(--burgundy-accent);
         }
 
         .cmp-summary {
@@ -349,7 +356,7 @@
             color: var(--text-dim);
             padding: 15px;
             background: rgba(128, 0, 32, 0.05);
-            border-left: 3px solid var(--burgundy);
+            border-left: 3px solid var(--burgundy-accent);
             border-radius: 0 6px 6px 0;
         }
 
@@ -368,7 +375,7 @@
         }
 
         html.light .ai-name {
-            color: var(--burgundy);
+            color: var(--burgundy-accent);
         }
 
         .ai-just {
@@ -485,14 +492,14 @@
             height: 40px;
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            border-top-color: var(--burgundy);
+            border-top-color: var(--burgundy-accent);
             animation: spin 1s ease-in-out infinite;
             margin: 50px auto;
         }
 
         html.light .loader {
             border-color: rgba(0, 0, 0, 0.1);
-            border-top-color: var(--burgundy);
+            border-top-color: var(--burgundy-accent);
         }
 
         @keyframes spin {
@@ -503,7 +510,7 @@
     </style>
 </head>
 
-<body class="sidebar-open">
+<body>
     <div class="topbar">
         <div class="topbar-left"><a href="../index.html">← Home</a></div>
         <div class="topbar-right">Team Dashboard</div>
@@ -630,6 +637,7 @@
         </div>
     </div>
 
+    <script src="../js/utils/validators.js"></script>
     <!-- Dashboard Script -->
     <script>
         let teamMembers = [];
@@ -722,7 +730,7 @@
                     document.getElementById('rankings-table').style.display = 'none';
                     document.getElementById('cmp-wrap').style.display = 'none';
                     document.getElementById('cmp-empty').style.display = 'none';
-                    document.getElementById('ai-content').innerHTML = '<div class="empty-msg">No team set up yet. <a href="manage-team.html" style="color:var(--burgundy)">Go to Manage Team</a> to create your team and add players.</div>';
+                    document.getElementById('ai-content').innerHTML = '<div class="empty-msg">No team set up yet. <a href="manage-team.html" style="color:var(--burgundy-accent)">Go to Manage Team</a> to create your team and add players.</div>';
                     document.getElementById('act-empty').style.display = 'block';
                     document.getElementById('ov-members').textContent = '0';
                     document.getElementById('ov-avgscore').textContent = '0';
@@ -1111,7 +1119,7 @@
             if (window.rtUserRole !== 'coach') {
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('login-msg').innerHTML =
-                    '<div class="empty-msg" style="margin-top:50px;">This page is only accessible to Coaches and Mentors. <a href="../index.html" style="color:var(--burgundy)">Go Home</a></div>';
+                    '<div class="empty-msg" style="margin-top:50px;">This page is only accessible to Coaches and Mentors. <a href="../index.html" style="color:var(--burgundy-accent)">Go Home</a></div>';
                 document.getElementById('login-msg').style.display = 'block';
                 return;
             }

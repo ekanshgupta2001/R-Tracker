@@ -156,11 +156,11 @@ function drawLevelOverlay() {
       ctx.stroke();
     } else if (isTarget) {
       ctx.save();
-      ctx.shadowColor = '#800020';
+      ctx.shadowColor = '#c73e5a';
       ctx.shadowBlur = 10 + 8 * pulse;
       ctx.beginPath();
       ctx.arc(cx, cy, cpR + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(128,0,32,${0.6 * pulse})`;
+      ctx.strokeStyle = `rgba(199,62,90,${0.6 * pulse})`;
       ctx.lineWidth = 2.5;
       ctx.stroke();
       ctx.restore();
@@ -168,7 +168,7 @@ function drawLevelOverlay() {
       ctx.arc(cx, cy, cpR, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.90)';
       ctx.fill();
-      ctx.strokeStyle = '#800020';
+      ctx.strokeStyle = '#c73e5a';
       ctx.lineWidth = 2;
       ctx.stroke();
     } else {

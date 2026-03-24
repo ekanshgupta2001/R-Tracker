@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description" content="About R-Tracker — Rundle Robotics personally designed visualizer for FTC teams.">
   <title>About — R-Tracker</title>
@@ -20,7 +26,7 @@
   <script src="../js/sidebar.js"></script>
 </head>
 
-<body class="sidebar-open">
+<body>
   <div class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">About</div>
@@ -51,10 +57,26 @@
         <p>Cloud Syncing: </p>
         <p>Real-time collaboration tools to allow multiple teams or members to design and sync paths simultaneously across different devices. </p>
       </div>
+
+      <div class="about-block">
+        <h2>Privacy &amp; Data</h2>
+        <p>R-Tracker collects and stores the following data in Firebase (Google Cloud):</p>
+        <ul>
+          <li>Email address and display name (for authentication)</li>
+          <li>Driver practice scores, level completions, and session metrics</li>
+          <li>Curriculum progress, code submissions, and theory answers</li>
+          <li>Team membership and role information</li>
+          <li>Strategy planner annotations (shared with your team)</li>
+        </ul>
+        <p><strong>AI Code Review:</strong> When you submit code or theory answers for AI review, your submission is sent to Google's Gemini AI service for evaluation. Google's API terms may allow use of free-tier data for model improvement.</p>
+        <p><strong>Team Visibility:</strong> When you join a team, your coaches can view your curriculum progress, driver stats, and code submissions.</p>
+        <p><strong>Data Requests:</strong> To request a copy of your data or account deletion, contact your team coach or the site administrator.</p>
+      </div>
     </div>
 
     <footer class="page-footer">Built for FTC teams &nbsp;<span class="accent">♦</span></footer>
   </div>
+  <script src="../js/utils/validators.js"></script>
   <script>initAuth();</script>
 </body>
 </html>

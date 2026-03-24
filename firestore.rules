@@ -1,0 +1,67 @@
+// Firestore Security Rules for R-Tracker
+// Deploy via: firebase deploy --only firestore:rules
+// If on Spark plan, paste these rules manually in:
+// Firebase Console → Firestore → Rules → Publish
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read/write their own document
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // User subcollections (curriculum, rateLimit, etc.)
+    match /users/{userId}/{subcollection=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId
+        // Validate score values can't be manually set above 100
+        && (!request.resource.data.keys().hasAny(['aiScore']) || request.resource.data.aiScore <= 100)
+        && (!request.resource.data.keys().hasAny(['score']) || request.resource.data.score <= 100);
+    }
+
+    // Rate limit documents: can only increment, not reset to 0
+    match /users/{userId}/rateLimit/{date} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.count >= resource.data.count;
+    }
+
+    // Team document: anyone authed can read, only coaches can write settings
+    match /teams/{teamId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach';
+    }
+
+    // Team members: authed users can read
+    match /teams/{teamId}/members/{memberId} {
+      allow read: if request.auth != null;
+      // Users can write their own entry but CANNOT set role to coach
+      allow write: if request.auth != null && request.auth.uid == memberId
+        && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'player');
+      // Coaches can write any member entry (for verification, role changes)
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach';
+    }
+
+    // Strategies: team members can read, creators and coaches can modify
+    match /teams/{teamId}/strategies/{strategyId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach'
+      );
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

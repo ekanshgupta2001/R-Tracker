@@ -42,7 +42,8 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--burgundy);
+  color: var(--burgundy-accent);
+  text-shadow: var(--burgundy-glow-text);
   font-weight: 700;
   margin-bottom: 16px;
   padding-bottom: 10px;
@@ -131,7 +132,7 @@
   padding: 4px 12px;
   border-radius: 20px;
   background: rgba(128, 0, 32, 0.15);
-  border: 1px solid rgba(128, 0, 32, 0.3);
+  border: 1px solid rgba(199, 62, 90, 0.3);
   color: var(--burgundy-light);
   margin-bottom: 6px;
 }
@@ -218,7 +219,7 @@
   padding: 8px 12px;
   background: rgba(128, 0, 32, 0.08);
   border-radius: 6px;
-  border: 1px solid rgba(128, 0, 32, 0.15);
+  border: 1px solid rgba(199, 62, 90, 0.15);
 }
 
 .ai-comp-label { color: #999; }
@@ -305,7 +306,9 @@
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  box-shadow: var(--burgundy-glow-sm);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--burgundy-glow-sm);
 }
 
 .ai-generate-btn:hover {
@@ -458,8 +461,8 @@
 /* Not attempted (unlocked but no completion) */
 .rlg-cell:not(.gold):not(.silver):not(.bronze):not(.locked) .rlg-num { color: #555; }
 .rlg-cell:not(.gold):not(.silver):not(.bronze):not(.locked):hover {
-  border-color: rgba(128, 0, 32, 0.4);
-  box-shadow: 0 0 10px rgba(128, 0, 32, 0.15);
+  border-color: rgba(199, 62, 90, 0.4);
+  box-shadow: 0 0 10px rgba(199, 62, 90, 0.15);
 }
 
 /* Locked */

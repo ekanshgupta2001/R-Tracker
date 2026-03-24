@@ -41,7 +41,7 @@
       animation: rt-logo-pulse 1.8s ease-in-out infinite;
     }
     .rt-logo-r {
-      background: linear-gradient(135deg, #a0334a, #800020);
+      background: linear-gradient(135deg, #c73e5a, #a0334a);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -91,12 +91,12 @@
     #rt-auth-card {
       background: #1e1e1e;
       border: 1px solid #333;
-      border-top: 2px solid #800020;
+      border-top: 2px solid #c73e5a;
       border-radius: 16px;
       padding: 40px 36px 32px;
       width: 380px;
       max-width: 95vw;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.85), 0 0 0 1px rgba(128,0,32,0.15);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.85), 0 0 0 1px rgba(199,62,90,0.15);
     }
     #rt-auth-logo {
       text-align: center;
@@ -107,7 +107,7 @@
       font-size: 38px;
       font-weight: 800;
       letter-spacing: -1.5px;
-      background: linear-gradient(135deg, #a0334a, #800020);
+      background: linear-gradient(135deg, #c73e5a, #a0334a);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -180,7 +180,7 @@
     }
     .rt-auth-input:focus {
       outline: none;
-      border-color: #800020;
+      border-color: #c73e5a;
     }
     .rt-auth-input::placeholder { color: #444; }
     .rt-auth-btn-row { display: flex; gap: 8px; }
@@ -197,10 +197,10 @@
       cursor: pointer;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
     }
-    .rt-auth-btn:hover { border-color: #800020; color: #fff; }
+    .rt-auth-btn:hover { border-color: #c73e5a; color: #fff; }
     .rt-auth-btn.primary {
       background: #800020;
-      border-color: #800020;
+      border-color: #c73e5a;
       color: #fff;
     }
     .rt-auth-btn.primary:hover { background: #9a0028; border-color: #9a0028; }
@@ -398,10 +398,14 @@
     if (!email || !pass) { setError('Please enter an email and password.'); return; }
     if (pass.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
-    window.rtAuth.createUserWithEmailAndPassword(email, pass).catch(err => {
-      setError(friendlyError(err));
-      setLoading(false);
-    });
+    window.rtAuth.createUserWithEmailAndPassword(email, pass)
+      .then(function(userCredential) {
+        userCredential.user.sendEmailVerification();
+      })
+      .catch(err => {
+        setError(friendlyError(err));
+        setLoading(false);
+      });
   };
 
   window.rtSignOut = function () {
@@ -423,17 +427,23 @@
 
   function friendlyError(err) {
     const map = {
-      'auth/user-not-found':         'No account found with that email.',
-      'auth/wrong-password':         'Incorrect password.',
+      'auth/user-not-found':         'Invalid email or password.',
+      'auth/wrong-password':         'Invalid email or password.',
       'auth/invalid-email':          'Invalid email address.',
       'auth/email-already-in-use':   'An account with that email already exists.',
       'auth/weak-password':          'Password must be at least 6 characters.',
       'auth/popup-closed-by-user':   'Sign-in was cancelled.',
       'auth/network-request-failed': 'Network error. Check your connection.',
-      'auth/invalid-credential':     'Incorrect email or password.',
+      'auth/invalid-credential':     'Invalid email or password.',
     };
     return map[err.code] || err.message;
   }
+
+  // ── XSS sanitization ─────────────────────────────────────────────────────
+  function sanitize(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  window.rtSanitize = sanitize;
 
   // ── User Profile in Sidebar ───────────────────────────────────────────────
   function injectUserProfile(user) {
@@ -443,13 +453,13 @@
     const footer = document.querySelector('.sidebar-footer');
     if (!footer) return;
 
-    const name   = user.displayName || user.email.split('@')[0];
-    const email  = user.email || '';
+    const name   = sanitize(user.displayName || user.email.split('@')[0]);
+    const email  = sanitize(user.email || '');
     const photo  = user.photoURL;
-    const letter = name.charAt(0).toUpperCase();
+    const letter = sanitize(name.charAt(0).toUpperCase());
 
     const avatarHtml = photo
-      ? `<div class="rt-user-avatar"><img src="${photo}" referrerpolicy="no-referrer" alt="${letter}"></div>`
+      ? `<div class="rt-user-avatar"><img src="${sanitize(photo)}" referrerpolicy="no-referrer" alt="${letter}"></div>`
       : `<div class="rt-user-avatar">${letter}</div>`;
 
     const section = document.createElement('div');
@@ -459,11 +469,33 @@
       ${avatarHtml}
       <div class="rt-user-info">
         <div class="rt-user-name">${name}</div>
-        <div class="rt-user-email">${email}</div>
+        <div class="rt-user-email">${email} <a href="#" onclick="if(confirm('Sign out of R-Tracker?')){rtSignOut();}return false;" style="font-size:10px;color:#666;text-decoration:underline;margin-left:4px;">Not you?</a></div>
       </div>
       <button class="rt-signout-btn" onclick="rtSignOut()" title="Sign out">&#8594;&#xFE0E; out</button>
     `;
     footer.insertBefore(section, footer.firstChild);
+  }
+
+  // ── Email Verification Banner ─────────────────────────────────────────────
+  function checkEmailVerification(user) {
+    // Only show for email/password users who haven't verified
+    if (!user || user.emailVerified) return;
+    var isPasswordUser = false;
+    if (user.providerData) {
+      for (var i = 0; i < user.providerData.length; i++) {
+        if (user.providerData[i].providerId === 'password') isPasswordUser = true;
+      }
+    }
+    if (!isPasswordUser) return;
+
+    // Don't add duplicate banners
+    if (document.getElementById('rt-verify-banner')) return;
+
+    var banner = document.createElement('div');
+    banner.id = 'rt-verify-banner';
+    banner.style.cssText = 'background:#332800;border-bottom:1px solid #eab308;padding:8px 16px;text-align:center;font-size:13px;color:#eab308;position:fixed;top:0;left:0;right:0;z-index:9998;';
+    banner.innerHTML = 'Please verify your email address. <button onclick="window.rtUser.sendEmailVerification().then(function(){document.getElementById(\'rt-verify-banner\').innerHTML=\'Verification email sent!\'}).catch(function(){})" style="background:none;border:none;color:#eab308;text-decoration:underline;cursor:pointer;font-size:13px;font-family:inherit;">Resend verification email</button>';
+    document.body.insertBefore(banner, document.body.firstChild);
   }
 
   // ── Auth State Listener ───────────────────────────────────────────────────
@@ -485,11 +517,13 @@
         if (isFirst) {
           dismissLoader(() => {
             injectUserProfile(user);
+            checkEmailVerification(user);
             if (typeof onSignedIn === 'function') onSignedIn(user);
           });
         } else {
           // Subsequent fires (e.g. token refresh): no loader to dismiss
           injectUserProfile(user);
+          checkEmailVerification(user);
           if (typeof onSignedIn === 'function') onSignedIn(user);
         }
       } else {

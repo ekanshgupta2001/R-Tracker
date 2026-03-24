@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <title>TeleOp Practice — R-Tracker</title>
   <link rel="stylesheet" href="../css/global.css">
@@ -16,6 +22,9 @@
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 
 <body>
@@ -74,6 +83,11 @@
         <button class="btn" onclick="resetRobot()">Reset [R]</button>
         <span style="color:#334;font-size:16px">│</span>
         <button class="btn" onclick="openDriverReport()">&#128202; Report</button>
+        <span style="color:#334;font-size:16px">│</span>
+        <div class="view-toggle">
+          <button class="view-btn active" data-mode="2d" onclick="setViewMode('2d')">2D</button>
+          <button class="view-btn" data-mode="3d" onclick="setViewMode('3d')">3D</button>
+        </div>
         <div id="gpstatus" class="gpoff">No Gamepad</div>
       </div>
       <div id="mini-stats">
@@ -169,6 +183,13 @@
         <div class="srow">
           <div class="slrow"><span>Response Delay</span><span class="sval" id="s-rd-v">50 ms</span></div>
           <input type="range" id="s-rd" min="0" max="300" step="10" value="50" oninput="cfgUpdate()">
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">3D Robot Model</div>
+        <div class="stl-panel">
+          <button class="stl-upload-btn" onclick="uploadSTL()">Upload STL</button>
+          <button id="stl-remove-btn" onclick="removeSTL()">Remove</button>
         </div>
       </div>
       <div class="panel">
@@ -291,6 +312,7 @@
     </div>
   </div>
 
+  <script src="../js/utils/validators.js"></script>
   <!-- Teleop JS modules (load order matters — globals shared via plain scripts) -->
   <script src="../js/teleop/field.js"></script>
   <script src="../js/teleop/robot.js"></script>
@@ -301,6 +323,7 @@
   <script src="../js/teleop/levels.js"></script>
   <script src="../js/utils/storage.js"></script>
   <script src="../js/teleop/coach.js"></script>
+  <script src="../js/teleop/view3d.js"></script>
   <script src="../js/teleop/ui.js"></script>
   <script>
     initAuth(function(user) {

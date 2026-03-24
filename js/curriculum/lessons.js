@@ -462,6 +462,54 @@ public class CleanTeleOp extends OpMode {
     }
   ];
 
+  /* ── Phase 3 Theory Lessons (written-answer checks, rendered before code lessons) ── */
+  var PHASE_3_THEORY = [
+    {
+      id: 'theory-sensor-physics',
+      title: 'Theory: What Sensors Actually Measure',
+      isTheory: true,
+      learn: 'A sensor doesn\u2019t tell you truth about the world. It gives you a <strong>number</strong> that is <strong>related</strong> to something physical \u2014 filtered through physics, electronics, and noise.<br><br>A color sensor has tiny photodiodes behind colored filters. When you call <code>colorSensor.red()</code> and get 180, that number depends on: how much red light the object reflects (what you care about), ambient room lighting (what you can\u2019t control), distance to the object (light drops with distance squared), sensor angle, and surface texture.<br><br>This is why the same red game element gives <code>red = 180</code> in your workshop but <code>red = 95</code> at competition \u2014 the gym lighting is completely different.',
+      check: {
+        question: 'A color sensor reads red = 200 in your workshop but red = 110 at competition, even though you\'re reading the exact same red game element. Explain at least two physical reasons why the reading changed, and why this means you can\'t use a simple threshold like if (red > 150) to detect red reliably.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-hsv-physics',
+      title: 'Theory: Why HSV Beats RGB (The Physics)',
+      isTheory: true,
+      learn: 'RGB values change with lighting because they measure <strong>absolute light intensity</strong>. More ambient light = higher numbers across ALL channels.<br><br><strong>Hue</strong> (0-360\u00b0) is based on the <strong>ratio</strong> between RGB channels, not their absolute values. If your workshop has warm yellow lighting and the competition has cool fluorescents, absolute RGB changes dramatically \u2014 but the ratio stays roughly the same.<br><br>This is the same physics behind why your eyes can identify a red apple in sunlight, shade, or under fluorescent lights \u2014 your brain automatically adjusts for brightness and extracts the color ratio. <strong>Saturation</strong> tells you if it\u2019s a vivid color or just white/gray. <strong>Value</strong> tells you if the sensor sees something (bright) or empty air (dark).',
+      check: {
+        question: 'Explain in your own words why Hue is more stable than raw RGB values across different lighting conditions. Your answer should reference the fact that Hue is based on ratios rather than absolute values.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-noise',
+      title: 'Theory: Signal vs Noise',
+      isTheory: true,
+      learn: 'Every sensor reading = <strong>signal</strong> (real value) + <strong>noise</strong> (random variation). Sources of noise in FTC: <strong>electronic noise</strong> (ADC precision limits cause \u00b11-3 count fluctuation), <strong>mechanical vibration</strong> (robot shakes while driving, sensor moves relative to surface), <strong>electromagnetic interference</strong> (spinning motors generate fields that induce currents in sensor wires).<br><br>A distance reading of 15.2cm means the wall is <strong>probably</strong> between 14.5-15.9cm. Next cycle it might read 14.8 or 15.5 even though nothing moved. Reacting to one reading is dangerous \u2014 one noisy spike of 8cm triggers your state transition when the wall is actually 14cm away.<br><br><strong>Filtering</strong> combats noise: threshold counting (require N consecutive readings), moving average (average last 5 readings), or exponential smoothing (<code>filtered = \u03b1 \u00d7 new + (1-\u03b1) \u00d7 previous</code>).',
+      check: {
+        question: 'Your distance sensor reads: 15, 14, 3, 15, 14, 10, 9, 8. The reading of 3 is clearly noise. Explain why a moving average filter would handle this better than reacting to individual readings. What would the moving average (window size 3) show at the point where the raw reading was 3?',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-closed-loop-thinking',
+      title: 'Theory: Open-Loop vs Closed-Loop Thinking',
+      isTheory: true,
+      learn: 'The difference between a beginner and a competition-ready programmer is how they think about <strong>uncertainty</strong>.<br><br><strong>Open-loop thinking:</strong> "Set motor to 0.5 for 2 seconds and the robot will drive 40 inches." Assumes the world is deterministic.<br><br><strong>Closed-loop thinking:</strong> "I want the robot at position (36, 72). I\u2019ll continuously measure where it actually is, compare to where I want it, and adjust." Accepts that the world is noisy and builds correction into the system.<br><br>Every time you write sensor code, ask: <strong>"What happens if this reading is wrong?"</strong> If the answer is "the robot does something dangerous or stupid," you need a fallback.',
+      check: {
+        question: 'Compare open-loop and closed-loop approaches to driving a robot to a specific position. Explain why the closed-loop approach is more reliable, and describe what the "loop" in "closed-loop" actually refers to physically \u2014 what information flows where?',
+        type: 'written_answer',
+        minLength: 50
+      }
+    }
+  ];
+
   /* ══════════════════════════════════════════════════════════════════════════
      PHASE 3 LESSON CONTENT — "Make It Smart"
      ══════════════════════════════════════════════════════════════════════ */
@@ -680,6 +728,65 @@ public void loop() {
   /* ══════════════════════════════════════════════════════════════════════════
      PHASE 4 LESSON CONTENT — "Make It Precise"
      ══════════════════════════════════════════════════════════════════════ */
+  /* ── Phase 4 Theory Lessons (written-answer checks, rendered before code lessons) ── */
+  var PHASE_4_THEORY = [
+    {
+      id: 'theory-open-loop',
+      title: 'Theory: Why Open-Loop Control Fails',
+      isTheory: true,
+      learn: 'Imagine throwing a basketball at a hoop <strong>with your eyes closed</strong>. You line up, throw with a specific force, and hope. That\u2019s <strong>open-loop control</strong> \u2014 executing a pre-planned action without checking the result.<br><br>In FTC, open-loop looks like <code>setPower(0.5); sleep(2000);</code> \u2014 run at 50% for 2 seconds and hope it\u2019s the right distance. It fails because:<br><br><strong>Battery voltage drops</strong> during a match (13.5V \u2192 12.0V), so the same power command produces different speeds. <strong>Friction varies</strong> across the field \u2014 dusty tiles vs clean tiles. <strong>Weight changes</strong> when you pick up game elements, shifting the center of gravity. Open-loop assumes a perfectly predictable world. The world is not predictable.',
+      check: {
+        question: 'Explain in 2-3 sentences why running a motor at 0.5 power for 2 seconds does NOT guarantee the robot travels the same distance every time. Mention at least two physical factors that cause variation.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-pid-physics',
+      title: 'Theory: PID as Physical Forces',
+      isTheory: true,
+      learn: '<strong>P = A Spring.</strong> Attach a spring between your robot and the target. Far away \u2192 strong pull. Close \u2192 gentle pull. <code>force = kP \u00d7 error</code>. High kP = stiff spring (aggressive correction, might overshoot and oscillate). Low kP = loose spring (slow approach, might never arrive).<br><br><strong>D = A Shock Absorber.</strong> A spring alone oscillates \u2014 that\u2019s why cars have shock absorbers. D resists motion proportional to speed of approach. <code>braking = kD \u00d7 speed_of_approach</code>. It prevents the robot from blowing past the target.<br><br><strong>I = Impatience.</strong> Sometimes P gets you close but friction prevents the last bit of movement. I accumulates error over time, building up extra force until it pushes past friction. Danger: too much accumulation = <strong>integral windup</strong> = massive overshoot once the robot finally moves.<br><br><strong>F = Anti-Gravity.</strong> If an arm needs 0.15 power just to hold position against gravity, kF provides that baseline so PID only handles corrections. Remove the constant load so the fine-tuning system can focus.',
+      check: {
+        question: 'In your own words, explain what happens physically when kP is set too high on a drivetrain. Use the spring analogy \u2014 describe what a "too-stiff spring" does to the robot\'s motion and why it causes oscillation.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-odometry',
+      title: 'Theory: How Odometry Tracks Position',
+      isTheory: true,
+      learn: 'Dead wheels are unpowered wheels with encoders that roll freely \u2014 no motor torque means no slip. Each loop cycle (50/sec), the system: reads encoder ticks \u2192 converts to distance \u2192 calculates heading change from left/right wheel difference \u2192 uses <strong>trigonometry</strong> to compute new (x, y).<br><br>The key math: <code>\u0394heading = (rightDistance - leftDistance) / trackWidth</code>. Then: <code>\u0394x = forwardDistance \u00d7 cos(heading)</code>, <code>\u0394y = forwardDistance \u00d7 sin(heading)</code>.<br><br><strong>Why calibration is critical:</strong> Heading calculation divides by track width. If track width is off by 1mm, every heading calculation is slightly wrong. Over 100 inches of driving, these errors <strong>compound</strong> \u2014 the robot thinks it\u2019s facing north when it\u2019s actually 5\u00b0 east. Then every position calculation uses the wrong heading for the trig, making (x, y) drift even on a straight path.',
+      check: {
+        question: 'A robot drives in a straight line for 100 inches, but the odometry track width is calibrated 2mm too wide. Explain what effect this has on the robot\'s reported heading over time, and why this heading error makes the reported (x, y) position drift even on a perfectly straight path.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-bezier',
+      title: 'Theory: How Bezier Curves Work',
+      isTheory: true,
+      learn: 'A Bezier curve uses <strong>control points</strong> that shape the path like magnets \u2014 they pull the curve toward them without the robot passing through them.<br><br>The math is nested linear interpolation. For a straight line: <code>P(t) = (1-t)\u00d7A + t\u00d7B</code> where t goes from 0 to 1. For a curve with control point C: interpolate A\u2192C, then C\u2192B, then interpolate between those two results. The result is a smooth arc.<br><br><strong>Why this matters:</strong> Jerky paths (drive, stop, turn 90\u00b0, drive) waste time accelerating and decelerating at every corner. Bezier curves let the robot maintain speed through turns by following a continuous arc. Control point placement determines the shape: close to start = tight initial turn, far from path = wide dramatic arc.',
+      check: {
+        question: 'You have a start pose at (24, 24) and an end pose at (120, 24). You place a control point at (72, 96). Describe in words what shape the resulting Bezier curve will take \u2014 where does it start, which direction does it arc, and where does it end? Why would you choose this curve shape instead of a straight line?',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-tuning',
+      title: 'Theory: The Tuning Mindset',
+      isTheory: true,
+      learn: 'Tuning is NOT guessing. It\u2019s systematic:<br><br><strong>1. Start with P only</strong> (I, D, F = 0). Increase kP until the system reaches target but overshoots slightly. The spring is the right stiffness, just missing the damper.<br><strong>2. Add D</strong> to kill overshoot. Increase until the system settles cleanly. You\u2019ve added the shock absorber.<br><strong>3. Check for steady-state error.</strong> If consistently stopping short, friction is winning. Add small kI with an integral cap.<br><strong>4. Add F for constant loads.</strong> Measure hold power, set as kF.<br><br><strong>Golden rule:</strong> Change ONE constant at a time. Observe. If you change two things and it improves, you don\u2019t know which helped. Systematic isolation beats shotgunning.',
+      check: {
+        question: 'You\'re tuning a PID controller for a lift mechanism that holds a heavy arm. With kP = 0.05, the arm gets close to the target but stops about 8 degrees short and stays there. Explain which PID term(s) you would adjust and why, using the physical analogies (spring, damper, impatience, anti-gravity) to justify your answer.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    }
+  ];
+
   var PHASE_4_LESSONS = [
     {
       id: 'why-feedback',
@@ -881,6 +988,54 @@ PathChain pickupPath = follower.pathBuilder()
           { text: 'Motor directions', correct: false, explanation: 'Wrong motor directions cause obvious problems (spinning in circles), not subtle drift. Drift is almost always a calibration issue.' },
           { text: 'Battery voltage', correct: false, explanation: 'Low battery causes slower movement, not directional drift. Consistent left drift points to a mechanical or calibration issue.' }
         ]
+      }
+    }
+  ];
+
+  /* ── Phase 5 Theory Lessons (written-answer checks, rendered before code lessons) ── */
+  var PHASE_5_THEORY = [
+    {
+      id: 'theory-scientific-debugging',
+      title: 'Theory: Debugging IS the Scientific Method',
+      isTheory: true,
+      learn: 'Random mutation debugging \u2014 changing things randomly until it works \u2014 is like a scientist randomly mixing chemicals. Even when it accidentally works, you don\u2019t know why, so the same bug class reappears.<br><br>The scientific method for debugging: <strong>1. Observe</strong> (what exactly happens \u2014 not "it doesn\u2019t work"), <strong>2. Hypothesize</strong> (list at least 3 possible causes before touching code), <strong>3. Predict & Test</strong> (test each hypothesis WITHOUT changing code \u2014 use telemetry), <strong>4. Isolate</strong> (narrow down by eliminating hypotheses), <strong>5. Fix</strong> (ONE change for the confirmed cause), <strong>6. Verify</strong> (confirm fix works AND nothing else broke).',
+      check: {
+        question: 'Your robot\'s arm motor doesn\'t move when you press the A button. List three different hypotheses for why this might be happening (they should be meaningfully different \u2014 not three variations of the same idea). For each hypothesis, describe one test you could perform WITHOUT changing code to confirm or eliminate it.',
+        type: 'written_answer',
+        minLength: 80
+      }
+    },
+    {
+      id: 'theory-bug-taxonomy',
+      title: 'Theory: The Taxonomy of Bugs',
+      isTheory: true,
+      learn: 'Not all bugs are the same. The <strong>category</strong> tells you where to look:<br><br><strong>Configuration bugs</strong> \u2014 code is correct but references wrong things. Hardware Map mismatches, wrong motor direction. Cause immediate crashes or obvious wrong behavior. Easiest to find.<br><br><strong>Logic bugs</strong> \u2014 code doesn\u2019t crash but does the wrong thing. Wrong state transitions, bad PID constants, wrong comparisons. No error message \u2014 code does exactly what you told it, which isn\u2019t what you wanted.<br><br><strong>Timing bugs</strong> \u2014 works sometimes, not always. Race conditions, wrong ordering, sensors checked before stabilizing. Hardest because they\u2019re intermittent.<br><br><strong>Integration bugs</strong> \u2014 two pieces work alone but break together. Two controllers fighting over one motor, double update() calls. Only appear when the full system is assembled.',
+      check: {
+        question: 'You encounter a bug where your autonomous works perfectly 8 out of 10 times, but occasionally the robot stops mid-path and doesn\'t continue. Which category of bug is this most likely to be? Explain your reasoning and describe what debugging approach you would take based on that category.',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-root-cause',
+      title: 'Theory: Root Cause vs Symptom',
+      isTheory: true,
+      learn: 'The most important debugging skill: distinguish between <strong>symptom</strong> (what you see) and <strong>root cause</strong> (why it happens).<br><br><strong>Example:</strong> Robot overshoots scoring position by 6 inches. Tempting fix: reduce target by 6 inches. Why this is wrong: tomorrow with a different battery, it overshoots by 4 inches \u2014 your offset is now wrong. Root cause: kP is too high. Real fix: tune kP properly.<br><br><strong>The "5 Whys" technique:</strong> Keep asking "why?" until you reach the actual cause. Why did it overshoot? Going too fast near target. Why? High motor power. Why? kP \u00d7 error still produces high output at small errors. Why? kP is too large. Fix at level 4, not level 1.',
+      check: {
+        question: 'A team notices their robot\'s intake motor sometimes doesn\'t respond to button presses. They "fix" it by adding a 200ms sleep() after each button check to "give the motor time to respond." Explain why this is a symptom fix and not a root cause fix. What would you investigate to find the actual root cause?',
+        type: 'written_answer',
+        minLength: 50
+      }
+    },
+    {
+      id: 'theory-triage',
+      title: 'Theory: Competition Triage',
+      isTheory: true,
+      learn: 'At competition, you have 5 minutes to diagnose and fix. Most failures have simple causes \u2014 start simple, work up.<br><br><strong>30-second checks:</strong> Connected? Correct OpMode? Init AND Start pressed? Cables seated?<br><strong>2-minute checks:</strong> Read error message. Hardware Map error? NullPointerException? What state is telemetry showing?<br><strong>5-minute checks:</strong> Add telemetry to broken method. Check motor directions. Check sensor values. Verify update() calls.<br><strong>Nuclear option:</strong> Revert to working code. Disable broken subsystem. Use backup autonomous.<br><br><strong>Most important rule:</strong> Always have a backup autonomous. Dead-simple drive-forward-and-park. Zero sensors, zero path following. If everything fails, this gets parking points. Something beats nothing.',
+      check: {
+        question: 'You\'re at competition. Your autonomous was working perfectly during practice matches, but in your first qualification match, the robot initializes and then does nothing when Start is pressed. You have 4 minutes until your next match. Walk through your diagnostic process step by step \u2014 what do you check first, second, and third? What\'s your fallback plan if you can\'t find the bug in time?',
+        type: 'written_answer',
+        minLength: 80
       }
     }
   ];
@@ -1303,9 +1458,9 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
   window.PHASE_LESSONS = {
     phase1: PHASE_1_LESSONS,
     phase2: PHASE_2_LESSONS,
-    phase3: PHASE_3_LESSONS,
-    phase4: PHASE_4_LESSONS,
-    phase5: PHASE_5_LESSONS
+    phase3: PHASE_3_THEORY.concat(PHASE_3_LESSONS),
+    phase4: PHASE_4_THEORY.concat(PHASE_4_LESSONS),
+    phase5: PHASE_5_THEORY.concat(PHASE_5_LESSONS)
   };
 
   window.ADVANCED_CONTENT = {
@@ -1431,7 +1586,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       var isActive = (i === firstIncomplete);
       var isLocked = (i > firstIncomplete && !isDone);
 
-      html += '<div class="les-section' + (isDone ? ' done' : '') + (isActive ? ' active' : '') + (isLocked ? ' locked' : '') + '" id="les-sec-' + sec.id + '" data-idx="' + i + '">';
+      html += '<div class="les-section' + (isDone ? ' done' : '') + (isActive ? ' active' : '') + (isLocked ? ' locked' : '') + (sec.isTheory ? ' les-theory' : '') + '" id="les-sec-' + sec.id + '" data-idx="' + i + '">';
 
       // Section header
       html += '<div class="les-sec-header" onclick="window._toggleSection(\'' + sec.id + '\')">';
@@ -1440,9 +1595,10 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       } else if (isLocked) {
         html += '<div class="les-sec-lock">&#128274;</div>';
       } else {
-        html += '<div class="les-sec-num">' + (i + 1) + '</div>';
+        html += '<div class="les-sec-num' + (sec.isTheory ? ' les-sec-num-theory' : '') + '">' + (i + 1) + '</div>';
       }
       html += '<div class="les-sec-title">' + esc(sec.title) + '</div>';
+      if (sec.isTheory && !isDone) html += '<span class="les-theory-badge">\ud83d\udcd0 THEORY</span>';
       if (isDone) html += '<div class="les-sec-expand">&#9660;</div>';
       html += '</div>';
 
@@ -1462,11 +1618,39 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
 
       // Check block
       if (sec.check) {
-        html += '<div class="les-check" id="les-check-' + sec.id + '">';
-        if (isDone) {
-          // Already answered — show collapsed success
+        var isWritten = sec.check.type === 'written_answer';
+        html += '<div class="les-check' + (sec.isTheory ? ' les-check-theory' : '') + '" id="les-check-' + sec.id + '">';
+        if (isDone && !isWritten) {
+          // Already answered MC — show collapsed success
           html += '<div class="les-check-done">&#10003; Correct</div>';
+        } else if (isDone && isWritten) {
+          // Completed written answer — show read-only textarea + feedback wrap for Firestore to populate
+          html += '<div class="les-check-done" id="les-wdone-badge-' + sec.id + '">&#10003; Submitted</div>';
+          html += '<div class="les-written-done-detail" id="les-wdone-' + sec.id + '" style="display:none">';
+          html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
+          html += '<textarea class="les-written-area" id="les-written-' + sec.id + '" placeholder="Type your answer here..." readonly style="border-color:#22c55e;opacity:0.85"></textarea>';
+          html += '<div class="les-written-footer">';
+          html += '<span class="les-written-count" id="les-wcount-' + sec.id + '"></span>';
+          html += '<button class="les-written-submit les-written-submitted" id="les-wsubmit-' + sec.id + '" style="display:none" onclick="window._submitWrittenAnswer(\'' + sec.id + '\')" disabled>Submit Answer</button>';
+          html += '</div>';
+          html += '<div class="les-written-attempts" id="les-wattempts-' + sec.id + '" style="display:none"></div>';
+          html += '<div class="les-written-error" id="les-werror-' + sec.id + '" style="display:none"></div>';
+          html += '<div class="theory-feedback-wrap" id="les-wfeedback-' + sec.id + '"></div>';
+          html += '</div>';
+        } else if (isWritten) {
+          // Written answer check
+          html += '<div class="les-check-icon">&#9999;&#65039;</div>';
+          html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
+          html += '<textarea class="les-written-area" id="les-written-' + sec.id + '" placeholder="Type your answer here..." minlength="' + (sec.check.minLength || 50) + '"></textarea>';
+          html += '<div class="les-written-footer">';
+          html += '<span class="les-written-count" id="les-wcount-' + sec.id + '">0 / ' + (sec.check.minLength || 50) + ' characters minimum</span>';
+          html += '<button class="les-written-submit" id="les-wsubmit-' + sec.id + '" onclick="window._submitWrittenAnswer(\'' + sec.id + '\')" disabled>Submit Answer</button>';
+          html += '</div>';
+          html += '<div class="les-written-attempts" id="les-wattempts-' + sec.id + '" style="display:none"></div>';
+          html += '<div class="les-written-error" id="les-werror-' + sec.id + '" style="display:none"></div>';
+          html += '<div class="theory-feedback-wrap" id="les-wfeedback-' + sec.id + '"></div>';
         } else {
+          // Multiple choice check
           html += '<div class="les-check-icon">&#10067;</div>';
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
           html += '<div class="les-check-opts" id="les-opts-' + sec.id + '">';
@@ -1505,6 +1689,108 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     }
 
     el.innerHTML = html;
+
+    // Attach listeners and load Firestore data for ALL written-answer sections (active AND completed)
+    for (var wi = 0; wi < sections.length; wi++) {
+      if (sections[wi].check && sections[wi].check.type === 'written_answer') {
+        var wiDone = lessonState.completed.indexOf(sections[wi].id) !== -1;
+        (function (sid, minLen, sectionDone) {
+          var ta = document.getElementById('les-written-' + sid);
+          var countEl = document.getElementById('les-wcount-' + sid);
+          var submitBtn = document.getElementById('les-wsubmit-' + sid);
+          if (!ta) return;
+
+          // Attach input listener for active (non-done) sections
+          if (!sectionDone) {
+            ta.addEventListener('input', function () {
+              var len = ta.value.trim().length;
+              if (countEl) countEl.textContent = len + ' / ' + minLen + ' characters minimum';
+              if (submitBtn) submitBtn.disabled = (len < minLen);
+            });
+          }
+
+          // Load previously submitted answer from Firestore (both done and active)
+          if (window.rtUser && window.rtDb) {
+            window.rtDb.collection('users').doc(window.rtUser.uid)
+              .collection('curriculum').doc(phaseId).get()
+              .then(function (doc) {
+                if (!doc.exists) return;
+                var data = doc.data();
+                if (!data.theoryAnswers || !data.theoryAnswers[sid]) return;
+
+                var saved = data.theoryAnswers[sid];
+                ta.value = saved.answer || '';
+                _theoryAttemptCounts[sid] = saved.attempts || 1;
+
+                // Show attempt count
+                var attemptsEl = document.getElementById('les-wattempts-' + sid);
+                if (attemptsEl && saved.attempts) {
+                  attemptsEl.textContent = 'Submitted ' + saved.attempts + ' time' + (saved.attempts > 1 ? 's' : '') + (saved.bestScore ? ' \u2022 Best: ' + saved.bestScore + '/100' : '');
+                  attemptsEl.style.display = 'block';
+                }
+
+                if (saved.passed) {
+                  ta.readOnly = true;
+                  ta.style.borderColor = '#22c55e';
+                  ta.style.opacity = '0.85';
+                  if (countEl) countEl.textContent = '\u2713 Passed \u2014 ' + (saved.bestScore || saved.score || '') + '/100';
+                  if (submitBtn) {
+                    submitBtn.style.display = 'none';
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('les-written-submitted');
+                  }
+                  var fbWrap = document.getElementById('les-wfeedback-' + sid);
+                  if (fbWrap) {
+                    var passHtml = '<div class="theory-feedback passed"><div class="score-badge">\u2713 Understanding Confirmed \u2014 ' + (saved.bestScore || saved.score || 70) + '/100</div>';
+                    if (saved.feedback) passHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
+                    passHtml += '</div>';
+                    passHtml += '<div class="les-written-resubmit-link" onclick="window._reviseTheoryAnswer(\'' + sid + '\', true)">Resubmit answer</div>';
+                    fbWrap.innerHTML = passHtml;
+                  }
+                  // For completed sections, also show the detail panel and hide the simple badge
+                  if (sectionDone) {
+                    var doneDetail = document.getElementById('les-wdone-' + sid);
+                    var doneBadge = document.getElementById('les-wdone-badge-' + sid);
+                    if (doneDetail) doneDetail.style.display = 'block';
+                    if (doneBadge) doneBadge.style.display = 'none';
+                  }
+                } else if (saved.score !== undefined && !saved.passed) {
+                  ta.readOnly = true;
+                  ta.style.borderColor = '#eab308';
+                  ta.style.opacity = '0.85';
+                  if (countEl) countEl.textContent = 'Score: ' + saved.score + '/100 \u2014 Revision needed';
+                  if (submitBtn) submitBtn.style.display = 'none';
+                  var fbWrap2 = document.getElementById('les-wfeedback-' + sid);
+                  if (fbWrap2) {
+                    var fbHtml = '<div class="theory-feedback failed"><div class="score-badge">\u26a0 Keep Thinking \u2014 ' + saved.score + '/100</div>';
+                    if (saved.feedback) fbHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
+                    fbHtml += '</div>';
+                    fbHtml += '<button class="les-written-submit les-written-revise" onclick="window._reviseTheoryAnswer(\'' + sid + '\', false)">Revise &amp; Resubmit</button>';
+                    fbWrap2.innerHTML = fbHtml;
+                  }
+                  if (sectionDone) {
+                    var doneDetail2 = document.getElementById('les-wdone-' + sid);
+                    var doneBadge2 = document.getElementById('les-wdone-badge-' + sid);
+                    if (doneDetail2) doneDetail2.style.display = 'block';
+                    if (doneBadge2) doneBadge2.style.display = 'none';
+                  }
+                } else {
+                  // Legacy: submitted without AI grading
+                  ta.readOnly = true;
+                  ta.style.borderColor = '#22c55e';
+                  ta.style.opacity = '0.85';
+                  if (countEl) countEl.textContent = '\u2713 Previously submitted';
+                  if (submitBtn) {
+                    submitBtn.textContent = '\u2713 Submitted';
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('les-written-submitted');
+                  }
+                }
+              }).catch(function () {});
+          }
+        })(sections[wi].id, sections[wi].check.minLength || 50, wiDone);
+      }
+    }
   };
 
   /* ── Section toggling ─────────────────────────────────────────────────── */
@@ -1611,6 +1897,274 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     }
   };
 
+  /* ── Written answer submission ────────────────────────────────────────── */
+  // Rate-limit tracker for theory submissions
+  var _theorySubmitCooldown = {};
+  // Track attempt counts per section (loaded from Firestore)
+  var _theoryAttemptCounts = {};
+
+  window._submitWrittenAnswer = function (secId) {
+    // Rate limit: 10s cooldown
+    if (_theorySubmitCooldown[secId]) return;
+
+    var phaseId = lessonState.phaseId;
+    var sections = window.PHASE_LESSONS[phaseId];
+    if (!sections) return;
+
+    var sec = null;
+    for (var si = 0; si < sections.length; si++) {
+      if (sections[si].id === secId) { sec = sections[si]; break; }
+    }
+    if (!sec || !sec.check || sec.check.type !== 'written_answer') return;
+
+    var textarea = document.getElementById('les-written-' + secId);
+    var errorEl = document.getElementById('les-werror-' + secId);
+    var submitBtn = document.getElementById('les-wsubmit-' + secId);
+    if (!textarea) return;
+
+    var answer = textarea.value.trim();
+    var minLen = sec.check.minLength || 50;
+
+    if (answer.length < minLen) {
+      if (errorEl) {
+        errorEl.textContent = 'Please write at least 2-3 sentences explaining your understanding.';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+
+    // Hide error
+    if (errorEl) errorEl.style.display = 'none';
+
+    // Disable textarea and button during review
+    textarea.readOnly = true;
+    textarea.style.opacity = '0.7';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'AI Mentor is reading your answer...';
+      submitBtn.classList.add('les-written-loading');
+    }
+
+    // Start cooldown
+    _theorySubmitCooldown[secId] = true;
+
+    // Strip HTML tags from learn content for the prompt
+    var plainLearn = (sec.learn || '').replace(/<[^>]+>/g, '');
+    var phaseNum = phaseId.replace('phase', '');
+
+    // Call AI review
+    var doReview = function (retryCount) {
+      window.reviewTheoryAnswer(phaseNum, secId, sec.title, plainLearn, sec.check.question, answer)
+        .then(function (result) {
+          _renderTheoryFeedback(secId, result, answer, phaseId, textarea, submitBtn);
+        })
+        .catch(function (err) {
+          console.error('[Theory] AI review error:', err);
+          if (retryCount < 1 && err && String(err).indexOf('429') !== -1) {
+            if (submitBtn) submitBtn.textContent = 'AI mentor is busy. Retrying in 15s...';
+            setTimeout(function () { doReview(retryCount + 1); }, 15000);
+          } else {
+            _renderTheoryFeedback(secId, null, answer, phaseId, textarea, submitBtn);
+          }
+        });
+    };
+    doReview(0);
+
+    // Release cooldown after 10s
+    setTimeout(function () { delete _theorySubmitCooldown[secId]; }, 10000);
+  };
+
+  function _renderTheoryFeedback(secId, result, answer, phaseId, textarea, submitBtn) {
+    var feedbackWrap = document.getElementById('les-wfeedback-' + secId);
+    if (!feedbackWrap) return;
+
+    // If AI returned null (error), auto-pass with a note
+    if (!result) {
+      result = { passed: true, score: 70, feedback: 'AI review unavailable. Your answer has been accepted.', strengths: [], misconceptions: [], suggestion: '' };
+    }
+
+    var passed = result.passed && result.score >= 70;
+    var attemptNum = (_theoryAttemptCounts[secId] || 0) + 1;
+    _theoryAttemptCounts[secId] = attemptNum;
+
+    // Build feedback card HTML
+    var html = '<div class="theory-feedback ' + (passed ? 'passed' : 'failed') + '">';
+    html += '<div class="score-badge">' + (passed ? '\u2713 Understanding Confirmed' : '\u26a0 Keep Thinking') + ' &mdash; ' + result.score + '/100</div>';
+    if (result.feedback) {
+      html += '<div class="feedback-text">' + esc(result.feedback) + '</div>';
+    }
+    if (result.strengths && result.strengths.length > 0) {
+      html += '<ul class="strengths">';
+      for (var s = 0; s < result.strengths.length; s++) {
+        html += '<li>\u2713 ' + esc(result.strengths[s]) + '</li>';
+      }
+      html += '</ul>';
+    }
+    if (!passed && result.misconceptions && result.misconceptions.length > 0) {
+      html += '<ul class="misconceptions">';
+      for (var m = 0; m < result.misconceptions.length; m++) {
+        html += '<li>\u26a0 ' + esc(result.misconceptions[m]) + '</li>';
+      }
+      html += '</ul>';
+    }
+    if (result.suggestion) {
+      html += '<div class="suggestion">\ud83d\udca1 ' + esc(result.suggestion) + '</div>';
+    }
+    html += '</div>';
+
+    // Resubmit controls
+    if (!passed) {
+      html += '<button class="les-written-submit les-written-revise" onclick="window._reviseTheoryAnswer(\'' + secId + '\', false)">Revise &amp; Resubmit</button>';
+    } else {
+      html += '<div class="les-written-resubmit-link" onclick="window._reviseTheoryAnswer(\'' + secId + '\', true)">Resubmit answer</div>';
+    }
+
+    feedbackWrap.innerHTML = html;
+
+    // Update attempt count display
+    var attemptsEl = document.getElementById('les-wattempts-' + secId);
+    if (attemptsEl) {
+      attemptsEl.textContent = 'Submitted ' + attemptNum + ' time' + (attemptNum > 1 ? 's' : '');
+      attemptsEl.style.display = 'block';
+    }
+
+    // Save to Firestore with history
+    _saveTheoryToFirestore(secId, answer, result, passed, attemptNum, phaseId);
+
+    if (passed) {
+      lessonState.answeredChecks[secId] = true;
+      textarea.style.borderColor = '#22c55e';
+      textarea.style.opacity = '0.85';
+      if (submitBtn) {
+        submitBtn.textContent = '\u2713 Passed';
+        submitBtn.classList.remove('les-written-loading');
+        submitBtn.classList.add('les-written-submitted');
+        submitBtn.style.display = 'none';
+      }
+      // Complete section if not already completed
+      if (lessonState.completed.indexOf(secId) === -1) {
+        setTimeout(function () { _doCompleteSection(secId); }, 1200);
+      }
+    } else {
+      textarea.readOnly = true;
+      textarea.style.borderColor = '#eab308';
+      textarea.style.opacity = '0.85';
+      if (submitBtn) {
+        submitBtn.style.display = 'none';
+        submitBtn.classList.remove('les-written-loading');
+      }
+    }
+  }
+
+  function _saveTheoryToFirestore(secId, answer, result, passed, attemptNum, phaseId) {
+    if (!window.rtUser || !window.rtDb) return;
+    var uid = window.rtUser.uid;
+    var docRef = window.rtDb.collection('users').doc(uid).collection('curriculum').doc(phaseId);
+
+    docRef.get().then(function (doc) {
+      var existing = {};
+      if (doc.exists && doc.data().theoryAnswers && doc.data().theoryAnswers[secId]) {
+        existing = doc.data().theoryAnswers[secId];
+      }
+
+      var history = existing.history || [];
+      history.push({
+        answer: answer,
+        score: result.score,
+        timestamp: new Date().toISOString()
+      });
+
+      var bestScore = Math.max(result.score, existing.bestScore || 0);
+
+      var answerData = {};
+      answerData[secId] = {
+        answer: answer,
+        score: result.score,
+        passed: passed || existing.passed || false,
+        bestScore: bestScore,
+        feedback: result.feedback || '',
+        attempts: attemptNum,
+        lastAttempt: new Date().toISOString(),
+        history: history
+      };
+
+      docRef.set({ theoryAnswers: answerData }, { merge: true });
+    }).catch(function (e) {
+      // Fallback: save without history merge
+      var answerData = {};
+      answerData[secId] = {
+        answer: answer,
+        score: result.score,
+        passed: passed,
+        bestScore: result.score,
+        feedback: result.feedback || '',
+        attempts: attemptNum,
+        lastAttempt: new Date().toISOString()
+      };
+      docRef.set({ theoryAnswers: answerData }, { merge: true });
+      console.warn('[Lessons] Saved theory answer (no history merge):', e.message);
+    });
+  }
+
+  window._reviseTheoryAnswer = function (secId, isPassed) {
+    if (isPassed) {
+      if (!confirm('You\'ve already passed this section. Resubmitting will update your answer and score. Your completion status won\'t be lost.')) {
+        return;
+      }
+    }
+
+    var textarea = document.getElementById('les-written-' + secId);
+    var submitBtn = document.getElementById('les-wsubmit-' + secId);
+    var feedbackWrap = document.getElementById('les-wfeedback-' + secId);
+    var countEl = document.getElementById('les-wcount-' + secId);
+
+    // Find minLength for this section
+    var sections = window.PHASE_LESSONS[lessonState.phaseId];
+    var minLen = 50;
+    if (sections) {
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].id === secId && sections[i].check) { minLen = sections[i].check.minLength || 50; break; }
+      }
+    }
+
+    if (textarea) {
+      textarea.readOnly = false;
+      textarea.style.borderColor = '#333';
+      textarea.style.opacity = '1';
+      textarea.focus();
+
+      // Attach input listener (use a flag to avoid duplicates)
+      if (!textarea._hasReviseListener) {
+        textarea._hasReviseListener = true;
+        textarea.addEventListener('input', function () {
+          var len = textarea.value.trim().length;
+          if (countEl) countEl.textContent = len + ' / ' + minLen + ' characters minimum';
+          if (submitBtn) submitBtn.disabled = (len < minLen);
+        });
+      }
+    }
+
+    var len = textarea ? textarea.value.trim().length : 0;
+    if (submitBtn) {
+      submitBtn.style.display = '';
+      submitBtn.disabled = (len < minLen);
+      submitBtn.textContent = 'Resubmit Answer';
+      submitBtn.classList.remove('les-written-submitted', 'les-written-loading');
+    }
+    if (countEl) {
+      countEl.textContent = len + ' / ' + minLen + ' characters minimum';
+    }
+    // Keep feedback visible but dim it
+    if (feedbackWrap) {
+      var fb = feedbackWrap.querySelector('.theory-feedback');
+      if (fb) fb.style.opacity = '0.4';
+      var revBtn = feedbackWrap.querySelector('.les-written-revise');
+      if (revBtn) revBtn.style.display = 'none';
+      var resubLink = feedbackWrap.querySelector('.les-written-resubmit-link');
+      if (resubLink) resubLink.style.display = 'none';
+    }
+  };
+
   /* ── Complete section (no-check sections) ─────────────────────────────── */
   window._completeSection = function (secId) {
     _doCompleteSection(secId);
@@ -1652,7 +2206,14 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       // Collapse the check to a green badge
       var checkEl = document.getElementById('les-check-' + secId);
       if (checkEl) {
-        checkEl.innerHTML = '<div class="les-check-done">&#10003; Correct</div>';
+        // Determine if this was a written answer section
+        var isTheorySec = false;
+        for (var si = 0; si < sections.length; si++) {
+          if (sections[si].id === secId && sections[si].check && sections[si].check.type === 'written_answer') {
+            isTheorySec = true; break;
+          }
+        }
+        checkEl.innerHTML = '<div class="les-check-done">&#10003; ' + (isTheorySec ? 'Submitted' : 'Correct') + '</div>';
       }
     }
 
@@ -1718,7 +2279,6 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       window.rtDb.collection('users').doc(uid)
         .collection('curriculum').doc(phaseId)
         .set({ lessonProgress: completedIds }, { merge: true });
-      console.log('[Lessons] Saved progress for', phaseId, ':', completedIds.join(', '));
     } catch (e) {
       console.warn('[Lessons] Failed to save progress:', e.message);
     }

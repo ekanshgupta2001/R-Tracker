@@ -59,10 +59,10 @@ function drawPath() {
     const isSel = (si === selectedSegIdx);
 
     ctx.save();
-    ctx.strokeStyle = isSel ? '#d0003a' : '#800020';
+    ctx.strokeStyle = isSel ? '#d0003a' : '#c73e5a';
     ctx.lineWidth   = isSel ? Math.max(2.5, px(2)) : Math.max(1.5, px(1.5));
     ctx.lineCap = 'round';
-    ctx.shadowColor = 'rgba(128,0,32,0.6)';
+    ctx.shadowColor = 'rgba(199,62,90,0.6)';
     ctx.shadowBlur  = isSel ? px(5) : px(2);
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -81,7 +81,7 @@ function drawPath() {
 
     const mid  = evalSegCanvas(si, 0.5);
     const near = evalSegCanvas(si, 0.42);
-    drawArrowHead(near.x, near.y, mid.x, mid.y, isSel ? '#d0003a' : '#800020');
+    drawArrowHead(near.x, near.y, mid.x, mid.y, isSel ? '#d0003a' : '#c73e5a');
   }
   drawControlPoints();
 }
@@ -113,7 +113,7 @@ function drawControlPoints() {
       ctx.save();
       ctx.beginPath(); ctx.arc(p.x, p.y, px(3), 0, Math.PI * 2);
       ctx.fillStyle   = isDraggingThis ? '#ffffff' : '#c04060';
-      ctx.strokeStyle = isDraggingThis ? '#ff3366' : '#800020';
+      ctx.strokeStyle = isDraggingThis ? '#ff3366' : '#c73e5a';
       ctx.lineWidth   = 1.2;
       ctx.fill(); ctx.stroke();
       ctx.restore();
@@ -125,7 +125,7 @@ function drawArrowHead(x1, y1, x2, y2, color) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const sz = px(4);
   ctx.save();
-  ctx.fillStyle = color || '#800020';
+  ctx.fillStyle = color || '#c73e5a';
   ctx.beginPath();
   ctx.moveTo(x2, y2);
   ctx.lineTo(x2 - Math.cos(angle - 0.45) * sz, y2 - Math.sin(angle - 0.45) * sz);
@@ -150,7 +150,7 @@ function drawWaypoints() {
     ctx.save();
     ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fillStyle   = '#ffffff';
-    ctx.strokeStyle = isSel ? '#ff3366' : '#800020';
+    ctx.strokeStyle = isSel ? '#ff3366' : '#c73e5a';
     ctx.lineWidth   = isSel ? px(1.5) : px(1);
     ctx.fill(); ctx.stroke();
     ctx.restore();

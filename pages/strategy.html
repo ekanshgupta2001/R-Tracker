@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <title>Strategy Planner — R-Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/login.css">
+  <link rel="stylesheet" href="../css/strategy.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../config.js"></script>
+  <script src="../js/firebase-init.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+</head>
+
+<body>
+  <div class="topbar" id="topbar">
+    <a href="../index.html" class="home-btn">&larr; Home</a>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-title">Strategy Planner</span>
+    <div class="topbar-actions">
+      <button class="topbar-btn" onclick="openStratModal('load')">&#128193; Load</button>
+      <button class="topbar-btn" onclick="openStratModal('save')">&#9729; Save</button>
+      <button class="topbar-btn" onclick="stratExportPNG()">&#128247; Export PNG</button>
+      <button class="topbar-btn" onclick="togglePresentation()">&#9654; Present</button>
+    </div>
+  </div>
+
+  <div class="main-wrap" id="mainWrap">
+    <!-- Field Panel -->
+    <div class="field-panel" id="fieldPanel">
+      <canvas id="strategyCanvas"></canvas>
+
+      <!-- Floating Toolbar -->
+      <div class="strat-toolbar" id="stratToolbar">
+        <!-- Drawing Tools -->
+        <button class="tool-btn active" data-tool="draw" onclick="setTool('draw')" title="Draw">&#9998;</button>
+        <button class="tool-btn" data-tool="arrow" onclick="setTool('arrow')" title="Arrow">&#10132;</button>
+        <button class="tool-btn" data-tool="rect" onclick="setTool('rect')" title="Rectangle">&#9634;</button>
+        <button class="tool-btn" data-tool="circle" onclick="setTool('circle')" title="Circle">&#9675;</button>
+        <button class="tool-btn" data-tool="text" onclick="setTool('text')" title="Text">T</button>
+        <button class="tool-btn" data-tool="robot" onclick="setTool('robot')" title="Robot">&#9647;</button>
+        <button class="tool-btn" data-tool="waypoint" onclick="setTool('waypoint')" title="Waypoint">&#9679;</button>
+        <button class="tool-btn" data-tool="eraser" onclick="setTool('eraser')" title="Eraser">&#9003;</button>
+
+        <div class="sep"></div>
+
+        <!-- Colors -->
+        <button class="color-swatch active" data-color="#ff4444" style="background:#ff4444" onclick="setColor('#ff4444')"></button>
+        <button class="color-swatch" data-color="#4488ff" style="background:#4488ff" onclick="setColor('#4488ff')"></button>
+        <button class="color-swatch" data-color="#44ff88" style="background:#44ff88" onclick="setColor('#44ff88')"></button>
+        <button class="color-swatch" data-color="#ffaa00" style="background:#ffaa00" onclick="setColor('#ffaa00')"></button>
+        <button class="color-swatch" data-color="#ff44ff" style="background:#ff44ff" onclick="setColor('#ff44ff')"></button>
+        <button class="color-swatch" data-color="#ffffff" style="background:#ffffff" onclick="setColor('#ffffff')"></button>
+
+        <div class="sep"></div>
+
+        <!-- Line Widths -->
+        <button class="width-btn" data-width="2" onclick="setLineWidth(2)"><span class="width-dot" style="width:4px;height:4px"></span></button>
+        <button class="width-btn active" data-width="4" onclick="setLineWidth(4)"><span class="width-dot" style="width:7px;height:7px"></span></button>
+        <button class="width-btn" data-width="8" onclick="setLineWidth(8)"><span class="width-dot" style="width:11px;height:11px"></span></button>
+
+        <div class="sep"></div>
+
+        <!-- Undo / Redo / Clear -->
+        <button class="act-btn" id="undoBtn" onclick="stratUndo()" disabled title="Undo (Ctrl+Z)">&#8630;</button>
+        <button class="act-btn" id="redoBtn" onclick="stratRedo()" disabled title="Redo (Ctrl+Y)">&#8631;</button>
+        <button class="act-btn" onclick="stratClearAll()" title="Clear All">&#128465;</button>
+      </div>
+
+      <!-- Text Input Overlay -->
+      <div class="text-input-overlay" id="textInputOverlay">
+        <input class="text-input-field" id="textInputField" type="text" placeholder="Type text...">
+      </div>
+
+      <!-- Notes expand button (when panel is collapsed) -->
+      <button class="notes-expand-btn" id="notesExpandBtn" onclick="toggleNotes()">&#9654;</button>
+
+      <!-- Minimap -->
+      <div class="minimap-wrap">
+        <canvas id="minimapCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Notes Panel -->
+    <div class="notes-panel" id="notesPanel">
+      <div class="notes-header">
+        <span class="notes-title">Strategy Notes</span>
+        <button class="notes-toggle" onclick="toggleNotes()" title="Collapse">&times;</button>
+      </div>
+      <textarea id="strategyNotes" placeholder="Write your strategy notes here...&#10;&#10;Example:&#10;- Auto: Score specimen, pick up samples&#10;- TeleOp: Focus on high basket&#10;- Endgame: Park in observation zone"></textarea>
+      <div class="notes-footer">Notes are saved with your strategy</div>
+    </div>
+  </div>
+
+  <!-- Save/Load Modal -->
+  <div id="strat-modal-backdrop" onclick="if(event.target===this)closeStratModal()">
+    <div id="strat-modal">
+      <div class="sm-header">
+        <div class="sm-title" id="sm-title">Save Strategy</div>
+        <button class="sm-close" onclick="closeStratModal()">&#10005;</button>
+      </div>
+      <div class="sm-input-row" id="sm-save-row">
+        <input id="sm-name-input" class="sm-input" type="text" placeholder="Strategy name (e.g. Match 1 Plan)"
+               onkeydown="if(event.key==='Enter')saveStrategy()">
+        <button class="sm-save-btn" onclick="saveStrategy()">Save</button>
+      </div>
+      <div id="sm-load-section" style="display:none">
+        <div class="sm-section-title">Your Saved Strategies</div>
+        <div id="sm-strat-list"><div class="sm-empty">Loading...</div></div>
+      </div>
+      <div class="sm-msg" id="sm-msg"></div>
+    </div>
+  </div>
+
+  <!-- Presentation exit hint -->
+  <div class="present-exit-hint">Press ESC to exit presentation</div>
+
+  <script src="../js/utils/validators.js"></script>
+  <!-- Strategy Engine -->
+  <script src="../js/strategy.js"></script>
+  <script>initAuth();</script>
+</body>
+</html>

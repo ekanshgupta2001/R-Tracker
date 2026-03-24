@@ -46,7 +46,8 @@
 .about-block {
   background: var(--card);
   border: 1px solid var(--card-border);
-  border-left: 3px solid var(--burgundy);
+  border-left: 3px solid var(--burgundy-accent);
+  box-shadow: var(--burgundy-glow-border-left);
   border-radius: 10px;
   padding: 28px 32px;
   margin-bottom: 24px;
@@ -79,7 +80,7 @@
   transition: color 0.35s ease, border-color 0.35s ease;
 }
 
-.page-footer .accent { color: var(--burgundy); }
+.page-footer .accent { color: var(--burgundy-accent); text-shadow: var(--burgundy-glow-text); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 820px) {

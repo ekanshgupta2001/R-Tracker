@@ -2,8 +2,8 @@
 
 /* ── Glow pulse keyframe — strong visible range ──────────────────────────── */
 @keyframes cardGlow {
-  0%, 100% { box-shadow: 0 0 12px rgba(128, 0, 32, 0.2), 0 0 24px rgba(128, 0, 32, 0.08); }
-  50%      { box-shadow: 0 0 16px rgba(128, 0, 32, 0.35), 0 0 28px rgba(128, 0, 32, 0.12); }
+  0%, 100% { box-shadow: 0 0 12px rgba(199, 62, 90, 0.2), 0 0 24px rgba(199, 62, 90, 0.08); }
+  50%      { box-shadow: 0 0 16px rgba(199, 62, 90, 0.35), 0 0 28px rgba(199, 62, 90, 0.12); }
 }
 
 /* ── Main wrap — full-height flex column, no scroll ──────────────────────── */
@@ -32,7 +32,7 @@
 
 /* ── Centered content — flex column, fills available space ───────────────── */
 .home-content {
-  max-width: 800px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 28px 0;
@@ -48,6 +48,9 @@
   text-align: center;
   margin-bottom: 48px;
   flex-shrink: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .home-logo {
@@ -58,7 +61,8 @@
 }
 
 .home-logo .hero-r {
-  color: #800020;
+  color: var(--burgundy-accent);
+  text-shadow: 0 0 15px rgba(199, 62, 90, 0.6);
 }
 
 .home-logo .hero-tracker {
@@ -67,7 +71,7 @@
 
 .home-tagline {
   font-size: 11px;
-  color: #aaa;
+  color: #ccc;
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-top: 8px;
@@ -76,11 +80,193 @@
 .home-welcome {
   font-size: 14px;
   font-weight: 400;
-  color: #999;
+  color: #bbb;
   margin-top: 8px;
 }
 
-/* ── Navigation Cards — flex-shrink to fit viewport ──────────────────────── */
+/* ── Card Carousel (3-card circular, smooth sliding) ─────────────────── */
+.carousel-section {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.home-carousel-container {
+  position: relative;
+  padding: 30px 60px;
+  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.home-carousel-container.dragging {
+  cursor: grabbing;
+}
+
+.home-carousel-track {
+  position: relative;
+  height: 360px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.carousel-card {
+  width: 480px;
+  height: 340px;
+  border-radius: 18px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  padding: 32px 28px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.7);
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.4s ease,
+              filter 0.4s ease,
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
+}
+
+/* Center card — active, full opacity, burgundy glow */
+.carousel-card.cc-center {
+  display: flex;
+  transform: translate(-50%, -50%) scale(1) translateX(0);
+  opacity: 1;
+  border-color: rgba(199, 62, 90, 0.4);
+  box-shadow: 0 0 24px rgba(199, 62, 90, 0.3);
+  z-index: 3;
+  pointer-events: auto;
+}
+
+/* Left card — faded, peeking from the left */
+.carousel-card.cc-left {
+  display: flex;
+  transform: translate(-50%, -50%) scale(0.8) translateX(-380px);
+  opacity: 0.35;
+  border-color: #333;
+  box-shadow: none;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+/* Right card — faded, peeking from the right */
+.carousel-card.cc-right {
+  display: flex;
+  transform: translate(-50%, -50%) scale(0.8) translateX(380px);
+  opacity: 0.35;
+  border-color: #333;
+  box-shadow: none;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.carousel-card.cc-center:hover {
+  border-color: rgba(199, 62, 90, 0.6);
+  box-shadow: 0 0 28px rgba(199, 62, 90, 0.3), 0 6px 24px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%) scale(1.02) translateX(0);
+}
+
+.carousel-card.cc-left:hover,
+.carousel-card.cc-right:hover {
+  opacity: 0.5;
+  border-color: rgba(199, 62, 90, 0.25);
+}
+
+.carousel-card .card-icon {
+  font-size: 52px;
+  margin-bottom: 8px;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.carousel-card.cc-center:hover .card-icon {
+  transform: scale(1.12);
+}
+
+.carousel-card .card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(199, 62, 90, 0.35);
+}
+
+.carousel-card .card-desc {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+/* Carousel Arrows */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(199, 62, 90, 0.25);
+  border: 1px solid rgba(199, 62, 90, 0.45);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.carousel-arrow:hover {
+  background: rgba(199, 62, 90, 0.5);
+  box-shadow: 0 0 14px rgba(199, 62, 90, 0.4);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-left { left: 10px; }
+.carousel-right { right: 10px; }
+
+/* Carousel Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #444;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.25s;
+}
+
+.carousel-dot.active {
+  background: #800020;
+  border-color: var(--burgundy-accent);
+  transform: scale(1.35);
+  box-shadow: var(--burgundy-glow-sm);
+}
+
+/* ── Legacy grid fallback (hidden, kept for coach cards) ────────────────── */
 .home-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -114,11 +300,11 @@
 
 .home-card:hover {
   background: #222;
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   transform: translateY(-5px) scale(1.01);
   box-shadow:
-    0 0 18px rgba(128, 0, 32, 0.4),
-    0 0 36px rgba(128, 0, 32, 0.2),
+    0 0 18px rgba(199, 62, 90, 0.4),
+    0 0 36px rgba(199, 62, 90, 0.2),
     0 4px 20px rgba(0, 0, 0, 0.4);
   animation: none;
   transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
@@ -134,23 +320,23 @@
   transition: border-color 0.6s ease, background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease;
 }
 
-/* Coach cards */
-#coach-cards .home-card {
+/* Coach cards (inside carousel) */
+#coach-carousel .home-card {
   padding: 28px;
   height: 450px !important;
   min-height: 450px !important;
   max-height: 450px !important;
 }
 
-#coach-cards .home-card-icon {
+#coach-carousel .home-card-icon {
   font-size: 56px;
 }
 
-#coach-cards .home-card-title {
+#coach-carousel .home-card-title {
   font-size: 22px;
 }
 
-#coach-cards .home-card-desc {
+#coach-carousel .home-card-desc {
   font-size: 14px;
 }
 
@@ -175,11 +361,12 @@ body.coach-view .home-hero {
   font-weight: 700;
   color: #fff;
   margin-bottom: 10px;
+  text-shadow: 0 0 12px rgba(199, 62, 90, 0.35);
 }
 
 .home-card-desc {
   font-size: 13px;
-  color: #999;
+  color: #bbb;
   line-height: 1.5;
   max-width: 300px;
 }
@@ -205,11 +392,11 @@ body.coach-view .home-hero {
 
 .home-report-btn:hover {
   background: #222;
-  border-color: #800020;
+  border-color: var(--burgundy-accent);
   transform: translateY(-5px) scale(1.01);
   box-shadow:
-    0 0 18px rgba(128, 0, 32, 0.4),
-    0 0 36px rgba(128, 0, 32, 0.2),
+    0 0 18px rgba(199, 62, 90, 0.4),
+    0 0 36px rgba(199, 62, 90, 0.2),
     0 4px 20px rgba(0, 0, 0, 0.4);
   animation: none;
   transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
@@ -250,11 +437,12 @@ body.coach-view .home-hero {
   font-weight: 700;
   color: #fff;
   margin-bottom: 2px;
+  text-shadow: 0 0 12px rgba(199, 62, 90, 0.35);
 }
 
 .home-report-desc {
   font-size: 12px;
-  color: #999;
+  color: #bbb;
   line-height: 1.3;
 }
 
@@ -276,15 +464,16 @@ body.coach-view .home-hero {
   font-weight: 800;
   line-height: 1;
   margin-bottom: 3px;
-  color: #666;
+  color: #999;
 }
 
 .rstat-label {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: #999;
   font-weight: 600;
+  text-shadow: 0 0 8px rgba(199, 62, 90, 0.25);
 }
 
 /* Bright accent colors for stat values */
@@ -308,22 +497,199 @@ body.coach-view .home-hero {
   transform: translateX(4px);
 }
 
+/* ── Driver Report Bar (compact single-row, below carousel) ──────────── */
+.report-stats-bar {
+  margin: 8px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.report-bar-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--burgundy-accent);
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-align: center;
+  text-shadow: var(--burgundy-glow-text);
+}
+
+.report-bar-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  text-decoration: none;
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-left: 3px solid var(--burgundy-accent);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--burgundy-glow-border-left);
+  transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.report-bar-row:hover {
+  background: #222;
+  border-color: rgba(199, 62, 90, 0.5);
+  border-left-color: var(--burgundy-accent);
+  box-shadow: -2px 0 16px rgba(199, 62, 90, 0.4), 0 0 18px rgba(199, 62, 90, 0.25), 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.report-bar-row:active {
+  transform: translateY(0) scale(0.99);
+  transition: transform 0.1s ease;
+}
+
+.report-bar-grade {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: #888;
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: center;
+}
+
+.report-bar-score {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.report-bar-divider {
+  width: 1px;
+  height: 30px;
+  background: #333;
+  flex-shrink: 0;
+}
+
+.report-bar-stats {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.report-bar-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.rbs-val {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rbs-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #666;
+  font-weight: 600;
+}
+
+.rbs-red { color: #ff4466; }
+.rbs-green { color: #22c55e; }
+.rbs-cyan { color: #06b6d4; }
+.rbs-grade { color: #888; }
+
+.report-bar-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--burgundy-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 160px;
+  text-shadow: var(--burgundy-glow-text);
+  transition: color 0.2s;
+}
+
+.report-bar-row:hover .report-bar-link {
+  color: var(--burgundy-accent-bright);
+}
+
+/* Light mode */
+html.light .report-bar-row {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  border-left-color: #800020;
+}
+
+html.light .report-bar-row:hover {
+  background: #f8f8f8;
+  border-color: rgba(128, 0, 32, 0.4);
+  border-left-color: #800020;
+  box-shadow: 0 0 14px rgba(128, 0, 32, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.light .report-bar-score {
+  color: #1a1a1a;
+}
+
+html.light .report-bar-divider {
+  background: #ddd;
+}
+
+html.light .rbs-lbl {
+  color: #999;
+}
+
+html.light .rbs-red { color: #dc2626; }
+html.light .rbs-green { color: #16a34a; }
+html.light .rbs-cyan { color: #0891b2; }
+
 /* ── Footer line ───────────────────────────────────────────────────────── */
 .home-footer-line {
   text-align: center;
   font-size: 12px;
-  color: #777;
+  color: #aaa;
   padding: 16px 0;
   margin-top: 12px;
   border-top: 1px solid #2a2a2a;
   flex-shrink: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .home-report-stats {
-    display: none;
+@media (max-width: 1100px) {
+  .carousel-card {
+    width: 380px;
+    height: 280px;
   }
+  .carousel-card.cc-left { transform: translate(-50%, -50%) scale(0.8) translateX(-320px); }
+  .carousel-card.cc-right { transform: translate(-50%, -50%) scale(0.8) translateX(320px); }
+  .home-carousel-track { height: 300px; }
+}
+
+@media (max-width: 900px) {
+  .home-carousel-container {
+    padding: 24px 40px;
+  }
+
+  .report-bar-stats { display: none; }
+  .report-bar-divider { display: none; }
+
+  .carousel-card {
+    width: 320px;
+    height: 250px;
+  }
+  .carousel-card.cc-left { transform: translate(-50%, -50%) scale(0.78) translateX(-260px); }
+  .carousel-card.cc-right { transform: translate(-50%, -50%) scale(0.78) translateX(260px); }
+  .home-carousel-track { height: 270px; }
+  .carousel-card .card-title { font-size: 18px; }
+  .carousel-card .card-icon { font-size: 42px; }
+  .carousel-card .card-desc { font-size: 12px; max-width: 260px; }
 }
 
 @media (max-width: 768px) {
@@ -339,21 +705,50 @@ body.coach-view .home-hero {
     font-size: 32px;
   }
 
-  .home-cards {
-    grid-template-columns: 1fr;
+  .home-carousel-container {
+    padding: 16px 30px;
   }
 
-  .home-card {
-    padding: 28px 20px;
+  .carousel-card {
+    width: 280px;
+    height: 220px;
+    padding: 20px 16px;
   }
 
-  .home-card-title {
-    font-size: 22px;
+  .carousel-card.cc-left,
+  .carousel-card.cc-right {
+    display: none !important;
+    pointer-events: none;
   }
 
-  .home-card-icon {
-    font-size: 56px;
+  .home-carousel-track { height: 240px; }
+
+  .carousel-card .card-title {
+    font-size: 16px;
   }
+
+  .carousel-card .card-icon {
+    font-size: 36px;
+  }
+
+  .carousel-card .card-desc {
+    font-size: 11px;
+    max-width: 220px;
+  }
+
+  .carousel-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .carousel-left { left: 4px; }
+  .carousel-right { right: 4px; }
+
+  .report-bar-row { padding: 12px 16px; gap: 12px; }
+  .report-bar-grade { font-size: 28px; }
+  .report-bar-score { font-size: 16px; }
+  .report-bar-link { font-size: 12px; }
 }
 
 /* ── Light Mode Overrides ──────────────────────────────────────────────── */
@@ -369,11 +764,11 @@ html.light .home-logo .hero-tracker {
 }
 
 html.light .home-tagline {
-  color: #777;
+  color: #888;
 }
 
 html.light .home-welcome {
-  color: #555;
+  color: #666;
 }
 
 html.light .home-card {
@@ -397,7 +792,11 @@ html.light .home-card-title {
 }
 
 html.light .home-card-desc {
-  color: #555;
+  color: #666;
+}
+
+html.light .home-card-title {
+  text-shadow: 0 0 10px rgba(128, 0, 32, 0.2);
 }
 
 html.light .home-report-btn {
@@ -421,11 +820,67 @@ html.light .home-report-title {
 }
 
 html.light .home-report-desc {
-  color: #555;
+  color: #666;
+}
+
+html.light .home-report-title {
+  text-shadow: 0 0 10px rgba(128, 0, 32, 0.2);
 }
 
 html.light .rstat-label {
   color: #888;
+  text-shadow: none;
+}
+
+/* Light carousel cards */
+html.light .carousel-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+html.light .carousel-card.cc-center {
+  border-color: rgba(128, 0, 32, 0.3);
+  box-shadow: 0 0 20px rgba(128, 0, 32, 0.08);
+}
+
+html.light .carousel-card.cc-center:hover {
+  border-color: rgba(128, 0, 32, 0.5);
+  box-shadow: 0 0 24px rgba(128, 0, 32, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+html.light .carousel-card.cc-left,
+html.light .carousel-card.cc-right {
+  background: #f8f8f8;
+  border-color: #ddd;
+}
+
+html.light .carousel-card .card-title {
+  color: #1a1a1a;
+  text-shadow: 0 0 10px rgba(128, 0, 32, 0.2);
+}
+
+html.light .carousel-card .card-desc {
+  color: #666;
+}
+
+html.light .carousel-arrow {
+  background: rgba(128, 0, 32, 0.12);
+  border-color: rgba(128, 0, 32, 0.3);
+  color: #800020;
+  text-shadow: var(--burgundy-glow-text);
+}
+
+html.light .carousel-arrow:hover {
+  background: rgba(128, 0, 32, 0.25);
+  box-shadow: 0 0 12px rgba(128, 0, 32, 0.2);
+}
+
+html.light .carousel-dot {
+  background: #ccc;
+}
+
+html.light .carousel-dot.active {
+  background: #800020;
 }
 
 /* Light mode accent colors — darker saturated versions */
@@ -444,7 +899,7 @@ html.light .home-footer-line {
 /* ── Home Levels Grid ──────────────────────────────────────────────────── */
 .home-levels-card {
   background: rgba(18, 18, 31, 0.6);
-  border: 1px solid rgba(128, 0, 32, 0.2);
+  border: 1px solid rgba(199, 62, 90, 0.2);
   border-radius: 12px;
   padding: 16px 18px;
   margin-bottom: 10px;

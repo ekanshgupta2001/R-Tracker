@@ -23,6 +23,7 @@ function resetRobot() {
   bot.vx = 0; bot.vy = 0;
   bot.actualVx = 0; bot.actualVy = 0; bot.actualOmega = 0;
   inputBuffer = [];
+  if (typeof reset3DCamera === 'function') reset3DCamera();
 }
 
 window.addEventListener('gamepadconnected', e => {

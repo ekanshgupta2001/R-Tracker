@@ -12,7 +12,15 @@
 :root {
   --burgundy: #800020;
   --burgundy-light: #a0334a;
-  --burgundy-glow: rgba(128, 0, 32, 0.45);
+  --burgundy-accent: #c73e5a;
+  --burgundy-accent-hover: #d4456a;
+  --burgundy-accent-bright: #e8658a;
+  --burgundy-glow: rgba(199, 62, 90, 0.45);
+  --burgundy-glow-sm: 0 0 8px rgba(199, 62, 90, 0.3);
+  --burgundy-glow-md: 0 0 14px rgba(199, 62, 90, 0.4);
+  --burgundy-glow-lg: 0 0 22px rgba(199, 62, 90, 0.5);
+  --burgundy-glow-text: 0 0 10px rgba(199, 62, 90, 0.5);
+  --burgundy-glow-border-left: -2px 0 12px rgba(199, 62, 90, 0.3);
   --bg: #111111;
   --bg-sidebar: #1a1a1a;
   --card: #1a1a1a;
@@ -37,6 +45,14 @@
 
 /* ── CSS Variables — Light Mode ─────────────────────────────────────────── */
 :root.light {
+  --burgundy-accent: #800020;
+  --burgundy-accent-hover: #a0334a;
+  --burgundy-accent-bright: #a0334a;
+  --burgundy-glow-sm: 0 0 8px rgba(128, 0, 32, 0.15);
+  --burgundy-glow-md: 0 0 14px rgba(128, 0, 32, 0.2);
+  --burgundy-glow-lg: 0 0 22px rgba(128, 0, 32, 0.25);
+  --burgundy-glow-text: 0 0 10px rgba(128, 0, 32, 0.25);
+  --burgundy-glow-border-left: -2px 0 12px rgba(128, 0, 32, 0.15);
   --bg: #f0f0f0;
   --bg-sidebar: #ffffff;
   --card: #ffffff;
@@ -91,6 +107,17 @@ body.grid-bg::before {
   transition: opacity 0.18s ease, transform 0.18s ease;
   opacity: 0;
   transform: translateY(6px);
+}
+
+/* ── Page content fade ───────────────────────────────────────────────────── */
+.page-content {
+  animation: pageIn 0.4s ease-out both;
+}
+
+.page-content.fade-out {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */

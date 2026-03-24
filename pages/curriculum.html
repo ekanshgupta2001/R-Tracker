@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description" content="FTC Programming Curriculum — R-Tracker structured learning path.">
   <title>Curriculum — R-Tracker</title>
@@ -22,7 +28,7 @@
   <script src="../js/curriculum/lessons.js"></script>
 </head>
 
-<body class="sidebar-open">
+<body>
   <div class="topbar">
     <div class="topbar-left"><a href="../index.html">&larr; Home</a></div>
     <div class="topbar-right">FTC Programming Curriculum</div>
@@ -47,6 +53,7 @@
     </div>
   </div>
 
+  <script src="../js/utils/validators.js"></script>
   <script>
     /* ══════════════════════════════════════════════════════════════════════════
        PHASE DEFINITIONS
@@ -959,6 +966,9 @@ telemetry.<span class="syn-fn">update</span>();</div>
           html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="submitForAIReview(\'' + phaseId + '\')">Submit for AI Review</button>';
         }
       }
+      // AI reviews remaining counter
+      var rateInfo = window.getGeminiRateInfo ? window.getGeminiRateInfo() : { remaining: '?', max: 30 };
+      html += '<div class="ai-rate-info" id="ai-rate-info" style="font-size:11px;color:#666;margin-top:6px;">AI reviews remaining today: ' + rateInfo.remaining + '/' + rateInfo.max + '</div>';
       html += '</div>';
 
       // AI review loading state (hidden)
@@ -1116,7 +1126,18 @@ telemetry.<span class="syn-fn">update</span>();</div>
         console.log('[Curriculum] Submitting code for AI review, phase:', phaseId, 'code length:', code.length);
         var review = await window.reviewStudentCode(phaseId, code);
         if (!review) throw new Error('No review returned');
+        // Check for rate limit / validation errors
+        if (review.error) {
+          var btn = document.getElementById('ai-review-btn-' + phaseId);
+          if (btn) { btn.disabled = false; btn.textContent = 'Submit for AI Review'; }
+          document.getElementById('ai-loading-' + phaseId).style.display = 'none';
+          alert(review.message);
+          return;
+        }
         console.log('[Curriculum] AI review result:', JSON.stringify({ passed: review.passed, score: review.score, summary: review.summary }));
+        // Update remaining counter
+        var rateEl = document.getElementById('ai-rate-info');
+        if (rateEl && window.getGeminiRateInfo) { var ri = window.getGeminiRateInfo(); rateEl.textContent = 'AI reviews remaining today: ' + ri.remaining + '/' + ri.max; }
 
         // Save review to Firestore
         var uid = viewingUid || currentUid;

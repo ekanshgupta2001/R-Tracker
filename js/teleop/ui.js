@@ -53,6 +53,8 @@ function loop(ts) {
   drawLevelOverlay();
   drawRobot();
 
+  if (typeof update3DView === 'function') update3DView();
+
   if (appMode === 'freedrive') renderUI();
   else                         renderLevelsHud();
 
@@ -60,7 +62,10 @@ function loop(ts) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
-window.addEventListener('resize', resize);
+window.addEventListener('resize', function () {
+  resize();
+  if (typeof resize3DView === 'function') resize3DView();
+});
 resize();
 cfgUpdate();
 renderLevelsSidebar();
