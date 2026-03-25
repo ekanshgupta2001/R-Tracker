@@ -32,14 +32,14 @@
   <script src="config.js"></script>
   <script src="js/firebase-init.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/sidebar.js"></script>
+  <script defer src="js/sidebar.js"></script>
 </head>
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
   <!-- ── Main Content ────────────────────────────────────────────────────── -->
-  <div class="main-wrap" id="main-content">
+  <main class="main-wrap" id="main-content">
     <div class="home-content">
 
       <!-- Logo -->
@@ -146,14 +146,14 @@
       </div>
 
       <!-- Footer -->
-      <div class="home-footer-line">
+      <footer class="home-footer-line">
         Built for FTC teams competing in the 2025–2026 DECODE season.
-      </div>
+      </footer>
 
     </div>
-  </div>
+  </main>
 
-  <script src="js/utils/validators.js"></script>
+  <script defer src="js/utils/validators.js"></script>
   <script>
     /* ── Page Transitions ──────────────────────────────────────────────────── */
     document.addEventListener('click', function (e) {

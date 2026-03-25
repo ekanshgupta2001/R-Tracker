@@ -20,10 +20,10 @@
   <script src="../config.js"></script>
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
-  <script src="../js/sidebar.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script defer src="../js/sidebar.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 
 <body>
@@ -31,7 +31,7 @@
   <div class="mobile-warning" style="display:none;padding:16px;background:#332800;border:1px solid #eab308;color:#eab308;text-align:center;font-size:13px;border-radius:8px;margin:8px;">
     TeleOp Practice works best on desktop or tablet with a gamepad. Some features may not work on mobile.
   </div>
-  <div id="app">
+  <main id="app">
     <div id="field-container">
       <div id="mode-tabs">
         <button class="mode-tab active" id="tab-freedrive" onclick="switchMode('freedrive')">Free Drive</button>
@@ -225,7 +225,7 @@
       </div>
       <div id="lvl-list"></div>
     </div>
-  </div>
+  </main>
 
   <!-- ── Leaderboard Modal ───────────────────────────────────────────── -->
   <div id="lb-backdrop" onclick="if(event.target===this)closeLeaderboard()">
@@ -315,19 +315,19 @@
     </div>
   </div>
 
-  <script src="../js/utils/validators.js"></script>
+  <script defer src="../js/utils/validators.js"></script>
   <!-- Teleop JS modules (load order matters — globals shared via plain scripts) -->
-  <script src="../js/teleop/field.js"></script>
-  <script src="../js/teleop/robot.js"></script>
-  <script src="../js/teleop/drive.js"></script>
-  <script src="../js/teleop/timer.js"></script>
-  <script src="../js/teleop/input.js"></script>
-  <script src="../js/teleop/metrics.js"></script>
-  <script src="../js/teleop/levels.js"></script>
-  <script src="../js/utils/storage.js"></script>
-  <script src="../js/teleop/coach.js"></script>
-  <script src="../js/teleop/view3d.js"></script>
-  <script src="../js/teleop/ui.js"></script>
+  <script defer src="../js/teleop/field.js"></script>
+  <script defer src="../js/teleop/robot.js"></script>
+  <script defer src="../js/teleop/drive.js"></script>
+  <script defer src="../js/teleop/timer.js"></script>
+  <script defer src="../js/teleop/input.js"></script>
+  <script defer src="../js/teleop/metrics.js"></script>
+  <script defer src="../js/teleop/levels.js"></script>
+  <script defer src="../js/utils/storage.js"></script>
+  <script defer src="../js/teleop/coach.js"></script>
+  <script defer src="../js/teleop/view3d.js"></script>
+  <script defer src="../js/teleop/ui.js"></script>
   <script>
     initAuth(function(user) {
       if (typeof loadLevelProgress === 'function') loadLevelProgress();

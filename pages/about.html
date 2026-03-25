@@ -22,7 +22,7 @@
   <script src="../config.js"></script>
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
-  <script src="../js/sidebar.js"></script>
+  <script defer src="../js/sidebar.js"></script>
 </head>
 
 <body>
@@ -32,7 +32,7 @@
     <div class="topbar-right">About</div>
   </div>
 
-  <div class="main-wrap" id="main-content">
+  <main class="main-wrap" id="main-content">
     <div class="content">
       <div class="about-header">
         <h1>About <span>R-Tracker</span></h1>
@@ -75,8 +75,8 @@
     </div>
 
     <footer class="page-footer">Built for FTC teams &nbsp;<span class="accent">♦</span></footer>
-  </div>
-  <script src="../js/utils/validators.js"></script>
+  </main>
+  <script defer src="../js/utils/validators.js"></script>
   <script>initAuth();</script>
 </body>
 </html>

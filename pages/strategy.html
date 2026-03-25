@@ -21,7 +21,7 @@
   <script src="../config.js"></script>
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
-  <script src="../js/sidebar.js"></script>
+  <script defer src="../js/sidebar.js"></script>
 </head>
 
 <body>
@@ -38,7 +38,7 @@
     </div>
   </div>
 
-  <div class="main-wrap" id="main-content">
+  <main class="main-wrap" id="main-content">
     <!-- Field Panel -->
     <div class="field-panel" id="fieldPanel">
       <canvas id="strategyCanvas"></canvas>
@@ -103,7 +103,7 @@
       <textarea id="strategyNotes" placeholder="Write your strategy notes here...&#10;&#10;Example:&#10;- Auto: Score specimen, pick up samples&#10;- TeleOp: Focus on high basket&#10;- Endgame: Park in observation zone"></textarea>
       <div class="notes-footer">Notes are saved with your strategy</div>
     </div>
-  </div>
+  </main>
 
   <!-- Save/Load Modal -->
   <div id="strat-modal-backdrop" onclick="if(event.target===this)closeStratModal()">
@@ -128,9 +128,9 @@
   <!-- Presentation exit hint -->
   <div class="present-exit-hint">Press ESC to exit presentation</div>
 
-  <script src="../js/utils/validators.js"></script>
+  <script defer src="../js/utils/validators.js"></script>
   <!-- Strategy Engine -->
-  <script src="../js/strategy.js"></script>
+  <script defer src="../js/strategy.js"></script>
   <script>initAuth();</script>
 </body>
 </html>

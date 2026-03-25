@@ -20,7 +20,7 @@
   <script src="../config.js"></script>
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
-  <script src="../js/sidebar.js"></script>
+  <script defer src="../js/sidebar.js"></script>
 
   <style>
     /* ── Layout ───────────────────────────────────────────────────────────── */
@@ -288,7 +288,7 @@
     <div class="topbar-right">Manage Team</div>
   </div>
 
-  <div class="main-wrap" id="main-content">
+  <main class="main-wrap" id="main-content">
     <!-- Coach-gate error (non-coaches) -->
     <div class="mt-gate" id="mt-gate" style="display:none">
       <p style="font-size:16px;">This page is only accessible to Coaches and Mentors.</p>
@@ -354,9 +354,9 @@
       </div>
 
     </div><!-- /mt-main -->
-  </div><!-- /main-wrap -->
+  </main><!-- /main-wrap -->
 
-  <script src="../js/utils/validators.js"></script>
+  <script defer src="../js/utils/validators.js"></script>
   <script>
     let _teamId = null;
 
