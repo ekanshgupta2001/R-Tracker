@@ -8,6 +8,14 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta property="og:title" content="R-Tracker — FTC Driver Practice & Programming Curriculum">
+  <meta property="og:description" content="Practice driving, plan autonomous paths, and learn FTC programming with AI-powered code review.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://r-tracker-liard.vercel.app">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="R-Tracker — FTC Driver Practice & Programming Curriculum">
+  <meta name="twitter:description" content="Practice driving, plan autonomous paths, and learn FTC programming with AI-powered code review.">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description"
@@ -179,30 +187,52 @@
       return '#888';
     }
 
+    function scoreToGrade(s) {
+      if (s >= 90) return 'S';
+      if (s >= 80) return 'A';
+      if (s >= 70) return 'B';
+      if (s >= 50) return 'C';
+      if (s >= 30) return 'D';
+      return 'F';
+    }
+
     function loadReportBarStats(user) {
       if (!window.rtDb || !user) return;
-      window.rtDb.collection('users').doc(user.uid).get().then(function(doc) {
-        if (!doc.exists) return;
-        var d = doc.data();
-        var el = function(id) { return document.getElementById(id); };
-        if (d.driverScore != null) {
-          var score = Math.round(d.driverScore);
-          el('rbar-score').textContent = score;
-          el('rbar-main-score').textContent = score;
-        }
-        if (d.driverGrade) {
-          var g = d.driverGrade;
-          var gc = gradeColor(g);
-          el('rbar-grade').textContent = g;
-          el('rbar-grade').style.color = gc;
-          el('rbar-main-grade').textContent = g;
-          el('rbar-main-grade').style.color = gc;
-        }
-        if (d.bestLevel != null) el('rbar-level').textContent = d.bestLevel + '/12';
-        if (d.practiceMinutes != null) {
-          var mins = Math.round(d.practiceMinutes);
-          el('rbar-time').textContent = mins >= 60 ? Math.floor(mins/60) + 'h' : mins + 'm';
-        }
+      var el = function(id) { return document.getElementById(id); };
+      var uid = user.uid;
+
+      // Read from the same paths the Report page uses
+      Promise.all([
+        window.rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get(),
+        window.rtDb.collection('users').doc(uid).collection('levels').get()
+      ]).then(function(results) {
+        var statsDoc = results[0];
+        var lvlSnap = results[1];
+
+        var d = statsDoc.exists ? statsDoc.data() : {};
+        var score = Math.round(d.overallRating || 0);
+        var totalMs = d.totalPracticeMs || 0;
+        var mins = Math.floor(totalMs / 60000);
+
+        // Count completed levels
+        var levelsDone = 0;
+        lvlSnap.forEach(function(ldoc) {
+          var ld = ldoc.data();
+          if (ld.bestStars && ld.bestStars >= 1) levelsDone++;
+        });
+
+        // Score and grade
+        var g = scoreToGrade(score);
+        var gc = gradeColor(g);
+        el('rbar-main-score').textContent = score;
+        el('rbar-main-grade').textContent = g;
+        el('rbar-main-grade').style.color = gc;
+
+        // Stat boxes
+        if (el('rbar-level')) el('rbar-level').textContent = levelsDone + '/12';
+        if (el('rbar-time')) el('rbar-time').textContent = mins >= 60 ? Math.floor(mins / 60) + 'h' : mins + 'm';
+        if (el('rbar-score')) el('rbar-score').textContent = score;
+        if (el('rbar-grade')) { el('rbar-grade').textContent = g; el('rbar-grade').style.color = gc; }
       }).catch(function() {});
     }
 

@@ -370,11 +370,9 @@
     async function loadAllTimeStats(uid) {
       var el = document.getElementById('alltime-content');
       try {
-        console.log('Firestore READ path: users/' + uid + '/stats/driverStats');
         var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
 
         // Also read levels to get accurate counts
-        console.log('Firestore READ path: users/' + uid + '/levels/ (for alltime stats)');
         var lvlSnap = await rtDb.collection('users').doc(uid).collection('levels').get();
         var levelsDone = 0;
         var bestLevel = 0;
@@ -418,14 +416,11 @@
     async function loadLevelsGrid(uid) {
       var el = document.getElementById('levels-content');
       try {
-        console.log('Firestore READ path: users/' + uid + '/levels/');
         var snap = await rtDb.collection('users').doc(uid).collection('levels').get();
         var userLevels = {};
         snap.forEach(function (doc) {
           userLevels[doc.id] = doc.data();
-          console.log('Level:', doc.id, 'data:', JSON.stringify(doc.data()));
         });
-        console.log('LOADED levels:', snap.size, 'documents from path: users/' + uid + '/levels/');
         var completed = Object.values(userLevels).filter(function (l) { return l.bestStars && l.bestStars >= 1; }).length;
 
         var bestLevel = 0;
@@ -505,9 +500,12 @@
     async function loadSessionHistory(uid, teamId) {
       var el = document.getElementById('history-content');
       try {
+        if (!teamId) {
+          el.innerHTML = '<div class="rpt-empty">Join a team to see session history</div>';
+          return;
+        }
         var items = [];
         if (teamId) {
-          console.log('Firestore READ path: teams/' + teamId + '/activity');
           var snap = await rtDb.collection('teams').doc(teamId).collection('activity')
             .orderBy('timestamp', 'desc').limit(20).get();
           snap.forEach(function (doc) {
@@ -522,7 +520,7 @@
         }
 
         if (items.length === 0) {
-          el.innerHTML = '<div class="rpt-empty">No sessions yet. <a href="teleop.html">Start practicing</a></div>';
+          el.innerHTML = '<div class="rpt-empty">No session history yet — <a href="teleop.html">start practicing!</a></div>';
           return;
         }
 

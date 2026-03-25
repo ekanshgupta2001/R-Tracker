@@ -20,6 +20,10 @@
   margin-left: 0;
 }
 
+.topbar-left {
+  padding-left: 46px;
+}
+
 .topbar-left a {
   color: #999;
   text-decoration: none;

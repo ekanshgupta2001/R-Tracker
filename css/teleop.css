@@ -902,3 +902,540 @@ canvas { border: none; }
 }
 
 #stl-remove-btn:hover { background: #2a0e0e; }
+
+/* ── Light Mode ──────────────────────────────────────────────────────────── */
+
+/* Body & App */
+html.light body {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Canvas & Field */
+html.light canvas {
+  border-color: #ccc;
+}
+
+html.light #field-wrap {
+  border-color: #bbb;
+}
+
+/* ── Controls Bar Buttons ─────────────────────────────────────────────────── */
+html.light .btn {
+  background: #e8e8e8;
+  color: #444;
+  border-color: #ccc;
+}
+
+html.light .btn:hover {
+  background: #ddd;
+  border-color: #aaa;
+}
+
+html.light .btn.active {
+  background: #800020;
+  color: #fff;
+  border-color: #800020;
+}
+
+/* ── Right Sidebar ────────────────────────────────────────────────────────── */
+html.light #sidebar-teleop::-webkit-scrollbar-track { background: #f0f0f0; }
+html.light #sidebar-teleop::-webkit-scrollbar-thumb { background: #bbb; }
+
+html.light #sidebar-teleop .sidebar-footer {
+  border-top-color: #ddd;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+html.light .panel {
+  background: #fff;
+  border-color: #ddd;
+}
+
+html.light .ptitle {
+  border-bottom-color: #ddd;
+}
+
+/* ── Timer ────────────────────────────────────────────────────────────────── */
+html.light #timer-display {
+  color: #333;
+}
+
+html.light #period-label {
+  color: #888;
+}
+
+html.light .ready-period { color: #999; }
+
+/* ── Telemetry ────────────────────────────────────────────────────────────── */
+html.light .trow {
+  border-bottom-color: #e0e0e0;
+}
+
+html.light .tlbl {
+  color: #777;
+}
+
+html.light .tval {
+  color: #0a8a3a;
+}
+
+/* ── Joystick Visualizers ─────────────────────────────────────────────────── */
+html.light .stk {
+  border-color: #ccc;
+  background: radial-gradient(circle, #f5f5f5 60%, #e8e8e8 100%);
+}
+
+html.light .stk::after {
+  background: #ddd;
+}
+
+html.light .stk::before {
+  background: #ddd;
+}
+
+html.light .slbl {
+  color: #888;
+}
+
+/* ── Motor Bars ───────────────────────────────────────────────────────────── */
+html.light .mlbl {
+  color: #777;
+}
+
+html.light .mbg {
+  background: #e8e8e8;
+  border-color: #ccc;
+}
+
+html.light .mctr {
+  background: #bbb;
+}
+
+/* ── Config Sliders ───────────────────────────────────────────────────────── */
+html.light .slrow {
+  color: #777;
+}
+
+html.light .sval {
+  color: #800020;
+}
+
+/* ── Help Text ────────────────────────────────────────────────────────────── */
+html.light .hlp {
+  color: #888;
+}
+
+html.light .hlp b {
+  color: #555;
+}
+
+/* ── Gamepad Status ───────────────────────────────────────────────────────── */
+html.light .gpok {
+  background: #e0f5e6;
+  color: #1a7a3a;
+  border-color: #a0d8b0;
+}
+
+html.light .gpoff {
+  background: #f5e0e0;
+  color: #c04040;
+  border-color: #d8a0a0;
+}
+
+/* ── Mode Tabs ────────────────────────────────────────────────────────────── */
+html.light .mode-tab {
+  background: #e8e8e8;
+  border-color: #ccc;
+  color: #888;
+  border-bottom-color: #ccc;
+}
+
+html.light .mode-tab.active {
+  background: #fff;
+  color: #333;
+  border-color: #ccc;
+  border-bottom-color: #fff;
+}
+
+html.light .mode-tab:hover:not(.active) {
+  background: #ddd;
+  color: #555;
+}
+
+/* ── Countdown Overlay ────────────────────────────────────────────────────── */
+html.light #countdown-overlay {
+  background: rgba(255,255,255,0.55);
+}
+
+/* ── Level HUD ────────────────────────────────────────────────────────────── */
+html.light .hud-chip {
+  background: rgba(255,255,255,0.85);
+  border-color: #ccc;
+  color: #333;
+}
+
+/* ── Result / Fail Cards ──────────────────────────────────────────────────── */
+html.light #result-card,
+html.light #fail-card {
+  background: #fff;
+  border-color: #ccc;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+
+html.light .rc-title {
+  color: #333;
+}
+
+html.light .rc-level {
+  color: #888;
+}
+
+html.light .rc-star {
+  color: #ddd;
+}
+
+html.light .rc-stats {
+  color: #777;
+}
+
+html.light .rc-stats b {
+  color: #444;
+}
+
+html.light .rc-delta {
+  color: #999;
+}
+
+html.light .fail-level {
+  color: #888;
+}
+
+/* ── Levels Sidebar ───────────────────────────────────────────────────────── */
+html.light #levels-sidebar::-webkit-scrollbar-track { background: #f0f0f0; }
+html.light #levels-sidebar::-webkit-scrollbar-thumb { background: #bbb; }
+
+html.light .tier-header {
+  background: #f0f0f0;
+  border-color: #ddd;
+}
+
+html.light .lvl-card {
+  background: #fff;
+  border-color: #ddd;
+}
+
+html.light .lvl-card:hover:not(.locked) {
+  background: #f5f5f5;
+}
+
+html.light .lvl-card.active-lvl {
+  background: #fff0f3;
+}
+
+html.light .lvl-card.locked .lvl-num {
+  color: #bbb;
+}
+
+html.light .lvl-name {
+  color: #444;
+}
+
+html.light .lvl-meta {
+  color: #999;
+}
+
+html.light .lvl-star {
+  color: #ddd;
+}
+
+html.light .lvl-lock-icon {
+  color: #ccc;
+}
+
+html.light .lvl-lb-btn {
+  color: #999;
+}
+
+/* ── Attempt Panel ────────────────────────────────────────────────────────── */
+html.light #attempt-panel {
+  background: #fff;
+  border-color: #ddd;
+}
+
+html.light .ap-title {
+  border-bottom-color: #ddd;
+}
+
+html.light .ap-lbl {
+  color: #777;
+}
+
+html.light .ap-val {
+  color: #0a8a3a;
+}
+
+/* ── Mini Stats Bar ───────────────────────────────────────────────────────── */
+html.light #mini-stats {
+  background: #fff;
+  border-color: #ddd;
+  color: #999;
+}
+
+html.light .ms-lbl {
+  color: #aaa;
+}
+
+html.light .ms-val {
+  color: #555;
+}
+
+html.light .ms-sep {
+  color: #ddd;
+}
+
+html.light .ms-hint {
+  color: #bbb;
+}
+
+/* ── Analytics Modal ──────────────────────────────────────────────────────── */
+html.light #analytics-backdrop {
+  background: rgba(0,0,0,0.35);
+}
+
+html.light #analytics-modal {
+  background: #fff;
+  border-color: #ddd;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+}
+
+html.light #analytics-modal::-webkit-scrollbar-track { background: #f5f5f5; }
+html.light #analytics-modal::-webkit-scrollbar-thumb { background: #bbb; }
+
+html.light .an-header {
+  border-bottom-color: #ddd;
+}
+
+html.light .an-close {
+  color: #999;
+}
+
+html.light .an-close:hover {
+  color: #333;
+}
+
+html.light .an-overall {
+  color: #444;
+}
+
+html.light .an-overall-lbl {
+  color: #999;
+}
+
+html.light .an-section-title {
+  border-bottom-color: #ddd;
+}
+
+html.light .an-bar-lbl {
+  color: #777;
+}
+
+html.light .an-bar-pct {
+  color: #555;
+}
+
+html.light .an-bar-bg {
+  background: #e8e8e8;
+}
+
+html.light .an-list-item {
+  color: #666;
+}
+
+html.light .an-stat {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+
+html.light .an-stat-lbl {
+  color: #999;
+}
+
+html.light .an-stat-val {
+  color: #444;
+}
+
+html.light .an-recommend {
+  background: #f9f5f6;
+  border-color: #ddd;
+  color: #555;
+}
+
+/* ── Analytics Tab Bar ────────────────────────────────────────────────────── */
+html.light .an-tabs {
+  border-bottom-color: #ddd;
+}
+
+html.light .an-tab {
+  color: #999;
+}
+
+html.light .an-tab:hover {
+  color: #555;
+}
+
+html.light .an-tab.active {
+  color: #333;
+}
+
+/* ── AI Coach Panel ───────────────────────────────────────────────────────── */
+html.light .coach-section-label {
+  border-bottom-color: #ddd;
+}
+
+html.light .coach-profile-badge {
+  background: rgba(128,0,32,0.06);
+  border-color: rgba(128,0,32,0.18);
+  color: #444;
+}
+
+html.light .coach-summary-text {
+  color: #444;
+}
+
+html.light .coach-analysis-text {
+  color: #666;
+}
+
+html.light .coach-check-item {
+  color: #666;
+}
+
+html.light .coach-plan-item {
+  background: #f5f5f5;
+  border-color: #ddd;
+  color: #666;
+}
+
+html.light .coach-comparison-row {
+  color: #666;
+}
+
+/* ── Leaderboard Modal ────────────────────────────────────────────────────── */
+html.light #lb-backdrop {
+  background: rgba(0,0,0,0.35);
+}
+
+html.light #lb-modal {
+  background: #fff;
+  border-color: #ddd;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18), 0 -2px 12px rgba(199,62,90,0.15);
+}
+
+html.light .lb-header {
+  border-bottom-color: #ddd;
+}
+
+html.light .lb-close {
+  color: #999;
+}
+
+html.light .lb-close:hover {
+  color: #333;
+}
+
+html.light .lb-row {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+
+html.light .lb-row.mine {
+  background: #fff0f3;
+}
+
+html.light .lb-rank {
+  color: #888;
+}
+
+html.light .lb-name {
+  color: #444;
+}
+
+html.light .lb-time {
+  color: #555;
+}
+
+html.light .lb-star-dim {
+  color: #ddd;
+}
+
+html.light .lb-empty {
+  color: #999;
+}
+
+/* ── Home Button ──────────────────────────────────────────────────────────── */
+html.light .home-btn {
+  background: #fff;
+  color: #333;
+  border-color: #ccc;
+}
+
+html.light .home-btn:hover {
+  background: #f5f5f5;
+}
+
+/* ── Sidebar Auth Footer ──────────────────────────────────────────────────── */
+html.light #sidebar-auth-footer {
+  border-top-color: #ddd;
+}
+
+/* ── View Toggle (2D / 3D) ────────────────────────────────────────────────── */
+html.light .view-toggle {
+  border-color: #ccc;
+}
+
+html.light .view-btn {
+  background: #e8e8e8;
+  color: #777;
+  border-right-color: #ccc;
+}
+
+html.light .view-btn:hover {
+  background: #ddd;
+  color: #444;
+}
+
+html.light .view-btn.active {
+  background: #800020;
+  color: #fff;
+  border-color: #800020;
+}
+
+/* ── STL Upload Panel ─────────────────────────────────────────────────────── */
+html.light .stl-upload-btn {
+  background: #e8e8e8;
+  color: #444;
+  border-color: #ccc;
+}
+
+html.light .stl-upload-btn:hover {
+  background: #ddd;
+}
+
+html.light #stl-remove-btn {
+  border-color: #ccc;
+}
+
+html.light #stl-remove-btn:hover {
+  background: #f5e0e0;
+}
+
+/* ── Match Phase Banner Colors (keep auto/teleop/over visible) ────────────── */
+html.light .auto-period   { color: #b89a00; }
+html.light .teleop-period { color: #0a8a3a; }
+html.light .over-period   { color: #cc2233; }
+
+/* ── Mobile Warning ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mobile-warning { display: block !important; }
+}
