@@ -182,8 +182,8 @@ function staggerCoachSections(baseDelay) {
 function switchReportTab(tab) {
   document.getElementById('tab-stats').classList.toggle('active', tab === 'stats');
   document.getElementById('tab-coach').classList.toggle('active', tab === 'coach');
-  document.getElementById('an-stats-panel').style.display = tab === 'stats' ? '' : 'none';
-  document.getElementById('an-coach-panel').style.display = tab === 'coach' ? '' : 'none';
+  document.getElementById('an-stats-panel').style.display = tab === 'stats' ? 'block' : 'none';
+  document.getElementById('an-coach-panel').style.display = tab === 'coach' ? 'block' : 'none';
 
   if (tab === 'coach' && !_coachGenerated) {
     _coachGenerated = true;

@@ -941,10 +941,10 @@ telemetry.<span class="syn-fn">update</span>();</div>
       html += '<ul class="curr-checklist">';
       def.checklist.forEach(function(item, i) {
         var checked = checklist[i] ? ' checked' : '';
-        html += '<li class="curr-check-item">';
-        html += '<input type="checkbox"' + checked + ' onchange="updateChecklist(\'' + phaseId + '\',' + i + ',this.checked)">';
+        html += '<label class="curr-check-item" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">';
+        html += '<input type="checkbox" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"' + checked + ' onchange="updateChecklist(\'' + phaseId + '\',' + i + ',this.checked)">';
         html += '<span>' + esc(item) + '</span>';
-        html += '</li>';
+        html += '</label>';
       });
       html += '</ul>';
 
