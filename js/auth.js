@@ -76,6 +76,7 @@
           </button>
         </div>
         <div id="rt-role-saving" style="display:none">Saving your role...</div>
+        <div style="margin-top:12px;font-size:12px;color:#666;text-align:center;">You can change this later from the sidebar until you join a team.</div>
       </div>
     </div>
   `;
@@ -326,14 +327,18 @@
     popover.id        = 'rt-role-popover';
     popover.className = 'rt-role-popover';
     popover.style.display = 'none';
-    popover.innerHTML = `
-      <div class="rt-popover-role">Currently: <strong>${roleLbl}</strong></div>
-      <button class="rt-popover-btn" id="rt-switch-btn" onclick="rtSwitchRole('${roleOther}')">
-        Switch to ${roleOtherLbl}
-      </button>
-      <div class="rt-popover-divider"></div>
-      <button class="rt-popover-signout" onclick="rtSignOut()">Sign Out</button>
-    `;
+    const hasTeam = !!window.rtUserTeamId;
+    popover.innerHTML = hasTeam
+      ? `<div class="rt-popover-role">Currently: <strong>${roleLbl}</strong></div>
+         <div style="font-size:11px;color:#666;padding:4px 0;">Role locked while on a team</div>
+         <div class="rt-popover-divider"></div>
+         <button class="rt-popover-signout" onclick="rtSignOut()">Sign Out</button>`
+      : `<div class="rt-popover-role">Currently: <strong>${roleLbl}</strong></div>
+         <button class="rt-popover-btn" id="rt-switch-btn" onclick="rtSwitchRole('${roleOther}')">
+           Switch to ${roleOtherLbl}
+         </button>
+         <div class="rt-popover-divider"></div>
+         <button class="rt-popover-signout" onclick="rtSignOut()">Sign Out</button>`;
 
     // User section (clickable)
     const section = document.createElement('div');
@@ -378,27 +383,10 @@
     const btn = document.getElementById('rt-switch-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
 
-    // Prevent self-escalation to coach — must be verified by existing coach
-    if (newRole === 'coach' && window.rtUserRole === 'player') {
-      // Check if user is already a coach in their team's member list
-      var teamId = window.rtUserTeamId;
-      if (teamId) {
-        try {
-          var memberDoc = await window.rtDb.collection('teams').doc(teamId)
-            .collection('members').doc(window.rtUser.uid).get();
-          if (!memberDoc.exists || memberDoc.data().role !== 'coach') {
-            if (btn) { btn.disabled = false; btn.textContent = 'Coach role requires team coach approval'; }
-            return;
-          }
-        } catch (e) {
-          if (btn) { btn.disabled = false; btn.textContent = 'Could not verify role'; }
-          return;
-        }
-      } else {
-        // No team — can't become coach without a team
-        if (btn) { btn.disabled = false; btn.textContent = 'Join a team first to become coach'; }
-        return;
-      }
+    // Role is locked once the user joins a team
+    if (window.rtUserTeamId) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Role locked — leave team to change'; }
+      return;
     }
 
     try {
