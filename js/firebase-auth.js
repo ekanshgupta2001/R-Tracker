@@ -372,13 +372,29 @@
   }
 
   // ── Auth Actions ──────────────────────────────────────────────────────────
+  let googleSignInPending = false;
+
   window.rtSignInGoogle = function () {
+    if (googleSignInPending) return;
+    googleSignInPending = true;
     setLoading(true);
+
+    const btn = document.querySelector('[onclick*="rtSignInGoogle"]');
+    if (btn) { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; }
+
     const provider = new firebase.auth.GoogleAuthProvider();
-    window.rtAuth.signInWithPopup(provider).catch(err => {
-      setError(friendlyError(err));
-      setLoading(false);
-    });
+    window.rtAuth.signInWithPopup(provider)
+      .then(function () { googleSignInPending = false; })
+      .catch(function (err) {
+        googleSignInPending = false;
+        if (btn) { btn.style.pointerEvents = ''; btn.style.opacity = ''; }
+        if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+          setLoading(false);
+          return;
+        }
+        setError(friendlyError(err));
+        setLoading(false);
+      });
   };
 
   window.rtSignInEmail = function () {

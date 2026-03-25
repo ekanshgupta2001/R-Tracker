@@ -129,13 +129,30 @@
   }
 
   // ── Auth Actions ──────────────────────────────────────────────────────────
+  let googleSignInPending = false;
+
   window.rtSignInGoogle = function () {
+    if (googleSignInPending) return;
+    googleSignInPending = true;
     setLoading(true);
+
+    // Disable button visually
+    const btn = document.querySelector('[onclick*="rtSignInGoogle"]');
+    if (btn) { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; }
+
     const provider = new firebase.auth.GoogleAuthProvider();
-    window.rtAuth.signInWithPopup(provider).catch(err => {
-      setError(friendlyError(err));
-      setLoading(false);
-    });
+    window.rtAuth.signInWithPopup(provider)
+      .then(function () { googleSignInPending = false; })
+      .catch(function (err) {
+        googleSignInPending = false;
+        if (btn) { btn.style.pointerEvents = ''; btn.style.opacity = ''; }
+        if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+          setLoading(false);
+          return;
+        }
+        setError(friendlyError(err));
+        setLoading(false);
+      });
   };
 
   window.rtSignInEmail = function () {
@@ -253,6 +270,7 @@
   }
 
   function setError(msg) {
+    if (!msg) return;
     const el = document.getElementById('rt-auth-error');
     if (el) el.textContent = msg;
     setLoading(false);
@@ -267,16 +285,17 @@
 
   function friendlyError(err) {
     const map = {
-      'auth/user-not-found':         'No account found with that email.',
-      'auth/wrong-password':         'Incorrect password.',
-      'auth/invalid-email':          'Invalid email address.',
-      'auth/email-already-in-use':   'An account with that email already exists.',
-      'auth/weak-password':          'Password must be at least 6 characters.',
-      'auth/popup-closed-by-user':   'Sign-in was cancelled.',
-      'auth/network-request-failed': 'Network error. Check your connection.',
-      'auth/invalid-credential':     'Incorrect email or password.',
+      'auth/user-not-found':           'Invalid email or password.',
+      'auth/wrong-password':           'Invalid email or password.',
+      'auth/invalid-credential':       'Invalid email or password.',
+      'auth/invalid-email':            'Invalid email address.',
+      'auth/email-already-in-use':     'An account with that email already exists.',
+      'auth/weak-password':            'Password must be at least 6 characters.',
+      'auth/popup-closed-by-user':     '',
+      'auth/cancelled-popup-request':  '',
+      'auth/network-request-failed':   'Network error. Check your connection.',
     };
-    return map[err.code] || err.message;
+    return map[err.code] !== undefined ? map[err.code] : err.message;
   }
 
   // ── User Profile in Sidebar ───────────────────────────────────────────────
