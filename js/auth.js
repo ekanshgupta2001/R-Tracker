@@ -27,7 +27,7 @@
         <div id="rt-auth-logo">
           <span class="al-r">R-</span><span class="al-t">Tracker</span>
         </div>
-        <div id="rt-auth-team">Rundle Robotics Castle &middot; Team 27502</div>
+        <div id="rt-auth-team">Rundle Robotics Castle &middot; Team 25702</div>
 
         <button id="rt-auth-google-btn" onclick="rtSignInGoogle()">
           <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">

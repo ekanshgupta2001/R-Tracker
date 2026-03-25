@@ -192,6 +192,21 @@ function switchReportTab(tab) {
 }
 
 function renderCoachPanel() {
+  // Show helpful empty state if no driving data yet
+  if (driverMetrics.totalInputs < 10) {
+    var panel = document.getElementById('an-coach-panel');
+    if (panel) {
+      panel.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#999;">' +
+        '<div style="font-size:32px;margin-bottom:12px;">&#129302;</div>' +
+        '<h3 style="color:#ccc;margin-bottom:8px;">AI Coach Analysis</h3>' +
+        '<p style="font-size:13px;line-height:1.6;">Start a practice session and drive for at least 30 seconds. The AI Coach will analyze your driving style, identify strengths and weaknesses, and provide personalized training recommendations.</p>' +
+        '<p style="font-size:12px;color:#666;margin-top:12px;">Press Start, then drive around the field using your gamepad or keyboard.</p>' +
+        '</div>';
+    }
+    _coachGenerated = false; // Allow re-render after driving
+    return;
+  }
+
   const report = generateCoachReport();
 
   const profileKey = report.driverProfile.split(' — ')[0];

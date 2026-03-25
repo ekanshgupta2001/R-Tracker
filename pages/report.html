@@ -8,7 +8,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
-  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description" content="Driver Report — R-Tracker performance analysis and AI coaching.">
   <title>Driver Report — R-Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -374,6 +374,16 @@
 
         // Also read levels to get accurate counts
         var lvlSnap = await rtDb.collection('users').doc(uid).collection('levels').get();
+
+        // Count completed curriculum phases
+        var phasesCompleted = 0;
+        try {
+          var currSnap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
+          currSnap.forEach(function(cdoc) {
+            var cd = cdoc.data();
+            if (cd.status === 'verified' || cd.status === 'submitted') phasesCompleted++;
+          });
+        } catch (e) { /* no curriculum data yet */ }
         var levelsDone = 0;
         var bestLevel = 0;
         lvlSnap.forEach(function(ldoc) {
@@ -397,7 +407,7 @@
           { val: levelsDone + '/12', label: 'Levels Done', cls: 'clr-gold' },
           { val: score, label: 'Best Score', cls: scoreColorClass(score) },
           { val: bestLevel > 0 ? bestLevel : '—', label: 'Best Level', cls: 'clr-gold' },
-          { val: cs.phasesCompleted || 0, label: 'Curriculum Phases', cls: 'clr-green' },
+          { val: phasesCompleted, label: 'Curriculum Phases', cls: 'clr-green' },
           { val: cs.averageAIScore ? cs.averageAIScore + '%' : '—', label: 'Avg AI Score', cls: 'clr-purple' },
         ];
 

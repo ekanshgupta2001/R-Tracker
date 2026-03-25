@@ -2359,7 +2359,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
         html += '<h3 class="adv-h3">' + esc(req.category) + '</h3>';
         html += '<ul class="adv-checklist">';
         for (var ri = 0; ri < req.items.length; ri++) {
-          html += '<li class="adv-check-item"><span class="adv-checkbox"></span>' + esc(req.items[ri]) + '</li>';
+          html += '<li class="adv-check-item"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;"><input type="checkbox" class="adv-checkbox-input" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"><span>' + esc(req.items[ri]) + '</span></label></li>';
         }
         html += '</ul>';
       }
@@ -2396,7 +2396,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       html += '<p class="adv-text">' + esc(del.description) + '</p>';
       html += '<ul class="adv-checklist">';
       for (var di = 0; di < del.requirements.length; di++) {
-        html += '<li class="adv-check-item"><span class="adv-checkbox"></span>' + esc(del.requirements[di]) + '</li>';
+        html += '<li class="adv-check-item"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;"><input type="checkbox" class="adv-checkbox-input" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"><span>' + esc(del.requirements[di]) + '</span></label></li>';
       }
       html += '</ul>';
       html += '</div>';

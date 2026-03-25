@@ -8,7 +8,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
-  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description" content="About R-Tracker — Rundle Robotics personally designed visualizer for FTC teams.">
   <title>About — R-Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

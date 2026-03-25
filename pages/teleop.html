@@ -8,7 +8,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
-  <script>try{if(localStorage.getItem('rt-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <title>TeleOp Practice — R-Tracker</title>
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/sidebar.css">
