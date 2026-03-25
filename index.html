@@ -43,7 +43,7 @@
 
       <!-- Logo -->
       <div class="home-hero">
-        <div class="home-logo"><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></div>
+        <h1 class="home-logo" style="margin:0;"><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></h1>
         <div class="home-tagline">RUNDLE ROBOTICS PERSONALLY DESIGNED VISUALIZER</div>
       </div>
 
@@ -267,6 +267,8 @@
       for (var i = 0; i < n; i++) {
         var dot = document.createElement('button');
         dot.className = 'carousel-dot';
+        dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        dot.setAttribute('role', 'button');
         dot.onclick = (function(idx) { return function() { goTo(idx); }; })(i);
         dotsWrap.appendChild(dot);
       }

@@ -1146,7 +1146,11 @@ html.light .lvl-meta {
 }
 
 html.light .lvl-star {
-  color: #ddd;
+  color: #ccc;
+}
+
+html.light .lvl-star.lit {
+  color: #b8860b;
 }
 
 html.light .lvl-lock-icon {

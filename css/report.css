@@ -614,9 +614,13 @@ html.light .rlg-cell {
 
 html.light .rlg-cell:not(.gold):not(.silver):not(.bronze):not(.locked) .rlg-num { color: #aaa; }
 
-html.light .rlg-cell.gold { background: rgba(234, 179, 8, 0.08); border-top-color: #eab308; }
-html.light .rlg-cell.silver { background: rgba(192, 192, 192, 0.1); border-top-color: #a0a0a0; }
-html.light .rlg-cell.bronze { background: rgba(205, 127, 50, 0.08); border-top-color: #cd7f32; }
+html.light .rlg-cell.gold { background: #fef9e7; border-top-color: #d4a017; }
+html.light .rlg-cell.gold .rlg-star.lit { color: #b8860b; }
+html.light .rlg-cell.silver { background: #f5f5f5; border-top-color: #999; }
+html.light .rlg-cell.silver .rlg-star.lit { color: #777; }
+html.light .rlg-cell.bronze { background: #fdf2e6; border-top-color: #b5651d; }
+html.light .rlg-cell.bronze .rlg-star.lit { color: #a0522d; }
+html.light .rlg-star { color: #ccc; }
 
 html.light .rlg-cell.locked {
   background: #f5f5f5;

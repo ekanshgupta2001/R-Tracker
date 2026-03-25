@@ -26,12 +26,13 @@
 </head>
 
 <body>
+<a href="#main-content" class="skip-to-content">Skip to main content</a>
   <div class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">Driver Report</div>
   </div>
 
-  <div class="main-wrap">
+  <div class="main-wrap" id="main-content">
     <div class="report-content">
 
       <!-- Section 1: Driver Overview -->
@@ -553,7 +554,11 @@
         html += '</div>';
         el.innerHTML = html;
       } catch (e) {
-        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load history</div>';
+        // Firestore query failed (collection may not exist) — show friendly empty state
+        el.innerHTML = '<div class="rpt-empty" style="text-align:center;padding:24px;">' +
+          '<div style="font-size:24px;margin-bottom:8px;">&#128202;</div>' +
+          '<p style="font-size:13px;color:#888;">Session history will appear here as you practice.</p>' +
+          '<p style="font-size:12px;color:#666;">Complete TeleOp sessions to build your history.</p></div>';
       }
     }
 
