@@ -725,6 +725,11 @@ telemetry.<span class="syn-fn">update</span>();</div>
       el.innerHTML = html;
       el.scrollTop = 0;
 
+      // Restore saved quiz progress for Phase 0
+      if (phase.id === 'phase0' && data.quizAnswers) {
+        restoreQuizProgress(data.quizAnswers);
+      }
+
       // Render advanced/capstone content after DOM is ready
       if (hasAdvancedContent) {
         window.renderAdvancedContent(phase.id, 'adv-container');
@@ -823,11 +828,26 @@ telemetry.<span class="syn-fn">update</span>();</div>
       expEl.className = 'quiz-explanation show ' + (isCorrect ? 'correct' : 'wrong');
       expEl.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Incorrect. ') + q.explain;
 
+      // Save progress after each answer
+      saveQuizProgress();
+
       // Check if all questions answered
       if (Object.keys(quizAnswers).length === QUIZ.length) {
         setTimeout(showQuizResults, 500);
       }
     };
+
+    function saveQuizProgress() {
+      if (!window.rtUser || !window.rtDb) return;
+      var answers = {};
+      Object.keys(quizAnswers).forEach(function(k) {
+        answers['q' + k] = quizAnswers[k] === QUIZ[k].correct;
+      });
+      window.rtDb.collection('users').doc(window.rtUser.uid)
+        .collection('curriculum').doc('phase0')
+        .set({ quizAnswers: answers, status: 'in_progress' }, { merge: true })
+        .catch(function() {});
+    }
 
     function showQuizResults() {
       var correct = 0;
@@ -846,6 +866,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       if (passed) {
         html += '<div class="quiz-result-msg pass">Congratulations! Phase 0 complete. Phase 1 is now unlocked.</div>';
+        html += '<button class="quiz-retry-btn" style="background:#800020;border-color:#800020;color:white;" onclick="selectPhase(\'phase1\')">Start Phase 1 &rarr;</button>';
       } else {
         html += '<div class="quiz-result-msg fail">You need 80% to pass. Review the material and try again.</div>';
         html += '<button class="quiz-retry-btn" onclick="retryQuiz()">Retry Quiz</button>';
@@ -853,6 +874,9 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       el.innerHTML = html;
       el.classList.add('show');
+
+      // Scroll results into view
+      setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
 
       // Save to Firestore
       var saveData = {
@@ -905,9 +929,55 @@ telemetry.<span class="syn-fn">update</span>();</div>
       if (!container) return;
       quizAnswers = {};
       quizDone = false;
+      // Clear saved progress
+      if (window.rtUser && window.rtDb) {
+        window.rtDb.collection('users').doc(window.rtUser.uid)
+          .collection('curriculum').doc('phase0')
+          .set({ quizAnswers: null }, { merge: true }).catch(function() {});
+      }
       // Re-render just the quiz
       container.outerHTML = renderQuiz(currData.phase0 || {});
     };
+
+    function restoreQuizProgress(savedAnswers) {
+      // Replay previously answered questions to restore visual state
+      Object.keys(savedAnswers).forEach(function(key) {
+        var qIdx = parseInt(key.replace('q', ''));
+        if (isNaN(qIdx) || qIdx >= QUIZ.length) return;
+        var q = QUIZ[qIdx];
+        var wasCorrect = savedAnswers[key];
+
+        // Find the correct option index and the user's chosen option
+        var correctIdx = q.correct;
+        // We only know if it was correct or not; simulate the answer
+        var chosenIdx = wasCorrect ? correctIdx : -1;
+        if (!wasCorrect) {
+          // Find a wrong option (we don't know which one they picked, so mark the first wrong one)
+          for (var j = 0; j < q.opts.length; j++) {
+            if (j !== correctIdx) { chosenIdx = j; break; }
+          }
+        }
+
+        // Apply visual state without triggering save again
+        quizAnswers[qIdx] = chosenIdx;
+        var opts = document.querySelectorAll('#quiz-opts-' + qIdx + ' .quiz-opt');
+        var expEl = document.getElementById('quiz-exp-' + qIdx);
+
+        opts.forEach(function(btn, j) {
+          btn.classList.add('quiz-answered');
+          if (j === correctIdx) btn.classList.add('quiz-correct');
+          if (j === chosenIdx && chosenIdx !== correctIdx) btn.classList.add('quiz-wrong');
+        });
+
+        expEl.className = 'quiz-explanation show ' + (wasCorrect ? 'correct' : 'wrong');
+        expEl.innerHTML = (wasCorrect ? '&#10003; Correct! ' : '&#10007; Incorrect. ') + q.explain;
+      });
+
+      // If all questions were answered, show results
+      if (Object.keys(quizAnswers).length === QUIZ.length) {
+        setTimeout(showQuizResults, 300);
+      }
+    }
 
     /* ══════════════════════════════════════════════════════════════════════════
        DELIVERABLE RENDERING
