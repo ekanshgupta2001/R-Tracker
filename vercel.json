@@ -1,8 +1,9 @@
 {
+  "installCommand": "echo 'Skipping install - static site'",
   "buildCommand": "bash build.sh",
   "outputDirectory": ".",
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/404.html", "status": 404 }
   ]
 }
