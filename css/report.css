@@ -11,12 +11,6 @@
   animation: pageIn 0.35s ease-out both;
 }
 
-.page-leaving .main-wrap {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  opacity: 0;
-  transform: translateY(6px);
-}
-
 .sidebar-collapsed .main-wrap { margin-left: 0; }
 
 /* ── Centered content ──────────────────────────────────────────────────── */

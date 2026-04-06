@@ -1834,12 +1834,7 @@ html.light .adv-table tbody tr:hover td {
   opacity: 0.4;
 }
 
-/* ── Page transitions ──────────────────────────────────────────────────────── */
-.page-leaving .curr-wrap,
-.page-leaving .topbar {
-  transition: opacity 0.18s ease;
-  opacity: 0;
-}
+/* ── Page transitions (handled by global wipe) ────────────────────────────── */
 
 /* ══════════════════════════════════════════════════════════════════════════════
    RESPONSIVE

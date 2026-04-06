@@ -23,13 +23,6 @@
   margin-left: 0;
 }
 
-/* ── Page transition ───────────────────────────────────────────────────── */
-.page-leaving .main-wrap {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  opacity: 0;
-  transform: translateY(6px);
-}
-
 /* ── Centered content — flex column, fills available space ───────────────── */
 .home-content {
   max-width: 1200px;

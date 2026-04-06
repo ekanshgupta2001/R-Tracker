@@ -119,18 +119,8 @@
     });
   }
 
-  // ── Page Transitions ───────────────────────────────────────────────────────
-  function setupPageTransitions() {
-    document.addEventListener('click', e => {
-      const a = e.target.closest('a[href]');
-      if (!a) return;
-      const href = a.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
-      e.preventDefault();
-      document.body.classList.add('page-leaving');
-      setTimeout(() => { window.location.href = href; }, 180);
-    });
-  }
+  // ── Page Transitions (handled by transitions.js) ───────────────────────────
+  function setupPageTransitions() { /* noop — see js/transitions.js */ }
 
   // ── Resize ────────────────────────────────────────────────────────────────
   window.addEventListener('resize', () => {

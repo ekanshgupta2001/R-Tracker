@@ -28,10 +28,12 @@
   <script src="js/firebase-init.js"></script>
   <script src="js/auth.js"></script>
   <script defer src="js/sidebar.js"></script>
+  <script defer src="js/transitions.js"></script>
 </head>
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
+<div id="rt-page-wipe" aria-hidden="true"></div>
 
   <!-- ── Main Content ────────────────────────────────────────────────────── -->
   <main class="main-wrap" id="main-content">
@@ -150,17 +152,6 @@
 
   <script defer src="js/utils/validators.js"></script>
   <script>
-    /* ── Page Transitions ──────────────────────────────────────────────────── */
-    document.addEventListener('click', function (e) {
-      var a = e.target.closest('a[href]');
-      if (!a) return;
-      var href = a.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
-      e.preventDefault();
-      document.body.classList.add('page-leaving');
-      setTimeout(function () { window.location.href = href; }, 180);
-    });
-
     /* ── Update User / Cards ─────────────────────────────────────────────── */
     function updateHomeUser(user, role) {
       if (role === 'coach') {
