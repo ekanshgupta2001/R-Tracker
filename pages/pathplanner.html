@@ -21,7 +21,7 @@
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
-<div id="rt-logo-transition" aria-hidden="true"><span class="logo-r">R-</span><span class="logo-tracker">Tracker</span></div>
+<div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
   <header class="topbar" id="topbar">
     <a href="../index.html" class="home-btn">← Home</a>
     <span class="topbar-sep">|</span>
@@ -137,19 +137,37 @@
   <script defer src="../js/pathplanner/ui.js"></script>
   <script>initAuth();</script>
 <script>
-document.addEventListener('click', function(e) {
-  var link = e.target.closest('a[href]');
-  if (!link) return;
-  var href = link.getAttribute('href');
-  if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-  if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
-  if (link.target === '_blank') return;
-  e.preventDefault();
-  document.body.classList.add('page-leaving');
-  var logo = document.getElementById('rt-logo-transition');
-  if (logo) logo.classList.add('flash');
-  setTimeout(function() { window.location.href = href; }, 125);
-});
+(function() {
+  var overlay = document.getElementById('rt-overlay');
+  if (!overlay) return;
+  if (sessionStorage.getItem('rt-nav') === '1') {
+    sessionStorage.removeItem('rt-nav');
+    overlay.classList.add('visible');
+    setTimeout(function() {
+      overlay.classList.remove('visible');
+      document.body.classList.add('rt-entering');
+    }, 200);
+    setTimeout(function() { document.body.classList.remove('rt-entering'); }, 400);
+  }
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
+    if (link.target === '_blank') return;
+    e.preventDefault();
+    sessionStorage.setItem('rt-nav', '1');
+    overlay.classList.add('visible');
+    setTimeout(function() { window.location.href = href; }, 150);
+  });
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      overlay.classList.remove('visible');
+      document.body.classList.remove('rt-entering');
+    }
+  });
+})();
 </script>
 </body>
 </html>
