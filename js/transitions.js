@@ -14,7 +14,7 @@
     return document.querySelector('main, #main-content, #app');
   }
 
-  // === PAGE ARRIVAL: scan up to reveal ===
+  // === PAGE ARRIVAL ===
   function playEntrance() {
     if (sessionStorage.getItem('rt-navigating') !== '1') return;
     sessionStorage.removeItem('rt-navigating');
@@ -23,31 +23,31 @@
     if (content) content.classList.add('fade-hidden');
 
     transition.style.display = 'block';
-
     scanLine.className = '';
-    void scanLine.offsetWidth;
     scanLine.style.top = '100%';
 
-    requestAnimationFrame(function () {
-      scanLine.classList.add('scanning-up');
+    void scanLine.offsetWidth;
 
-      setTimeout(function () { logoFlash.classList.add('flash'); }, 100);
+    scanLine.classList.add('scanning-up');
 
-      setTimeout(function () {
-        if (content) content.classList.remove('fade-hidden');
-      }, 150);
+    setTimeout(function () { logoFlash.classList.add('flash'); }, 80);
 
-      setTimeout(function () {
-        transition.style.display = 'none';
-        scanLine.className = '';
-        logoFlash.className = '';
-        scanLine.style.top = '-4px';
-        if (content) {
-          content.classList.remove('transitioning-out');
-          content.classList.remove('fade-hidden');
-        }
-      }, 450);
-    });
+    setTimeout(function () {
+      if (content) content.classList.remove('fade-hidden');
+    }, 100);
+
+    setTimeout(function () {
+      transition.style.display = 'none';
+      scanLine.className = '';
+      logoFlash.className = '';
+      scanLine.style.top = '-6px';
+      if (content) {
+        content.classList.remove('transitioning-out');
+        content.classList.remove('fade-hidden');
+        content.style.filter = '';
+        content.style.opacity = '';
+      }
+    }, 350);
   }
 
   if (document.readyState === 'complete') {
@@ -56,7 +56,7 @@
     window.addEventListener('load', playEntrance);
   }
 
-  // === PAGE EXIT: scan down to cover ===
+  // === PAGE EXIT ===
   function playExit(href) {
     var content = getContent();
 
@@ -65,19 +65,20 @@
     if (content) content.classList.add('transitioning-out');
 
     transition.style.display = 'block';
-
     scanLine.className = '';
-    scanLine.style.top = '-4px';
+    scanLine.style.top = '-6px';
+
     void scanLine.offsetWidth;
 
     scanLine.classList.add('scanning');
 
-    setTimeout(function () { logoFlash.classList.add('flash'); }, 120);
+    setTimeout(function () { logoFlash.classList.add('flash'); }, 80);
 
-    setTimeout(function () { window.location.href = href; }, 350);
+    // Navigate BEFORE scan finishes — overlap animation with page load
+    setTimeout(function () { window.location.href = href; }, 200);
   }
 
-  // === INTERCEPT NAVIGATION LINKS ===
+  // === INTERCEPT LINKS ===
   document.addEventListener('click', function (e) {
     var link = e.target.closest('a[href]');
     if (!link) return;
@@ -93,7 +94,7 @@
     playExit(href);
   });
 
-  // === HANDLE BACK/FORWARD NAVIGATION ===
+  // === BACK/FORWARD CACHE ===
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) {
       var content = getContent();
