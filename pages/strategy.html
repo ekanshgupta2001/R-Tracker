@@ -21,7 +21,7 @@
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
-<div id="rt-logo-transition" aria-hidden="true">R-</div>
+<div id="rt-logo-transition" aria-hidden="true"><span class="logo-r">R-</span><span class="logo-tracker">Tracker</span></div>
   <header class="topbar" id="topbar">
     <a href="../index.html" class="home-btn">&larr; Home</a>
     <span class="topbar-sep">|</span>
@@ -140,7 +140,7 @@ document.addEventListener('click', function(e) {
   document.body.classList.add('page-leaving');
   var logo = document.getElementById('rt-logo-transition');
   if (logo) logo.classList.add('flash');
-  setTimeout(function() { window.location.href = href; }, 100);
+  setTimeout(function() { window.location.href = href; }, 125);
 });
 </script>
 </body>

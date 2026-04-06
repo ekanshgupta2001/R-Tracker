@@ -23,7 +23,7 @@
 
 <body>
 <a href="#app" class="skip-to-content">Skip to main content</a>
-<div id="rt-logo-transition" aria-hidden="true">R-</div>
+<div id="rt-logo-transition" aria-hidden="true"><span class="logo-r">R-</span><span class="logo-tracker">Tracker</span></div>
   <div class="mobile-warning" style="display:none;padding:16px;background:#332800;border:1px solid #eab308;color:#eab308;text-align:center;font-size:13px;border-radius:8px;margin:8px;">
     TeleOp Practice works best on desktop or tablet with a gamepad. Some features may not work on mobile.
   </div>
@@ -341,7 +341,7 @@ document.addEventListener('click', function(e) {
   document.body.classList.add('page-leaving');
   var logo = document.getElementById('rt-logo-transition');
   if (logo) logo.classList.add('flash');
-  setTimeout(function() { window.location.href = href; }, 100);
+  setTimeout(function() { window.location.href = href; }, 125);
 });
 </script>
 </body>
