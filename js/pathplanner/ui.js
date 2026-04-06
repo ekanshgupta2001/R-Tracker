@@ -280,11 +280,11 @@ async function renderCloudPaths() {
       const row = document.createElement('div');
       row.className = 'ppc-path-item';
       row.innerHTML = `
-        <div onclick="loadCloudPath('${doc.id}')" style="flex:1;min-width:0">
-          <div class="ppc-path-name">${d.name}</div>
-          <div class="ppc-path-meta">${(d.waypoints||[]).length} waypoints &middot; ${updated}</div>
+        <div onclick="loadCloudPath('${sanitizeHTML(doc.id)}')" style="flex:1;min-width:0">
+          <div class="ppc-path-name">${sanitizeHTML(d.name)}</div>
+          <div class="ppc-path-meta">${(d.waypoints||[]).length} waypoints &middot; ${sanitizeHTML(updated)}</div>
         </div>
-        <button class="ppc-path-del" onclick="deleteCloudPath('${doc.id}',event)" title="Delete">&#128465;</button>`;
+        <button class="ppc-path-del" onclick="deleteCloudPath('${sanitizeHTML(doc.id)}',event)" title="Delete">&#128465;</button>`;
       container.appendChild(row);
     });
   } catch (e) {

@@ -3,11 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://generativelanguage.googleapis.com wss://*.firebaseio.com https://*.gstatic.com https://*.firebaseapp.com; frame-src https://accounts.google.com https://*.firebaseapp.com;">
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-  <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
   <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <title>Manage Team — R-Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -419,11 +414,24 @@
       return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
 
+    // ── Validation ─────────────────────────────────────────────────────────
+    function validateTeamName(name) {
+      if (!name || name.length < 2) return 'Team name must be at least 2 characters';
+      if (name.length > 50) return 'Team name must be under 50 characters';
+      var stripped = name.replace(/<[^>]*>/g, '');
+      if (stripped !== name) return 'Team name cannot contain HTML';
+      return null;
+    }
+
     // ── Save team info ───────────────────────────────────────────────────────
     async function saveTeamInfo() {
       const name   = document.getElementById('team-name').value.trim();
       const number = document.getElementById('team-number').value.trim();
-      if (!name)   { msg('team-info-msg', 'Team name is required.', 'err'); return; }
+      var nameErr = validateTeamName(name);
+      if (nameErr) { msg('team-info-msg', nameErr, 'err'); return; }
+      if (number && (number.length > 10 || number.replace(/<[^>]*>/g, '') !== number)) {
+        msg('team-info-msg', 'Invalid team number.', 'err'); return;
+      }
 
       const btn = document.querySelector('[onclick="saveTeamInfo()"]');
       btn.disabled = true;
@@ -431,7 +439,7 @@
         await rtDb.collection('teams').doc(_teamId).set({ name, number }, { merge: true });
         msg('team-info-msg', 'Team info saved.', 'ok');
       } catch (e) {
-        msg('team-info-msg', 'Save failed: ' + e.message, 'err');
+        msg('team-info-msg', 'Save failed: ' + esc(e.message), 'err');
       }
       btn.disabled = false;
     }

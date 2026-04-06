@@ -210,7 +210,7 @@ async function openLeaderboard(levelId) {
       ).join('');
       html += `<div class="lb-row${isMe ? ' mine' : ''}">
         <div class="lb-rank ${rankClass}">${rankStr}</div>
-        <div class="lb-name">${d.displayName || 'Driver'}${isMe ? '<span class="lb-you">YOU</span>' : ''}</div>
+        <div class="lb-name">${sanitizeHTML(d.displayName || 'Driver')}${isMe ? '<span class="lb-you">YOU</span>' : ''}</div>
         <div class="lb-time">${d.time.toFixed(2)}s</div>
         <div class="lb-stars">${starsHtml}</div>
       </div>`;
@@ -219,7 +219,7 @@ async function openLeaderboard(levelId) {
     document.getElementById('lb-content').innerHTML = html;
   } catch (e) {
     document.getElementById('lb-content').innerHTML =
-      `<div class="lb-empty" style="color:#ff5544">Error: ${e.message}</div>`;
+      '<div class="lb-empty" style="color:#ff5544">Error: ' + sanitizeHTML(e.message) + '</div>';
   }
 }
 

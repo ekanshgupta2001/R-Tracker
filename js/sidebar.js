@@ -214,7 +214,7 @@
     }
     if (!window.rtUser) return;
 
-    // Rate limit failed join attempts
+    // Rate limit failed join attempts (localStorage fast check + Firestore backing)
     var joinAttempts = parseInt(localStorage.getItem('rt-join-attempts') || '0');
     var joinLockUntil = parseInt(localStorage.getItem('rt-join-lock-until') || '0');
     if (Date.now() < joinLockUntil) {
@@ -224,6 +224,19 @@
       return;
     }
 
+    // Firestore-backed rate limit check
+    try {
+      var today = new Date().toISOString().split('T')[0];
+      var rlRef = window.rtDb.collection('users').doc(window.rtUser.uid)
+        .collection('rateLimit').doc('join-' + today);
+      var rlDoc = await rlRef.get();
+      if (rlDoc.exists && rlDoc.data().count >= 10) {
+        msg.textContent = 'Too many join attempts today. Try again tomorrow.';
+        msg.className = 'sb-join-msg error';
+        return;
+      }
+    } catch (_rlErr) { /* fail open */ }
+
     btn.disabled = true;
 
     try {
@@ -231,6 +244,16 @@
       if (snap.empty) {
         joinAttempts++;
         localStorage.setItem('rt-join-attempts', joinAttempts.toString());
+
+        // Record failed attempt in Firestore
+        try {
+          var todayKey = new Date().toISOString().split('T')[0];
+          window.rtDb.collection('users').doc(window.rtUser.uid)
+            .collection('rateLimit').doc('join-' + todayKey)
+            .set({ count: firebase.firestore.FieldValue.increment(1),
+                   lastAttempt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        } catch (_) {}
+
         if (joinAttempts >= 5) {
           localStorage.setItem('rt-join-lock-until', (Date.now() + 60000).toString());
           localStorage.setItem('rt-join-attempts', '0');
