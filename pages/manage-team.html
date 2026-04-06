@@ -278,6 +278,7 @@
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
+<div id="rt-logo-transition" aria-hidden="true">R-</div>
   <header class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">Manage Team</div>
@@ -626,7 +627,9 @@ document.addEventListener('click', function(e) {
   if (link.target === '_blank') return;
   e.preventDefault();
   document.body.classList.add('page-leaving');
-  setTimeout(function() { window.location.href = href; }, 150);
+  var logo = document.getElementById('rt-logo-transition');
+  if (logo) logo.classList.add('flash');
+  setTimeout(function() { window.location.href = href; }, 100);
 });
 </script>
 </body>

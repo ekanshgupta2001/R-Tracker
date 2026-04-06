@@ -97,15 +97,15 @@ body.grid-bg::before {
   z-index: 0;
 }
 
-/* ── Page Transition — Fade + Blur ───────────────────────────────────────── */
+/* ── Page Transition — Fast Fade + Blur + Logo ──────────────────────────── */
 body {
-  animation: pageIn 0.25s ease-out;
+  animation: pageIn 0.15s ease-out;
 }
 
 body.page-leaving {
   opacity: 0;
   filter: blur(4px);
-  transition: opacity 0.15s ease, filter 0.15s ease;
+  transition: opacity 0.1s ease, filter 0.1s ease;
 }
 
 @keyframes pageIn {
@@ -113,9 +113,39 @@ body.page-leaving {
   100% { opacity: 1; }
 }
 
+#rt-logo-transition {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  pointer-events: none;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: #c73e5a;
+  opacity: 0;
+  text-shadow:
+    0 0 20px rgba(199, 62, 90, 0.7),
+    0 0 40px rgba(128, 0, 32, 0.5),
+    0 0 60px rgba(128, 0, 32, 0.3);
+}
+
+#rt-logo-transition.flash {
+  animation: logoGlow 0.25s ease-out forwards;
+}
+
+@keyframes logoGlow {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.08); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body { animation: none; }
   body.page-leaving { transition: none; opacity: 1; filter: none; }
+  #rt-logo-transition { display: none !important; }
 }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */
