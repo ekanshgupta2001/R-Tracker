@@ -119,8 +119,8 @@
     });
   }
 
-  // ── Page Transitions (handled by transitions.js) ───────────────────────────
-  function setupPageTransitions() { /* noop — see js/transitions.js */ }
+  // ── Page Transitions (inline script in each HTML file) ─────────────────────
+  function setupPageTransitions() { /* noop — handled by inline script */ }
 
   // ── Resize ────────────────────────────────────────────────────────────────
   window.addEventListener('resize', () => {

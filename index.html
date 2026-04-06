@@ -28,12 +28,10 @@
   <script src="js/firebase-init.js"></script>
   <script src="js/auth.js"></script>
   <script defer src="js/sidebar.js"></script>
-  <script defer src="js/transitions.js"></script>
 </head>
 
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
-<div id="rt-transition" aria-hidden="true"><div id="rt-scan-line"></div><div id="rt-logo-flash">R-</div></div>
 
   <!-- ── Main Content ────────────────────────────────────────────────────── -->
   <main class="main-wrap" id="main-content">
@@ -488,6 +486,19 @@
       updateHomeUser(user, role);
     });
   </script>
+<script>
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('a[href]');
+  if (!link) return;
+  var href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+  if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
+  if (link.target === '_blank') return;
+  e.preventDefault();
+  document.body.classList.add('page-leaving');
+  setTimeout(function() { window.location.href = href; }, 150);
+});
+</script>
 </body>
 
 </html>

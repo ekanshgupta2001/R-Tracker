@@ -16,7 +16,6 @@
   <script src="../js/firebase-init.js"></script>
   <script src="../js/auth.js"></script>
   <script defer src="../js/sidebar.js"></script>
-  <script defer src="../js/transitions.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -24,7 +23,6 @@
 
 <body>
 <a href="#app" class="skip-to-content">Skip to main content</a>
-<div id="rt-transition" aria-hidden="true"><div id="rt-scan-line"></div><div id="rt-logo-flash">R-</div></div>
   <div class="mobile-warning" style="display:none;padding:16px;background:#332800;border:1px solid #eab308;color:#eab308;text-align:center;font-size:13px;border-radius:8px;margin:8px;">
     TeleOp Practice works best on desktop or tablet with a gamepad. Some features may not work on mobile.
   </div>
@@ -330,5 +328,18 @@
       if (typeof loadLevelProgress === 'function') loadLevelProgress();
     });
   </script>
+<script>
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('a[href]');
+  if (!link) return;
+  var href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+  if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
+  if (link.target === '_blank') return;
+  e.preventDefault();
+  document.body.classList.add('page-leaving');
+  setTimeout(function() { window.location.href = href; }, 150);
+});
+</script>
 </body>
 </html>
