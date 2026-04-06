@@ -60,7 +60,7 @@
       return { allowed: true, remaining: RATE_LIMIT.maxPerDay - data.count };
     } catch (err) {
       console.error('Firestore rate limit check failed:', err);
-      return { allowed: true, remaining: '?' };
+      return { allowed: false, message: 'Unable to verify rate limit. Please try again in a moment.', remaining: 0 };
     }
   }
 

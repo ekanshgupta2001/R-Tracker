@@ -953,8 +953,8 @@
             const statWrap = document.getElementById('cmp-stats');
             statWrap.innerHTML = '';
 
-            const n1 = d1.displayName.split(' ')[0];
-            const n2 = d2.displayName.split(' ')[0];
+            const n1 = esc((d1.displayName || 'Driver').split(' ')[0]);
+            const n2 = esc((d2.displayName || 'Driver').split(' ')[0]);
 
             let h1 = 0, h2 = 0;
 
@@ -1087,11 +1087,11 @@
                 return;
             }
 
-            let html = `<div class="ai-role">Primary Driver: <span class="ai-name">${d1.displayName}</span></div>`;
+            let html = `<div class="ai-role">Primary Driver: <span class="ai-name">${esc(d1.displayName)}</span></div>`;
             html += `<div class="ai-just">The highest overall rating (${d1.overallScore}) with strong consistency across metrics. Recommended for critical matches.</div>`;
 
             if (d2 && (d2.overallScore || 0) >= 60) {
-                html += `<div class="ai-role">Secondary Driver: <span class="ai-name" style="color:#a0a0a0">${d2.displayName}</span></div>`;
+                html += `<div class="ai-role">Secondary Driver: <span class="ai-name" style="color:#a0a0a0">${esc(d2.displayName)}</span></div>`;
                 html += `<div class="ai-just">Solid secondary option (Rating: ${d2.overallScore}). Complements the primary driver well.</div>`;
 
                 if (Math.abs((d1.overallScore || 0) - (d2.overallScore || 0)) <= 5) {
