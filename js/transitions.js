@@ -1,54 +1,83 @@
-// ── R-Tracker Burgundy Wipe Page Transition ──────────────────────────────────
-// Adds a branded wipe effect when navigating between pages.
-// Requires #rt-page-wipe div in every page's <body>.
+// ── R-Tracker Page Transition — Scan Line + Logo Flash ───────────────────────
+// A thin burgundy line sweeps the screen with a centered "R-" logo flash.
+// Requires #rt-transition, #rt-scan-line, #rt-logo-flash in every page's <body>.
 
 (function () {
   'use strict';
 
-  var wipe = document.getElementById('rt-page-wipe');
-  if (!wipe) return;
+  var transition = document.getElementById('rt-transition');
+  var scanLine = document.getElementById('rt-scan-line');
+  var logoFlash = document.getElementById('rt-logo-flash');
+  if (!transition || !scanLine || !logoFlash) return;
 
-  var content = document.querySelector('main, #main-content, #app');
+  function getContent() {
+    return document.querySelector('main, #main-content, #app');
+  }
 
-  // ── Page load: reveal with wipe-out if navigating internally ──────────
-  var isInternal = sessionStorage.getItem('rt-navigating') === '1';
-  sessionStorage.removeItem('rt-navigating');
+  // === PAGE ARRIVAL: scan up to reveal ===
+  function playEntrance() {
+    if (sessionStorage.getItem('rt-navigating') !== '1') return;
+    sessionStorage.removeItem('rt-navigating');
 
-  if (isInternal) {
-    // Hide content, show wipe covering screen
+    var content = getContent();
     if (content) content.classList.add('fade-hidden');
-    wipe.style.transform = 'scaleX(1)';
-    wipe.style.transformOrigin = 'right center';
+
+    transition.style.display = 'block';
+
+    scanLine.className = '';
+    void scanLine.offsetWidth;
+    scanLine.style.top = '100%';
 
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        wipe.classList.add('wipe-out');
-        setTimeout(function () {
-          if (content) content.classList.remove('fade-hidden');
-        }, 120);
-        setTimeout(function () {
-          wipe.classList.remove('wipe-out');
-          wipe.style.transform = 'scaleX(0)';
-        }, 300);
-      });
+      scanLine.classList.add('scanning-up');
+
+      setTimeout(function () { logoFlash.classList.add('flash'); }, 100);
+
+      setTimeout(function () {
+        if (content) content.classList.remove('fade-hidden');
+      }, 150);
+
+      setTimeout(function () {
+        transition.style.display = 'none';
+        scanLine.className = '';
+        logoFlash.className = '';
+        scanLine.style.top = '-4px';
+        if (content) {
+          content.classList.remove('transitioning-out');
+          content.classList.remove('fade-hidden');
+        }
+      }, 450);
     });
   }
 
-  // ── Back/forward cache (bfcache) ──────────────────────────────────────
-  window.addEventListener('pageshow', function (e) {
-    if (e.persisted) {
-      if (content) content.classList.remove('fade-hidden');
-      wipe.classList.remove('wipe-in');
-      wipe.style.transform = 'scaleX(1)';
-      wipe.classList.add('wipe-out');
-      setTimeout(function () {
-        wipe.classList.remove('wipe-out');
-        wipe.style.transform = 'scaleX(0)';
-      }, 300);
-    }
-  });
+  if (document.readyState === 'complete') {
+    playEntrance();
+  } else {
+    window.addEventListener('load', playEntrance);
+  }
 
-  // ── Intercept navigation clicks ───────────────────────────────────────
+  // === PAGE EXIT: scan down to cover ===
+  function playExit(href) {
+    var content = getContent();
+
+    sessionStorage.setItem('rt-navigating', '1');
+
+    if (content) content.classList.add('transitioning-out');
+
+    transition.style.display = 'block';
+
+    scanLine.className = '';
+    scanLine.style.top = '-4px';
+    void scanLine.offsetWidth;
+
+    scanLine.classList.add('scanning');
+
+    setTimeout(function () { logoFlash.classList.add('flash'); }, 120);
+
+    setTimeout(function () { window.location.href = href; }, 350);
+  }
+
+  // === INTERCEPT NAVIGATION LINKS ===
   document.addEventListener('click', function (e) {
     var link = e.target.closest('a[href]');
     if (!link) return;
@@ -61,22 +90,22 @@
     if (link.target === '_blank') return;
 
     e.preventDefault();
+    playExit(href);
+  });
 
-    // Flag for the next page to know it's an internal navigation
-    sessionStorage.setItem('rt-navigating', '1');
-
-    // Fade content out
-    if (content) content.classList.add('fade-hidden');
-
-    // Wipe in (cover the page)
-    wipe.style.transform = 'scaleX(0)';
-    wipe.style.transformOrigin = 'left center';
-    wipe.classList.remove('wipe-out');
-    wipe.classList.add('wipe-in');
-
-    // Navigate after wipe covers screen
-    setTimeout(function () {
-      window.location.href = href;
-    }, 250);
+  // === HANDLE BACK/FORWARD NAVIGATION ===
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      var content = getContent();
+      if (content) {
+        content.classList.remove('transitioning-out');
+        content.classList.remove('fade-hidden');
+        content.style.filter = '';
+        content.style.opacity = '';
+      }
+      transition.style.display = 'none';
+      scanLine.className = '';
+      logoFlash.className = '';
+    }
   });
 })();
