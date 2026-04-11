@@ -4,7 +4,8 @@
   "outputDirectory": ".",
   "functions": {
     "api/review.js": { "maxDuration": 30 },
-    "api/join-team.js": { "maxDuration": 10 }
+    "api/join-team.js": { "maxDuration": 10 },
+    "api/set-role.js": { "maxDuration": 10 }
   },
   "headers": [
     {

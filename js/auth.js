@@ -240,14 +240,16 @@
 
         // No profile yet — show role selection modal
         _onRoleChosen = async (role) => {
-          const name = user.displayName || user.email.split('@')[0];
-          await window.rtDb.collection('users').doc(user.uid).set({
-            displayName: name,
-            email:       user.email,
-            role:        role,
-            teamId:      null,
-            createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
+          const token = await user.getIdToken();
+          const resp = await fetch('/api/set-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ role: role })
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to set role');
+          }
 
           window.rtUserRole   = role;
           window.rtUserTeamId = null;
@@ -390,9 +392,16 @@
     }
 
     try {
-      await window.rtDb.collection('users').doc(window.rtUser.uid).set(
-        { role: newRole }, { merge: true }
-      );
+      const token = await window.rtUser.getIdToken();
+      const resp = await fetch('/api/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ role: newRole })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to switch role');
+      }
       window.rtUserRole = newRole;
 
       // Re-render the profile section with new role
