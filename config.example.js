@@ -9,7 +9,7 @@ const FIREBASE_CONFIG = {
   appId: "YOUR_APP_ID"
 };
 
-// NOTE: The Gemini key is used client-side. For production deployment,
-// move Gemini API calls to Firebase Cloud Functions (requires Blaze plan).
-// For now, restrict the key to specific HTTP referrers in Google Cloud Console.
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+// Note: GEMINI_API_KEY is stored server-side in Vercel environment variables
+// and accessed via the /api/review serverless function.
+// For local development with direct Gemini calls, add:
+// const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";

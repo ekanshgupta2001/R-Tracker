@@ -8,7 +8,5 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "${FIREBASE_MESSAGING_SENDER_ID}",
   appId: "${FIREBASE_APP_ID}"
 };
-
-const GEMINI_API_KEY = "${GEMINI_API_KEY}";
 EOF
-echo "config.js generated from environment variables"
+echo "config.js generated (Gemini key is server-side only)"
