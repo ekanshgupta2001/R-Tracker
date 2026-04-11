@@ -1,5 +1,5 @@
 {
-  "installCommand": "echo 'Skipping install - static site'",
+  "installCommand": "npm install",
   "buildCommand": "bash build.sh",
   "outputDirectory": ".",
   "functions": {

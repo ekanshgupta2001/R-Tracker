@@ -7,6 +7,29 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
-  }
+  },
+  "version": "1.0.0",
+  "description": "![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?logo=javascript&logoColor=black) ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black) ![Gemini](https://img.shields.io/badge/Google%20Gemini-AI%20Code%20Review-4285F4?logo=google&logoColor=white) ![Playwright](https://img.shields.io/badge/Playwright-E2E%20Tests-2EAD33?logo=playwright&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-blue)",
+  "main": "config.example.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.8.0",
+    "fsevents": "^2.3.2",
+    "playwright": "^1.58.2",
+    "playwright-core": "^1.58.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ekanshgupta2001/R-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ekanshgupta2001/R-Tracker/issues"
+  },
+  "homepage": "https://github.com/ekanshgupta2001/R-Tracker#readme"
 }
-
