@@ -3,9 +3,8 @@
   "buildCommand": "bash build.sh",
   "outputDirectory": ".",
   "functions": {
-    "api/review.js": {
-      "maxDuration": 30
-    }
+    "api/review.js": { "maxDuration": 30 },
+    "api/join-team.js": { "maxDuration": 10 }
   },
   "headers": [
     {
@@ -21,6 +20,15 @@
     }
   ],
   "routes": [
+    { "src": "/build\\.sh$", "status": 404, "dest": "/404.html" },
+    { "src": "/\\.gitignore$", "status": 404, "dest": "/404.html" },
+    { "src": "/config\\.example\\.js$", "status": 404, "dest": "/404.html" },
+    { "src": "/vercel\\.json$", "status": 404, "dest": "/404.html" },
+    { "src": "/README\\.md$", "status": 404, "dest": "/404.html" },
+    { "src": "/firestore\\.rules$", "status": 404, "dest": "/404.html" },
+    { "src": "/package\\.json$", "status": 404, "dest": "/404.html" },
+    { "src": "/package-lock\\.json$", "status": 404, "dest": "/404.html" },
+    { "src": "/api/(.*)\\.js$", "status": 404, "dest": "/404.html" },
     { "handle": "filesystem" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/404.html", "status": 404 }

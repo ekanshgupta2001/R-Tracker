@@ -7,17 +7,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can only read/write their own document
+    // Users can read their own document
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Users can create their own profile (first-time role selection)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Users can update their own profile BUT cannot change the 'role' field
+      // unless it's being set for the first time (role doesn't exist yet)
+      allow update: if request.auth != null && request.auth.uid == userId
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+            || !resource.data.keys().hasAny(['role']));
     }
 
-    // User subcollections (curriculum, rateLimit, etc.)
+    // User subcollections (curriculum, rateLimit, stats, etc.)
     match /users/{userId}/{subcollection=**} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId
-        // Validate score values can't be manually set above 100
         && (!request.resource.data.keys().hasAny(['aiScore']) || request.resource.data.aiScore <= 100)
         && (!request.resource.data.keys().hasAny(['score']) || request.resource.data.score <= 100);
     }
@@ -30,6 +35,12 @@ service cloud.firestore {
         && request.resource.data.count >= resource.data.count;
     }
 
+    // Server-side rate limit documents (written by admin SDK, no client access)
+    match /rateLimits/{docId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // Team document: anyone authed can read, only coaches can write settings
     match /teams/{teamId} {
       allow read: if request.auth != null;
@@ -38,15 +49,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach';
     }
 
-    // Team members: authed users can read
+    // Team members
     match /teams/{teamId}/members/{memberId} {
       allow read: if request.auth != null;
-      // Users can write their own entry (stats, metrics, etc.)
-      // Role escalation prevention is handled client-side
-      allow write: if request.auth != null && request.auth.uid == memberId;
-      // Coaches can write any member entry (for verification, role changes)
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach';
+      allow write: if request.auth != null && (
+        request.auth.uid == memberId ||
+        get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'coach'
+      );
     }
 
     // Team activity: authed members can create activity entries

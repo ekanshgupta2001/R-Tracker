@@ -197,83 +197,41 @@
     msg.textContent = '';
     msg.className = 'sb-join-msg';
 
-    if (!raw || raw.length < 6 || raw.length > 8) {
-      msg.textContent = 'Enter a valid invite code (6\u20138 characters).';
+    if (!raw || raw.length < 4 || raw.length > 12) {
+      msg.textContent = 'Enter a valid invite code.';
       msg.className = 'sb-join-msg error';
       return;
     }
     if (!window.rtUser) return;
 
-    // Rate limit failed join attempts (localStorage fast check + Firestore backing)
-    var joinAttempts = parseInt(localStorage.getItem('rt-join-attempts') || '0');
-    var joinLockUntil = parseInt(localStorage.getItem('rt-join-lock-until') || '0');
-    if (Date.now() < joinLockUntil) {
-      var waitSec = Math.ceil((joinLockUntil - Date.now()) / 1000);
-      msg.textContent = 'Too many attempts. Try again in ' + waitSec + 's.';
-      msg.className = 'sb-join-msg error';
-      return;
-    }
-
-    // Firestore-backed rate limit check
-    try {
-      var today = new Date().toISOString().split('T')[0];
-      var rlRef = window.rtDb.collection('users').doc(window.rtUser.uid)
-        .collection('rateLimit').doc('join-' + today);
-      var rlDoc = await rlRef.get();
-      if (rlDoc.exists && rlDoc.data().count >= 10) {
-        msg.textContent = 'Too many join attempts today. Try again tomorrow.';
-        msg.className = 'sb-join-msg error';
-        return;
-      }
-    } catch (_rlErr) { /* fail open */ }
-
     btn.disabled = true;
 
     try {
-      const snap = await window.rtDb.collection('teams').where('inviteCode', '==', raw).limit(1).get();
-      if (snap.empty) {
-        joinAttempts++;
-        localStorage.setItem('rt-join-attempts', joinAttempts.toString());
+      const token = await window.rtUser.getIdToken();
+      const response = await fetch('/api/join-team', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ inviteCode: raw })
+      });
 
-        // Record failed attempt in Firestore
-        try {
-          var todayKey = new Date().toISOString().split('T')[0];
-          window.rtDb.collection('users').doc(window.rtUser.uid)
-            .collection('rateLimit').doc('join-' + todayKey)
-            .set({ count: firebase.firestore.FieldValue.increment(1),
-                   lastAttempt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-        } catch (_) {}
+      const data = await response.json();
 
-        if (joinAttempts >= 5) {
-          localStorage.setItem('rt-join-lock-until', (Date.now() + 60000).toString());
-          localStorage.setItem('rt-join-attempts', '0');
-          msg.textContent = 'Too many failed attempts. Locked for 60 seconds.';
-        } else {
-          msg.textContent = 'Invalid code.';
-        }
+      if (!response.ok) {
+        msg.textContent = data.error || 'Failed to join team.';
         msg.className = 'sb-join-msg error';
         btn.disabled = false;
         return;
       }
-      const teamDoc = snap.docs[0];
-      const teamId = teamDoc.id;
-      const teamData = teamDoc.data();
-      const user = window.rtUser;
-      const name = user.displayName || user.email.split('@')[0];
 
-      await window.rtDb.collection('teams').doc(teamId).collection('members').doc(user.uid).set({
-        displayName: name, email: user.email, role: 'player',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-      await window.rtDb.collection('users').doc(user.uid).set({ teamId: teamId }, { merge: true });
-      window.rtUserTeamId = teamId;
-      localStorage.setItem('rt-join-attempts', '0');
-
-      msg.textContent = 'Joined ' + (teamData.name || 'team') + '!';
+      window.rtUserTeamId = data.teamId;
+      msg.textContent = 'Joined ' + (data.teamName || 'team') + '!';
       msg.className = 'sb-join-msg success';
       setTimeout(function () { location.reload(); }, 1000);
     } catch (e) {
-      msg.textContent = 'Failed: ' + e.message;
+      msg.textContent = 'Failed: ' + (e.message || 'Network error');
       msg.className = 'sb-join-msg error';
       btn.disabled = false;
     }
