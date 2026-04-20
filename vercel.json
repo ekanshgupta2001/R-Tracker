@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install --production",
-  "buildCommand": "printf 'const FIREBASE_CONFIG = {\n  apiKey: \"%s\",\n  authDomain: \"%s\",\n  projectId: \"%s\",\n  storageBucket: \"%s\",\n  messagingSenderId: \"%s\",\n  appId: \"%s\"\n};\n' \"$FIREBASE_API_KEY\" \"$FIREBASE_AUTH_DOMAIN\" \"$FIREBASE_PROJECT_ID\" \"$FIREBASE_STORAGE_BUCKET\" \"$FIREBASE_MESSAGING_SENDER_ID\" \"$FIREBASE_APP_ID\" > config.js && rm -f firestore.rules firebase.json config.example.js README.md CLAUDE.md && rm -rf functions/",
+  "buildCommand": "node build.js",
   "outputDirectory": ".",
   "functions": {
     "api/review.js": { "maxDuration": 30 },
