@@ -11,8 +11,6 @@ const FIREBASE_CONFIG = {
 };
 CONF
 echo "config.js generated"
-
-# Remove sensitive files from deployment
 rm -f firestore.rules
 rm -f firebase.json
 rm -f config.example.js
