@@ -1,5 +1,6 @@
 #!/bin/bash
-cat > config.js << EOF
+# Generate config.js from Vercel environment variables
+cat > config.js << CONF
 const FIREBASE_CONFIG = {
   apiKey: "${FIREBASE_API_KEY}",
   authDomain: "${FIREBASE_AUTH_DOMAIN}",
@@ -8,5 +9,14 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "${FIREBASE_MESSAGING_SENDER_ID}",
   appId: "${FIREBASE_APP_ID}"
 };
-EOF
-echo "config.js generated (Gemini key is server-side only)"
+CONF
+echo "config.js generated"
+
+# Remove sensitive files from deployment
+rm -f firestore.rules
+rm -f firebase.json
+rm -f config.example.js
+rm -f README.md
+rm -f CLAUDE.md
+rm -rf functions/
+echo "Sensitive files removed from deployment"
