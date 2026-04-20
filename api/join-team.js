@@ -12,7 +12,7 @@ if (!admin.apps.length) {
 export default async function handler(req, res) {
   const origin = req.headers.origin || '';
   const allowedOrigins = ['https://r-tracker-liard.vercel.app', 'http://localhost:5500', 'http://127.0.0.1:5500'];
-  const isAllowed = allowedOrigins.some(o => o === origin);
+  const isAllowed = allowedOrigins.includes(origin);
 
   if (isAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
