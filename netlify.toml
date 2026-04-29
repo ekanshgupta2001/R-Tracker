@@ -1,0 +1,29 @@
+[build]
+  command = "node build.js"
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+
+# Block sensitive files
+[[headers]]
+  for = "/firestore.rules"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+# Custom 404
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

@@ -3,7 +3,7 @@
 ## Project Overview
 R-Tracker is a browser-based FTC (FIRST Tech Challenge) robotics platform for Team 25702 Rundle Robotics Castle. It provides driver practice simulation, programming curriculum with AI grading, path planning, strategy planning, and team management.
 
-**Live URL:** https://r-tracker-liard.vercel.app
+**Live URL:** https://r-tracker.netlify.app
 **GitHub:** github.com/ekanshgupta2001/R-Tracker (main branch)
 **Firebase Project:** r-tracker-646c3
 
@@ -12,9 +12,9 @@ R-Tracker is a browser-based FTC (FIRST Tech Challenge) robotics platform for Te
 - **3D Rendering:** Three.js r128
 - **Authentication:** Firebase Auth (Google OAuth + email/password)
 - **Database:** Cloud Firestore (NoSQL)
-- **AI:** Google Gemini 2.5 Flash (proxied through Vercel serverless function)
-- **Server Functions:** Vercel Serverless Functions (Node.js, ESM imports)
-- **Hosting:** Vercel (auto-deploys on push to main)
+- **AI:** Google Gemini 2.5 Flash (proxied through Netlify serverless function)
+- **Server Functions:** Netlify Functions (Node.js 20, ESM imports, `.mjs` files)
+- **Hosting:** Netlify (auto-deploys on push to main)
 - **Testing:** Playwright (11 smoke tests)
 
 ## Project Structure
@@ -36,7 +36,7 @@ R-Tracker/
 │   ├── sidebar.js              # Sidebar navigation, theme toggle
 │   ├── curriculum/
 │   │   ├── lessons.js          # All lesson content (Phases 1-5 + theory)
-│   │   └── gemini.js           # AI review client (calls /api/review)
+│   │   └── gemini.js           # AI review client (calls /.netlify/functions/review)
 │   ├── teleop/
 │   │   ├── simulator.js        # 2D field canvas, physics, input handling
 │   │   └── view3d.js           # Three.js 3D field view
@@ -49,16 +49,20 @@ R-Tracker/
 │   ├── global.css              # Global styles, transitions, theme
 │   ├── teleop.css              # TeleOp-specific styles
 │   └── [feature].css           # Per-feature stylesheets
-├── api/
-│   ├── review.js               # Gemini AI proxy (serverless function)
-│   ├── join-team.js            # Server-side invite code validation
-│   └── set-role.js             # Server-side role assignment
+├── netlify/
+│   └── functions/
+│       ├── review.mjs          # Gemini AI proxy (Netlify function)
+│       ├── join-team.mjs       # Server-side invite code validation
+│       ├── set-role.mjs        # Server-side role assignment
+│       ├── leave-team.mjs      # Server-side team-leave flow
+│       └── package.json        # Function dependencies (firebase-admin)
+├── api/                        # LEGACY Vercel handlers — kept for rollback
+│                                 only; stripped from deploy output by build.js
 ├── tests/
 │   └── smoke.spec.js           # Playwright smoke tests
-├── build.sh                    # Generates config.js from env vars
-├── vercel.json                 # Vercel config (headers, routes, functions)
+├── build.js                    # Generates config.js + strips legacy/sensitive files
+├── netlify.toml                # Netlify config (build, headers, redirects)
 ├── firestore.rules             # Firestore security rules
-├── .vercelignore               # Files excluded from deployment
 ├── config.js                   # GITIGNORED — generated at build time
 ├── config.example.js           # Template showing config structure
 ├── 404.html                    # Custom 404 page
@@ -81,13 +85,18 @@ R-Tracker/
 - Light mode: `.light-mode` class on `<html>`, with overrides in each CSS file
 - All CSS changes must include light-mode variants
 
-### Serverless Functions (api/)
-- Use ESM imports (`import admin from 'firebase-admin'`)
+### Serverless Functions (netlify/functions/)
+- File extension `.mjs`, ESM imports (`import admin from 'firebase-admin'`)
+- Handler signature: `export async function handler(event)` — returns `{ statusCode, headers, body }`
+- `event.body` is a string — `JSON.parse(event.body || '{}')` before reading fields
+- Header keys on `event.headers` are lowercase: `event.headers.authorization`, `event.headers.origin`
+- Method on `event.httpMethod` (not `req.method`)
 - Every endpoint MUST verify Firebase ID token via `admin.auth().verifyIdToken()`
-- Origin validation uses exact match (`===`), NOT `startsWith()`
-- Allowed origins: `https://r-tracker-liard.vercel.app`, `http://localhost:5500`, `http://127.0.0.1:5500`
+- Origin validation uses exact match: `ALLOWED.includes(origin)` — never `startsWith()`
+- Allowed origins: `https://r-tracker.netlify.app`, `http://localhost:5500`, `http://127.0.0.1:5500`
 - Rate limiting tracked in Firestore `rateLimits` collection (admin SDK bypasses rules)
-- The `GEMINI_API_KEY` lives ONLY in Vercel environment variables — NEVER in client code
+- The `GEMINI_API_KEY` lives ONLY in Netlify environment variables — NEVER in client code
+- Function dependencies are declared in `netlify/functions/package.json`, NOT the root `package.json`
 
 ### Firestore Security Rules
 - Users can read/write their own data under `users/{userId}`
@@ -98,8 +107,8 @@ R-Tracker/
 - Rules must be manually deployed: Firebase Console → Firestore → Rules → Publish
 
 ### Config & Environment Variables
-- `config.js` is gitignored and generated by `build.sh` at deploy time
-- Vercel environment variables: `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `GEMINI_API_KEY`, `FIREBASE_SERVICE_ACCOUNT`
+- `config.js` is gitignored and generated by `build.js` at deploy time
+- Netlify environment variables (set in Netlify dashboard → Site settings → Environment variables): `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `GEMINI_API_KEY`, `FIREBASE_SERVICE_ACCOUNT`
 - The `FIREBASE_SERVICE_ACCOUNT` is a full JSON service account key used by serverless functions
 
 ## Curriculum Structure
@@ -113,9 +122,9 @@ R-Tracker/
 - Section locking: theory → code → deliverable (sequential unlock)
 
 ## AI Integration
-- All Gemini calls go through `/api/review` serverless function
-- Client sends: `{ prompt, type }` with Firebase auth token in Authorization header
-- Types: `code_review`, `theory_review`
+- All Gemini calls go through `/.netlify/functions/review`
+- Client sends structured fields: `{ type, code, phase, requirements }` for `code_review` or `{ type, answer, phase, section, question, lessonContent }` for `theory_review` — NEVER a raw `prompt`. The server builds the prompt via `buildPrompt()` with anti-injection prefixes.
+- Authorization header: `Bearer <Firebase ID token>`
 - Server-side rate limits: 10/user/day, 2/user/minute, 230/global/day
 - Prompts include anti-injection protection
 - Model: `gemini-2.5-flash` via v1beta endpoint
@@ -130,11 +139,10 @@ R-Tracker/
 - AI driver coach: rule-based metrics (NOT Gemini), generates scores and profiles
 
 ## Deployment
-- Push to `main` → Vercel auto-deploys
-- `build.sh` generates `config.js` from Vercel env vars
+- Push to `main` → Netlify auto-deploys
+- `build.js` (Node 20, ESM): generates `config.js` from env vars and strips sensitive/legacy files (`firestore.rules`, `firebase.json`, `config.example.js`, `README.md`, `CLAUDE.md`, `vercel.json`, `.vercelignore`, `build.sh`, `.netlifyignore`, the `functions/` and `api/` directories) from the deploy output. Source remains in git.
 - Firestore rules deployed manually via Firebase Console
-- `.vercelignore` blocks sensitive files from deployment
-- Security headers set in `vercel.json`
+- Security headers set in `netlify.toml`
 
 ## Testing
 - Run: `npm test` (requires Live Server running on localhost:5500)
@@ -144,12 +152,14 @@ R-Tracker/
 ## Common Gotchas
 - Firestore rules changes require manual deployment in Firebase Console — they don't auto-deploy
 - `config.js` must exist locally for development (copy from `config.example.js` and fill in values)
-- For local serverless function testing, use `vercel dev` instead of Live Server
+- For local serverless function testing, use `netlify dev` (not Live Server) — it serves functions at `/.netlify/functions/*`
 - The 3D view uses `overflow: visible` on canvas ancestors — don't add `overflow: hidden` to parent containers
 - The page transition script intercepts all `<a>` clicks — new navigation patterns must use `<a href>` tags
 - Firebase compat SDK syntax: `firebase.firestore()` not `getFirestore()`
 - All `innerHTML` assignments with user data MUST use `sanitizeHTML()` / `esc()` / `escSidebar()`
 - Never reference `GEMINI_API_KEY` in client-side code — it only exists server-side
+- `.netlifyignore` is NOT a Netlify feature — it's a no-op marker. Actual deploy-output cleanup happens in `build.js`.
+- The legacy `api/` Vercel handlers remain in git for rollback but are stripped from each deploy by `build.js`. Do not add new handlers there.
 
 ## Important Do-Nots
 - Do NOT add `GEMINI_API_KEY` to any client-side file
@@ -160,3 +170,4 @@ R-Tracker/
 - Do NOT change the Firebase compat SDK to modular SDK
 - Do NOT add frameworks (React, Vue, etc.) — this is vanilla JS intentionally
 - Do NOT remove the `prefers-reduced-motion` media query support
+- Do NOT change `/.netlify/functions/review` to accept a raw `prompt` field — the structured-fields contract is what allows server-side anti-injection prompt construction

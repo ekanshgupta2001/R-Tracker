@@ -7,9 +7,6 @@
     "test": "npx playwright test tests/smoke.spec.js --headed",
     "test:ci": "npx playwright test tests/smoke.spec.js"
   },
-  "dependencies": {
-    "firebase-admin": "^13.8.0"
-  },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
   }

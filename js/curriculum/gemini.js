@@ -1,5 +1,5 @@
 // ── Gemini AI Code Review for R-Tracker Curriculum ──────────────────────────
-// Uses /api/review serverless function with server-side rate limiting and prompt construction.
+// Uses /.netlify/functions/review serverless function with server-side rate limiting and prompt construction.
 // Exposes: window.reviewStudentCode(), window.reviewTheoryAnswer(), window.getGeminiRateInfo()
 
 (function () {
@@ -21,7 +21,7 @@
 
     var token = await user.getIdToken();
 
-    var response = await fetch('/api/review', {
+    var response = await fetch('/.netlify/functions/review', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

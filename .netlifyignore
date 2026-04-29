@@ -1,0 +1,12 @@
+firestore.rules
+firebase.json
+config.example.js
+README.md
+CLAUDE.md
+functions/
+api/
+vercel.json
+.vercelignore
+tests/
+test-results/
+node_modules/

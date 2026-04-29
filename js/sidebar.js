@@ -208,7 +208,7 @@
 
     try {
       const token = await window.rtUser.getIdToken();
-      const response = await fetch('/api/join-team', {
+      const response = await fetch('/.netlify/functions/join-team', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +243,7 @@
     if (!confirm('Leave this team? You will lose access to the dashboard, strategies, and activity feed.')) return;
     try {
       const token = await window.rtUser.getIdToken();
-      const response = await fetch('/api/leave-team', {
+      const response = await fetch('/.netlify/functions/leave-team', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

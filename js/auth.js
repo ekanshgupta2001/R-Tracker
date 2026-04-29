@@ -241,7 +241,7 @@
         // No profile yet — show role selection modal
         _onRoleChosen = async (role) => {
           const token = await user.getIdToken();
-          const resp = await fetch('/api/set-role', {
+          const resp = await fetch('/.netlify/functions/set-role', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ role: role })
@@ -393,7 +393,7 @@
 
     try {
       const token = await window.rtUser.getIdToken();
-      const resp = await fetch('/api/set-role', {
+      const resp = await fetch('/.netlify/functions/set-role', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ role: newRole })
