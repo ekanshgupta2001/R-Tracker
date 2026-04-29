@@ -734,6 +734,23 @@
                     document.getElementById('ov-golds').textContent = '0';
                     return;
                 }
+                // Verify membership before broader queries — members/activity reads
+                // require the requester to be a member per firestore.rules.
+                let isMember = false;
+                try {
+                    const memberDoc = await window.rtDb.collection('teams').doc(teamId)
+                        .collection('members').doc(window.rtUser.uid).get();
+                    isMember = memberDoc.exists;
+                } catch (preErr) {
+                    console.error('Member preflight failed:', preErr);
+                }
+                if (!isMember) {
+                    console.log('User', window.rtUser.uid, 'is not a member of team', teamId);
+                    document.getElementById('loader').style.display = 'none';
+                    alert('Your team membership could not be verified. The team may have been deleted, or your member record is missing. Please rejoin the team.');
+                    return;
+                }
+
                 console.log('Firestore READ path: teams/' + teamId + '/members');
                 const memSnap = await window.rtDb.collection('teams').doc(teamId).collection('members').get();
                 teamMembers = [];

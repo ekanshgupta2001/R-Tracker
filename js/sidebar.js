@@ -150,12 +150,12 @@
 
     if (role === 'coach') {
       if (teamId) {
-        // Coach with a team — show team name
+        // Coach with a team — show team name + Leave button
         window.rtDb.collection('teams').doc(teamId).get().then(doc => {
           const name = doc.exists ? (doc.data().name || 'Your Team') : 'Your Team';
-          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">' + escSidebar(name) + '</span></div>';
+          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">' + escSidebar(name) + '</span> <button class="sb-team-leave" onclick="sidebarLeaveTeam()">Leave</button></div>';
         }).catch(() => {
-          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">Your Team</span></div>';
+          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">Your Team</span> <button class="sb-team-leave" onclick="sidebarLeaveTeam()">Leave</button></div>';
         });
       } else {
         el.innerHTML = '<a href="' + root + 'pages/manage-team.html" class="sb-team-create">+ Create Team</a>';
@@ -240,18 +240,28 @@
   // ── Leave Team (sidebar) ───────────────────────────────────────────────────
   window.sidebarLeaveTeam = async function () {
     if (!window.rtUser) return;
-    if (!confirm('Leave this team?')) return;
+    if (!confirm('Leave this team? You will lose access to the dashboard, strategies, and activity feed.')) return;
     try {
-      const uid = window.rtUser.uid;
-      const teamId = window.rtUserTeamId;
-      if (teamId) {
-        await window.rtDb.collection('teams').doc(teamId).collection('members').doc(uid).delete();
+      const token = await window.rtUser.getIdToken();
+      const response = await fetch('/api/leave-team', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      const data = await response.json();
+      if (data && data.needsCoachTransfer) {
+        alert(data.error);
+        return;
       }
-      await window.rtDb.collection('users').doc(uid).set({ teamId: null }, { merge: true });
+      if (!response.ok) {
+        throw new Error((data && data.error) || ('Failed (' + response.status + ')'));
+      }
       window.rtUserTeamId = null;
       location.reload();
     } catch (e) {
-      alert('Failed: ' + e.message);
+      alert('Failed to leave team: ' + (e.message || 'Network error'));
     }
   };
 
