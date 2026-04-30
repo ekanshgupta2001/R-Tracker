@@ -6,6 +6,10 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  node_bundler = "esbuild"
+  included_files = []
+
 # Security headers
 [[headers]]
   for = "/*"
@@ -15,15 +19,3 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-
-# Block sensitive files
-[[headers]]
-  for = "/firestore.rules"
-  [headers.values]
-    X-Robots-Tag = "noindex"
-
-# Custom 404
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
