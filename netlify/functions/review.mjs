@@ -2,10 +2,15 @@ import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
   try {
+    console.log('Initializing Firebase Admin...');
+    console.log('Service account env var exists:', !!process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log('Service account length:', (process.env.FIREBASE_SERVICE_ACCOUNT || '').length);
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    console.log('Service account parsed, project_id:', serviceAccount.project_id);
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    console.log('Firebase Admin initialized successfully');
   } catch (e) {
-    console.error('Firebase Admin init failed:', e.message);
+    console.error('Admin init FAILED:', e.message, e.stack);
   }
 }
 
@@ -158,24 +163,27 @@ async function verifyFirebaseToken(authHeader) {
 }
 
 export async function handler(event) {
-  const origin = event.headers.origin || '';
-  const headers = corsHeaders(origin);
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
-  if (!ALLOWED.includes(origin)) {
-    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Unauthorized origin' }) };
-  }
-
+  console.log('Review function called, method:', event.httpMethod);
   try {
+    const origin = event.headers.origin || '';
+    const headers = corsHeaders(origin);
+
+    if (event.httpMethod === 'OPTIONS') {
+      return { statusCode: 200, headers, body: '' };
+    }
+    if (event.httpMethod !== 'POST') {
+      return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+    if (!ALLOWED.includes(origin)) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Unauthorized origin' }) };
+    }
+
+    console.log('Verifying Firebase token...');
     const userId = await verifyFirebaseToken(event.headers.authorization);
     if (!userId) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: 'Please sign in to use AI reviews.' }) };
     }
+    console.log('Token verified for user:', userId);
 
     let body;
     try {
@@ -199,6 +207,7 @@ export async function handler(event) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Submission too long.' }) };
     }
 
+    console.log('Checking rate limits...');
     const rateCheck = await checkRateLimits(userId);
     if (!rateCheck.allowed) {
       return { statusCode: 429, headers, body: JSON.stringify({ error: rateCheck.reason, remaining: rateCheck.remaining }) };
@@ -206,9 +215,11 @@ export async function handler(event) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('GEMINI_API_KEY missing');
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'AI review service not configured' }) };
     }
 
+    console.log('Calling Gemini API, prompt length:', prompt.length);
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
@@ -220,13 +231,16 @@ export async function handler(event) {
         })
       }
     );
+    console.log('Gemini response status:', geminiResponse.status);
 
     if (geminiResponse.status === 429) {
       return { statusCode: 429, headers, body: JSON.stringify({ error: 'AI review limit reached for today. Try again tomorrow.', remaining: 0 }) };
     }
 
     if (!geminiResponse.ok) {
-      return { statusCode: 502, headers, body: JSON.stringify({ error: 'AI review service temporarily unavailable.' }) };
+      const errText = await geminiResponse.text().catch(() => '(no body)');
+      console.error('Gemini error body:', errText.substring(0, 500));
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'AI review service temporarily unavailable.', geminiStatus: geminiResponse.status, geminiError: errText.substring(0, 500) }) };
     }
 
     await recordUsage(userId);
@@ -235,7 +249,14 @@ export async function handler(event) {
     return { statusCode: 200, headers, body: JSON.stringify({ ...data, _rateLimit: { remaining: rateCheck.remaining - 1 } }) };
 
   } catch (error) {
-    console.error('Review API error:', error);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'An unexpected error occurred.' }) };
+    console.error('TOP LEVEL ERROR:', error.message, error.stack);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: 'Internal server error: ' + error.message,
+        stack: error.stack
+      })
+    };
   }
 }
