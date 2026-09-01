@@ -1,173 +1,236 @@
-# CLAUDE.md — R-Tracker Project Guide
+# CLAUDE.md — R-Tracker v2 (Zero-Data Rebuild)
 
-## Project Overview
-R-Tracker is a browser-based FTC (FIRST Tech Challenge) robotics platform for Team 25702 Rundle Robotics Castle. It provides driver practice simulation, programming curriculum with AI grading, path planning, strategy planning, and team management.
+You are working on the `v2` branch of R-Tracker. Your job is to convert the v1 app, step by step, into a
+version that handles **no student data outside the student's own browser**. Read `PROJECT.md` for what
+we're building and `PLAN.md` for the order of work. Do not skip phases in `PLAN.md`; each one ends with
+a verification gate that must pass before you continue.
 
-**Live URL:** https://r-tracker.netlify.app
-**GitHub:** github.com/ekanshgupta2001/R-Tracker (main branch)
-**Firebase Project:** r-tracker-646c3
+The frozen v1 reference lives at the git tag `v1-final` (and on `main` until v2 is merged). Read it with
+`git show v1-final:<path>`; **never commit to `main` or move the tag.**
 
-## Tech Stack
-- **Frontend:** Vanilla HTML/CSS/JavaScript (NO framework)
-- **3D Rendering:** Three.js r128
-- **Authentication:** Firebase Auth (Google OAuth + email/password)
-- **Database:** Cloud Firestore (NoSQL)
-- **AI:** Google Gemini 2.5 Flash (proxied through Netlify serverless function)
-- **Server Functions:** Netlify Functions (Node.js 20, ESM imports, `.mjs` files)
-- **Hosting:** Netlify (auto-deploys on push to main)
-- **Testing:** Playwright (11 smoke tests)
+## Project overview
 
-## Project Structure
+R-Tracker is a browser-based FTC (FIRST Tech Challenge) training platform for Team 25702 Rundle Robotics
+Castle: 2D/3D driver-practice simulator, autonomous path planner, match strategy planner, a programming
+curriculum with theory and code checkpoints, and a progress report. v1 used Firebase Auth + Firestore and
+the Gemini API. v2 is the same product as a **static site**: no accounts, no database, no AI API, no
+server. Progress lives in the browser tab (`sessionStorage`) and in a `.json` file the student exports.
+
+- **Live (v1):** https://r-tracker.netlify.app — keeps deploying from `main` until v2 is merged.
+- **GitHub:** github.com/ekanshgupta2001/R-Tracker
+
+## Your three jobs
+
+1. **Revitalize** — strip out the parts that no longer apply (Firebase Auth, Firestore, Cloud/Netlify
+   Functions, Gemini) and rebuild the affected features (progress, report, theory grading, code checks)
+   on a client-only architecture. Keep everything that already works and doesn't touch data (Three.js
+   teleop practice, path planner, strategy planner, curriculum content, UI/animations).
+2. **Debug** — every phase leaves the app in a runnable state. A half-migrated feature is hidden behind a
+   flag or removed from navigation, never shipped broken. Playwright tests are updated alongside the
+   code, not after.
+3. **Audit** — before marking any phase complete, prove that no student data can be transmitted,
+   persisted server-side, or displayed to anyone other than the student who produced it. Proof means
+   grep results and a passing test, not a sentence saying "I checked."
+
+## Hard constraints (never violate, never ask for exceptions)
+
+- **No network requests carrying user-generated content.** No `fetch`/`XMLHttpRequest`/WebSocket calls
+  that send anything a student typed, scored, or did. The only network activity is same-origin GETs of
+  static files. Cross-origin requests are blocked by the Content-Security-Policy in `netlify.toml`, the
+  `<meta http-equiv>` copy on every page, and `tests/serve.js`.
+- **No authentication of any kind.** No Firebase Auth, no OAuth, no email/password, no "enter your name"
+  that is stored anywhere but the local state / export file.
+- **No server-side storage.** No Firestore, no Realtime DB, no Supabase, no analytics, no error reporting
+  services, no leaderboards that leave the device.
+- **No external AI APIs.** No Gemini, no OpenAI, no Anthropic, nothing. Grading and reports are
+  deterministic client-side logic (see `PROJECT.md`).
+- **No localStorage for student data.** The school rejected localStorage. Student state goes through
+  `RTStore` (sessionStorage backend, swappable to memory). The only localStorage key allowed is
+  `rt-theme` (UI preference). The only other browser storage keys are `rt-state`, `rt-stl-model`, and
+  `rt-nav` in sessionStorage — all documented in `AUDIT.md`.
+- **No third-party scripts loaded at runtime.** Three.js and fonts are vendored under `vendor/` and
+  `assets/fonts/`. Before adding any dependency, confirm it makes zero outbound requests at runtime;
+  vendor it, read it, record its hash and license in `vendor/README.md` and `AUDIT.md`.
+- **Never execute student code.** The code checker is regex/string matching only: no `eval`,
+  `new Function`, workers, iframes, or uploads.
+
+## Definition of "student data" for this project
+
+Treat all of the following as student data — anything in this list must only ever exist in the
+student's browser (memory, sessionStorage) or in a file the student explicitly exports:
+
+- identity: name, email, team name, team number, any ID that could map back to a person
+- activity: practice runs, driver stats, times, scores, streaks, attempts
+- answers: theory answers, code submissions, reflections, quiz responses
+- derived: BKT mastery estimates, reports, rankings, anything computed from the above
+- device/session: timestamps of use, IP, user agent — do not collect even if "harmless"
+
+If you are unsure whether something is student data, it is.
+
+## Verification gates (run at the end of every phase)
+
+```bash
+# 1. No banned services referenced anywhere in the codebase (quote the globs — zsh expands them otherwise)
+grep -rniE "firebase|firestore|gemini|generativelanguage|googleapis|cloudfunctions|onAuthStateChanged|signIn|apiKey" \
+  --include='*.js' --include='*.html' --include='*.json' --include='*.toml' --include='*.css' . \
+  | grep -v node_modules | grep -v '^./vendor/'
+
+# 2. No outbound calls in application code (review every hit by hand; each must be annotated in AUDIT.md)
+grep -rnE "fetch\(|XMLHttpRequest|WebSocket|navigator\.sendBeacon|new Image\(" \
+  --include='*.js' . | grep -v node_modules | grep -v '^./vendor/'
+
+# 3. No leftovers from v1's auth/Firestore layer
+grep -rnE "rtUser|rtDb|rtAuth|initAuth|serverTimestamp|netlify/functions|rtUserRole|rtUserTeamId" \
+  --include='*.js' --include='*.html' . | grep -v node_modules
+
+# 4. No student-code execution
+grep -rnE "\beval\(|new Function|new Worker|importScripts" --include='*.js' --include='*.html' . \
+  | grep -v node_modules | grep -v '^./vendor/'
+
+# 5. Tests (self-contained: playwright.config.js starts tests/serve.js)
+npm test
+node --test tests/
+```
+
+Gate 1 must return nothing. Gate 2 hits must each be annotated in `AUDIT.md` with why they are safe
+(e.g. "loads the local field image from `assets/`"). `tests/network-audit.spec.js` intercepts all
+network requests during a full student session and asserts every one is a same-origin GET with no
+query string and no body.
+
+## Tech stack (v2)
+
+- **Frontend:** Vanilla HTML/CSS/JavaScript. No framework, no bundler, no build step.
+- **Scripts:** plain `<script src>` files that expose globals from IIFEs (`window.RTStore`,
+  `window.renderLessons`, …). **Not** ES modules — the whole codebase uses classic scripts and `var`.
+- **3D:** Three.js r128 vendored at `vendor/three/`.
+- **State:** `js/schema.js` (`RTSchema`: shape, versions, migration, import validation) and
+  `js/store.js` (`RTStore`: load/get/update/save/clear/export/import; backends: sessionStorage, memory).
+- **Grading:** `js/grader.js` (rubric grader for theory), `js/code-check.js` (structural code checker),
+  `js/bkt.js` (Bayesian Knowledge Tracing), `js/report.js` + `js/report-templates.js` + `js/charts.js`.
+- **Hosting:** any static host. `netlify.toml` has no build command and no functions.
+- **Testing:** Playwright (`tests/*.spec.js`, chromium) + Node's built-in test runner
+  (`tests/*.test.js`) for grader fixtures.
+
+## Project structure
+
 ```
 R-Tracker/
-├── index.html                  # Home page with role-aware carousel
+├── index.html                  # Home page (carousel + report bar + first-run panel)
 ├── pages/
-│   ├── teleop.html             # TeleOp driver practice
-│   ├── curriculum.html         # Programming curriculum
+│   ├── teleop.html             # TeleOp driver practice (2D canvas + Three.js 3D view)
+│   ├── curriculum.html         # Programming curriculum (phases, quiz, deliverables)
 │   ├── pathplanner.html        # Autonomous path planner
 │   ├── strategy.html           # Match strategy planner
-│   ├── report.html             # Driver report card
-│   ├── dashboard.html          # Coach dashboard
-│   ├── manage-team.html        # Team management
-│   └── about.html              # About page
+│   ├── report.html             # Progress report
+│   └── about.html              # About + privacy statement
 ├── js/
-│   ├── firebase-init.js        # Firebase initialization
-│   ├── firebase-auth.js        # Auth flow, role selection overlay
-│   ├── sidebar.js              # Sidebar navigation, theme toggle
+│   ├── schema.js               # RTSchema — state shape, LIMITS, migrate, validateImport
+│   ├── store.js                # RTStore — the only persistence layer
+│   ├── grader.js               # gradeTheoryAnswer()  (Phase 4; stub until then)
+│   ├── code-check.js           # checkCode(), getPhaseRequirements()  (Phase 5; stub until then)
+│   ├── bkt.js / report.js / report-templates.js / charts.js   (Phase 3)
+│   ├── sidebar.js              # Sidebar nav, theme toggle, Export/Import progress
 │   ├── curriculum/
-│   │   ├── lessons.js          # All lesson content (Phases 1-5 + theory)
-│   │   └── gemini.js           # AI review client (calls /.netlify/functions/review)
-│   ├── teleop/
-│   │   ├── simulator.js        # 2D field canvas, physics, input handling
-│   │   └── view3d.js           # Three.js 3D field view
-│   ├── pathplanner/            # Path planner logic
-│   ├── strategy.js             # Strategy planner canvas tools
-│   └── utils/
-│       ├── validators.js       # Input validation functions
-│       └── storage.js          # Firestore read/write helpers
-├── css/
-│   ├── global.css              # Global styles, transitions, theme
-│   ├── teleop.css              # TeleOp-specific styles
-│   └── [feature].css           # Per-feature stylesheets
-├── netlify/
-│   └── functions/
-│       ├── review.mjs          # Gemini AI proxy (Netlify function)
-│       ├── join-team.mjs       # Server-side invite code validation
-│       ├── set-role.mjs        # Server-side role assignment
-│       ├── leave-team.mjs      # Server-side team-leave flow
-│       └── package.json        # Function dependencies (firebase-admin)
-├── api/                        # LEGACY Vercel handlers — kept for rollback
-│                                 only; stripped from deploy output by build.js
+│   │   ├── lessons.js          # Lesson content (Phases 1-5, Advanced, Capstone) + renderer
+│   │   └── code-rules.js       # Per-phase structural rules (Phase 5)
+│   ├── teleop/                 # field, robot, drive, timer, input, metrics, levels, coach, view3d, ui
+│   ├── pathplanner/            # canvas, waypoints, animation, codegen, ui
+│   ├── strategy.js
+│   └── utils/validators.js     # sanitizeHTML/sanitizeCode, isScore/isStars, validatePhasePatch
+├── css/                        # global, fonts, sidebar, home, teleop, curriculum, pathplanner, strategy, report, about
+├── vendor/three/               # three.min.js, STLLoader.js, OrbitControls.js (r128) + README with hashes
+├── assets/                     # decode.webp field image, fonts/, favicon.svg
 ├── tests/
-│   └── smoke.spec.js           # Playwright smoke tests
-├── build.js                    # Generates config.js + strips legacy/sensitive files
-├── netlify.toml                # Netlify config (build, headers, redirects)
-├── firestore.rules             # Firestore security rules
-├── config.js                   # GITIGNORED — generated at build time
-├── config.example.js           # Template showing config structure
-├── 404.html                    # Custom 404 page
-└── robots.txt                  # Search engine directives
+│   ├── serve.js                # zero-dependency static server used by playwright.config.js
+│   ├── helpers/state.js        # seed/read state, quiz helpers
+│   ├── *.spec.js               # Playwright: smoke, network-audit, persistence, report, curriculum
+│   ├── *.test.js               # node --test: grader / code-check fixtures
+│   └── fixtures/               # theory-samples.json, code-samples/
+├── playwright.config.js
+├── netlify.toml                # static publish + security headers incl. CSP
+├── AUDIT.md                    # running log of every data flow and why it is safe
+├── PROJECT.md / PLAN.md        # what and in which order
+└── README.md
 ```
 
-## Key Conventions
+## Key conventions
 
-### JavaScript Style
-- Vanilla JS only — no React, no frameworks, no build tools
-- Use `var` or `function` declarations for broad browser compatibility
-- Firebase uses compat SDK (v9 compat): `firebase.auth()`, `firebase.firestore()`
-- DOM manipulation via `document.createElement()` and `innerHTML`
-- All user-provided strings in innerHTML MUST be wrapped in `sanitizeHTML()`, `esc()`, or `escSidebar()`
+### JavaScript
+- Vanilla JS only. `var`/`function` declarations, IIFEs, globals on `window`. No frameworks, no build
+  tools, no ES modules in page scripts (test files under `tests/` are ESM because `package.json` has
+  `"type": "module"`).
+- All state reads go through `RTStore.get()`; all writes through `RTStore.update(function (s) { … })`.
+  Update functions must be trivial (assignments only) — there is no rollback if they throw.
+- Timestamps are epoch milliseconds (`Date.now()`).
+- **Every user-provided or imported string placed in `innerHTML` MUST be escaped** with `esc()`,
+  `sanitizeHTML()`, or `escSidebar()`. Imported `.json` files are untrusted input.
+- DOM manipulation via `document.createElement()` and `innerHTML`.
 
-### CSS Style
-- Color scheme: burgundy (#800020) + matte black (#1a1a1a) + white
-- Accent color: #c73e5a (brighter rose for borders, text, thin lines)
-- Hover accent: #d4456a
-- Light mode: `.light-mode` class on `<html>`, with overrides in each CSS file
-- All CSS changes must include light-mode variants
+### CSS
+- Color scheme: burgundy `#800020` + matte black `#1a1a1a` + white. Accent `#c73e5a` (borders, text,
+  thin lines). Hover accent `#d4456a`.
+- Light mode: `.light-mode` class on `<html>` with overrides in each CSS file. **All CSS changes must
+  include light-mode variants.**
+- Keep the `prefers-reduced-motion` media query support.
+- Font: Inter, self-hosted via `css/fonts.css` (variable woff2 in `assets/fonts/`), with a system fallback.
 
-### Serverless Functions (netlify/functions/)
-- File extension `.mjs`, ESM imports (`import admin from 'firebase-admin'`)
-- Handler signature: `export async function handler(event)` — returns `{ statusCode, headers, body }`
-- `event.body` is a string — `JSON.parse(event.body || '{}')` before reading fields
-- Header keys on `event.headers` are lowercase: `event.headers.authorization`, `event.headers.origin`
-- Method on `event.httpMethod` (not `req.method`)
-- Every endpoint MUST verify Firebase ID token via `admin.auth().verifyIdToken()`
-- Origin validation uses exact match: `ALLOWED.includes(origin)` — never `startsWith()`
-- Allowed origins: `https://r-tracker.netlify.app`, `http://localhost:5500`, `http://127.0.0.1:5500`
-- Rate limiting tracked in Firestore `rateLimits` collection (admin SDK bypasses rules)
-- The `GEMINI_API_KEY` lives ONLY in Netlify environment variables — NEVER in client code
-- Function dependencies are declared in `netlify/functions/package.json`, NOT the root `package.json`
+### Storage (`RTStore`)
+- One constant, `RT_STORAGE_BACKEND` in `js/store.js`, selects `'session'` or `'memory'`. Tests can
+  override it by setting `window.__RT_BACKEND` before scripts run.
+- `schema.js` is the single source of truth for what is stored. If a field is not in
+  `createEmptyState()`, it is not stored. Bump `SCHEMA_VERSION` and add a migration when the shape changes.
+- Export produces `rtracker-progress-YYYY-MM-DD.json`; import validates with `RTSchema.validateImport`
+  and confirms before overwriting.
 
-### Firestore Security Rules
-- Users can read/write their own data under `users/{userId}`
-- `role` and `teamId` fields are LOCKED from client-side writes — only serverless functions (admin SDK) can set them
-- Score fields validated: 0-100 for scores, 0-3 for stars, 0-20 for levels
-- Rate limit docs are increment-only (cannot be reset by users)
-- Team members/strategies/activity restricted to team members only
-- Rules must be manually deployed: Firebase Console → Firestore → Rules → Publish
+### Curriculum
+- Phase 0: Java quiz (10 MC, 80% to pass, unlocks Phase 1). Phases 1–2: code lessons with MC checks.
+  Phases 3–5: theory sections first (written answers, rubric-graded), then code sections. Advanced 1–2:
+  reference modules. Capstone: project brief with rubric.
+- Theory: each `written_answer` check carries a `rubric` (required concepts with accepted phrasings,
+  disqualifiers, threshold, per-concept hints) or `graded: false` ("Reflection — share with your
+  mentor"). Pass = `score >= 70`.
+- Code: `checkCode(phaseId, code)` runs the per-phase rules in `js/curriculum/code-rules.js` and returns
+  `{ status, passed, score, summary, strengths, issues, requirements_met, next_steps }`. Auto-verify
+  needs `status === 'graded' && passed && score >= 75`. It is a structural check, and the UI says so.
+- A `submitted` deliverable (submit for mentor review) unlocks the next phase but is never shown as
+  "verified".
+- Every graded check appends to `curriculum.attempts`; BKT reads only `graded: true` events.
 
-### Config & Environment Variables
-- `config.js` is gitignored and generated by `build.js` at deploy time
-- Netlify environment variables (set in Netlify dashboard → Site settings → Environment variables): `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `GEMINI_API_KEY`, `FIREBASE_SERVICE_ACCOUNT`
-- The `FIREBASE_SERVICE_ACCOUNT` is a full JSON service account key used by serverless functions
-
-## Curriculum Structure
-- **Phase 0:** Java quiz (10 MC questions, 80% to pass, auto-unlocks Phase 1)
-- **Phases 1-2:** Code-only lessons with MC check questions
-- **Phases 3-5:** Theory sections first (written answers, AI graded), then code sections
-- **Advanced 1-2:** Reference documents
-- **Capstone:** Project brief with rubric
-- Theory answers require minimum 50-80 characters, graded by Gemini with strict rubric
-- Code review requires 75+ score to pass
-- Section locking: theory → code → deliverable (sequential unlock)
-
-## AI Integration
-- All Gemini calls go through `/.netlify/functions/review`
-- Client sends structured fields: `{ type, code, phase, requirements }` for `code_review` or `{ type, answer, phase, section, question, lessonContent }` for `theory_review` — NEVER a raw `prompt`. The server builds the prompt via `buildPrompt()` with anti-injection prefixes.
-- Authorization header: `Bearer <Firebase ID token>`
-- Server-side rate limits: 10/user/day, 2/user/minute, 230/global/day
-- Prompts include anti-injection protection
-- Model: `gemini-2.5-flash` via v1beta endpoint
-- Temperature: 0.1, maxOutputTokens: 8192
-
-## TeleOp Simulator
-- 2D canvas: 144x144 inch FTC field with game elements
-- 3D view: Three.js, replaces 2D canvas in-place (same parent container)
-- Input: Gamepad API + keyboard (WASD + arrows), listeners on `document`
-- Physics: mecanum/tank drive, field-centric/robot-centric modes
-- 12 levels across 4 tiers with star ratings
-- AI driver coach: rule-based metrics (NOT Gemini), generates scores and profiles
-
-## Deployment
-- Push to `main` → Netlify auto-deploys
-- `build.js` (Node 20, ESM): generates `config.js` from env vars and strips sensitive/legacy files (`firestore.rules`, `firebase.json`, `config.example.js`, `README.md`, `CLAUDE.md`, `vercel.json`, `.vercelignore`, `build.sh`, `.netlifyignore`, the `functions/` and `api/` directories) from the deploy output. Source remains in git.
-- Firestore rules deployed manually via Firebase Console
-- Security headers set in `netlify.toml`
+### TeleOp
+- 2D canvas: 144x144 inch FTC field with game elements. 3D view: Three.js, replaces the 2D canvas
+  in-place (same parent container). Input: Gamepad API + keyboard (WASD + arrows), listeners on
+  `document`. 12 levels across 4 tiers with star ratings.
+- The driver coach is rule-based (`js/teleop/coach.js`), not an LLM. Reports persist to
+  `driver.coachReports`.
 
 ## Testing
-- Run: `npm test` (requires Live Server running on localhost:5500)
-- 11 Playwright smoke tests in `tests/smoke.spec.js`
-- Start Live Server in VS Code before running tests
+- `npm test` runs Playwright; `playwright.config.js` starts `tests/serve.js` on `http://127.0.0.1:5500`.
+  `npm run serve` starts the same server for manual use. `node --test tests/` runs fixture tests.
+- Tests navigate with `page.goto`, never by clicking sidebar links (the page-transition script delays
+  navigation). Wait on app globals with `waitForFunction`, never on `networkidle`.
 
-## Common Gotchas
-- Firestore rules changes require manual deployment in Firebase Console — they don't auto-deploy
-- `config.js` must exist locally for development (copy from `config.example.js` and fill in values)
-- For local serverless function testing, use `netlify dev` (not Live Server) — it serves functions at `/.netlify/functions/*`
-- The 3D view uses `overflow: visible` on canvas ancestors — don't add `overflow: hidden` to parent containers
-- The page transition script intercepts all `<a>` clicks — new navigation patterns must use `<a href>` tags
-- Firebase compat SDK syntax: `firebase.firestore()` not `getFirestore()`
-- All `innerHTML` assignments with user data MUST use `sanitizeHTML()` / `esc()` / `escSidebar()`
-- Never reference `GEMINI_API_KEY` in client-side code — it only exists server-side
-- `.netlifyignore` is NOT a Netlify feature — it's a no-op marker. Actual deploy-output cleanup happens in `build.js`.
-- The legacy `api/` Vercel handlers remain in git for rollback but are stripped from each deploy by `build.js`. Do not add new handlers there.
+## Working style
+- Small, reviewable diffs. One phase per branch/commit set, tagged on completion (`v2-phase-N`).
+- When you remove a feature, remove its navigation entry, its page, its tests, and its CSS. No dead
+  links, no orphan files.
+- When something in the old codebase is unclear, read `git show v1-final:<path>`. The full history of
+  how it works is in Ekansh's head and the old chat logs, not in comments — ask before guessing at intent.
+- Update `AUDIT.md` as part of every phase, not at the end.
+- Do not "improve" features outside the current phase's scope. Log ideas in `PLAN.md` under *Deferred*.
 
-## Important Do-Nots
-- Do NOT add `GEMINI_API_KEY` to any client-side file
-- Do NOT use `startsWith()` for origin checks in serverless functions
-- Do NOT allow users to write `role` or `teamId` from client-side code
-- Do NOT skip XSS sanitization on any user-provided content in innerHTML
-- Do NOT read image files when making changes (screenshots are described in conversation)
-- Do NOT change the Firebase compat SDK to modular SDK
-- Do NOT add frameworks (React, Vue, etc.) — this is vanilla JS intentionally
-- Do NOT remove the `prefers-reduced-motion` media query support
-- Do NOT change `/.netlify/functions/review` to accept a raw `prompt` field — the structured-fields contract is what allows server-side anti-injection prompt construction
+## Common gotchas
+- The page-transition script intercepts all `<a>` clicks — new navigation must use `<a href>` tags; it
+  skips links with a `download` attribute or a `blob:` href (used by Export).
+- `store.js` and `schema.js` are loaded non-deferred in `<head>` so every later script can call
+  `RTStore.get()` synchronously. Keep that order.
+- The 3D view uses `overflow: visible` on canvas ancestors — don't add `overflow: hidden` to parents.
+- `sessionStorage` (≈5 MB) is shared by `rt-state` and the STL cache; `RTStore.save()` has a quota
+  fallback chain. Don't add large blobs to state.
+- `beforeunload` prompts only when state is dirty **and** `rt-nav` is not set (in-app navigation sets it).
+
+## What "done" looks like
+
+A static site that can be deployed to any static host, that a school IT admin can verify in ten minutes
+by opening DevTools → Network, using the app for a full session, and seeing zero requests that contain
+student input. Everything a student does lives in their browser tab or in a `.json` file they chose to
+download.

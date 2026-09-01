@@ -1,0 +1,329 @@
+{
+  "_readme": "Hand-labelable regression set for the rubric grader (PLAN.md Phase 0 step 5, used by Phase 4). Drafted by Claude on 2026-09-01 from the theory questions in js/curriculum/lessons.js; PLEASE SPOT-CHECK the labels. label: correct = should pass; partial = names some required ideas but misses or misstates key ones (should not pass, score in the middle band); incorrect = should fail. note = why it was labeled that way.",
+  "samples": [
+    {
+      "sectionId": "theory-sensor-physics",
+      "label": "correct",
+      "note": "Two physical factors (lighting, distance/angle) plus the threshold conclusion.",
+      "answer": "Ambient lighting is different — the gym has different lights than the workshop so a different amount of light reflects into the sensor. Distance to the element also matters because reflected light falls off with distance squared, and the sensor angle changes how much light bounces back. A fixed threshold like red > 150 fails because the raw number depends on these conditions, not just on the object's color, so the same red element can be above the threshold in one room and below it in another."
+    },
+    {
+      "sectionId": "theory-sensor-physics",
+      "label": "correct",
+      "note": "Terse paraphrase; still names lighting and distance and explains why one cutoff fails.",
+      "answer": "The room lighting changed (gym vs workshop) and the sensor is probably a slightly different distance or angle from the element, and light drops off with distance. Since the raw reading changes with the environment, one hardcoded cutoff won't work everywhere — it would detect red in one room and miss it in the other."
+    },
+    {
+      "sectionId": "theory-sensor-physics",
+      "label": "partial",
+      "note": "Only one factor and the wrong conclusion (just lower the threshold).",
+      "answer": "The lighting at competition is different so the values come out lower. You should use a lower threshold at competition so it still detects red."
+    },
+    {
+      "sectionId": "theory-sensor-physics",
+      "label": "incorrect",
+      "note": "Blames hardware failure, no physical reasoning, keeps a fixed threshold.",
+      "answer": "The sensor is probably broken or the battery was low. You need to recalibrate the threshold to 100 and it will work again."
+    },
+
+    {
+      "sectionId": "theory-hsv-physics",
+      "label": "correct",
+      "note": "Ratio-based explanation, channels scale together, hue stays put.",
+      "answer": "Hue describes the color as an angle computed from the ratios between the red, green and blue channels rather than their absolute values. When the lighting gets dimmer, all three channels drop together, so the ratios stay roughly the same and the hue barely moves, while the raw RGB numbers all change."
+    },
+    {
+      "sectionId": "theory-hsv-physics",
+      "label": "correct",
+      "note": "Shorter, still says RGB is absolute and hue is a relationship between channels.",
+      "answer": "RGB values are absolute brightness numbers so they all scale up or down with the lighting. Hue is based on the relationship between the channels, so if everything gets darker by the same amount the hue stays about the same."
+    },
+    {
+      "sectionId": "theory-hsv-physics",
+      "label": "partial",
+      "note": "Asserts HSV is better without the ratio/absolute reasoning.",
+      "answer": "Hue is a different color space that is more accurate for detecting colors, so it works better in different lighting conditions than RGB does."
+    },
+    {
+      "sectionId": "theory-hsv-physics",
+      "label": "incorrect",
+      "note": "Invents a hue photodiode; claims immunity to light.",
+      "answer": "HSV is better because the sensor measures hue directly with a dedicated hue photodiode, so it is not affected by light at all."
+    },
+
+    {
+      "sectionId": "theory-noise",
+      "label": "correct",
+      "note": "Explains outlier dilution and computes (15+14+3)/3 ≈ 10.7.",
+      "answer": "A single reading of 3 is an outlier — a spike from noise. Reacting to it directly would make the robot think something is suddenly close and do the wrong thing. A moving average blends each reading with its neighbours so one spike is diluted instead of driving a decision. With a window of 3, at the point of the 3 the average is (15 + 14 + 3) / 3 = 32 / 3 ≈ 10.7, which is much closer to the real distance than 3."
+    },
+    {
+      "sectionId": "theory-noise",
+      "label": "correct",
+      "note": "Same ideas, less formal; number is right.",
+      "answer": "If you act on every raw reading, one glitch like the 3 triggers a false reaction. Averaging the last three readings smooths that out: at that point the average is (15+14+3)/3 which is about 10.7 rather than 3, so the spike is mostly filtered out."
+    },
+    {
+      "sectionId": "theory-noise",
+      "label": "partial",
+      "note": "Right idea about smoothing, wrong computation.",
+      "answer": "A moving average smooths the readings so the spike doesn't matter as much and the robot doesn't overreact. The average at that point would be 3 because that's the reading."
+    },
+    {
+      "sectionId": "theory-noise",
+      "label": "incorrect",
+      "note": "Replaces the filter with a hardcoded ignore and gets the average wrong.",
+      "answer": "You should just ignore any reading below 5 with an if statement. The moving average would show 15 because it ignores the bad value."
+    },
+
+    {
+      "sectionId": "theory-closed-loop-thinking",
+      "label": "correct",
+      "note": "Defines both, gives the reliability reason, describes the feedback loop physically.",
+      "answer": "Open-loop drives the motors for a fixed time or power and hopes the robot ends up in the right place; closed-loop measures where the robot actually is (encoders, odometry, a distance sensor) and keeps correcting the motor output until the error is zero. It is more reliable because battery voltage, friction and wheel slip change the result of the same command. The 'loop' is the flow of information: the motors move the robot, sensors measure the result, that measurement feeds back to the controller, which adjusts the motors again."
+    },
+    {
+      "sectionId": "theory-closed-loop-thinking",
+      "label": "correct",
+      "note": "Compact; sensor → controller → motor → sensor loop stated.",
+      "answer": "Open loop = no feedback, just a command. Closed loop = read a sensor, compare to the target, adjust, repeat. Closed loop handles variation like battery level or slipping because it corrects itself. The loop is sensor to controller to motor to robot moving to sensor reading again — the output feeds back into the input."
+    },
+    {
+      "sectionId": "theory-closed-loop-thinking",
+      "label": "partial",
+      "note": "Says sensors make it more accurate but misidentifies the loop as a while loop.",
+      "answer": "Closed loop uses sensors so it is more accurate. Open loop doesn't use sensors. The loop means the code runs inside a while loop until it is done."
+    },
+    {
+      "sectionId": "theory-closed-loop-thinking",
+      "label": "incorrect",
+      "note": "Backwards conclusion and a misconception about the loop.",
+      "answer": "Open-loop is better because it is simpler and faster. Closed-loop means the program is stuck in an infinite loop waiting for the sensor, which is why it is unreliable."
+    },
+
+    {
+      "sectionId": "theory-open-loop",
+      "label": "correct",
+      "note": "Battery voltage and friction/slip, plus no feedback.",
+      "answer": "Motor power is a percentage of the battery voltage, so as the battery drains the motor spins slower and the robot travels less in the same 2 seconds. Friction and wheel slip also vary — carpet versus tile, dust, or a heavier load change how much the wheels actually move the robot. Nothing is measuring the distance, so the error is never corrected."
+    },
+    {
+      "sectionId": "theory-open-loop",
+      "label": "correct",
+      "note": "Names battery, wheel slip, friction, motor temperature.",
+      "answer": "Battery voltage drops during a match so 0.5 power isn't the same speed every time, and things like wheel slip, floor friction and motor temperature change how far you go. Time-based driving has no feedback to fix that."
+    },
+    {
+      "sectionId": "theory-open-loop",
+      "label": "partial",
+      "note": "Only one factor.",
+      "answer": "The battery gets lower over time so the robot goes slower and doesn't travel as far."
+    },
+    {
+      "sectionId": "theory-open-loop",
+      "label": "incorrect",
+      "note": "Denies the premise.",
+      "answer": "It does travel the same distance because 0.5 power is always the same speed; any difference comes from the driver pressing start at a slightly different time."
+    },
+
+    {
+      "sectionId": "theory-pid-physics",
+      "label": "correct",
+      "note": "Stiff spring → overshoot → pulled back → oscillation.",
+      "answer": "kP acts like a spring pulling the robot toward the target — the farther away, the harder it pulls. If kP is too high the spring is too stiff: the robot accelerates hard, overshoots the target because it can't stop instantly, then the spring yanks it back the other way and it overshoots again. That back-and-forth is oscillation, and without enough damping it can grow instead of settling."
+    },
+    {
+      "sectionId": "theory-pid-physics",
+      "label": "correct",
+      "note": "Momentum carries past, bounces around the setpoint.",
+      "answer": "With a very stiff spring the robot gets pulled toward the setpoint so hard that its momentum carries it past, then it gets pulled back past it again. It keeps bouncing around the target instead of settling — that's oscillation."
+    },
+    {
+      "sectionId": "theory-pid-physics",
+      "label": "partial",
+      "note": "Describes jerkiness but not the overshoot/oscillation mechanism or the spring.",
+      "answer": "If kP is too high the robot moves too fast and is jerky, so you should lower it until it moves smoothly."
+    },
+    {
+      "sectionId": "theory-pid-physics",
+      "label": "incorrect",
+      "note": "Inverts the analogy.",
+      "answer": "A high kP makes the spring too loose, so the robot never reaches the target and stops short of it."
+    },
+
+    {
+      "sectionId": "theory-odometry",
+      "label": "correct",
+      "note": "Track width divides the wheel difference; heading under-reported; position integrates along wrong heading.",
+      "answer": "Heading is calculated from the difference between the left and right wheel distances divided by the track width. If the track width constant is too large, every difference gets divided by a bigger number, so the computed heading changes less than the real heading did — the reported heading slowly drifts away from the true heading. Then, even driving perfectly straight, each position update is added along the wrong heading, so the x and y estimate curves away from the true path and the error accumulates the farther you go."
+    },
+    {
+      "sectionId": "theory-odometry",
+      "label": "correct",
+      "note": "Same mechanism, shorter.",
+      "answer": "Track width is the divisor when converting the left/right wheel difference into rotation. Too wide means the code under-reports turning, so the heading estimate drifts. Since each little step of x and y is added in the direction of the estimated heading, a wrong heading makes the position drift sideways over time even on a straight line."
+    },
+    {
+      "sectionId": "theory-odometry",
+      "label": "partial",
+      "note": "States the outcome without the mechanism.",
+      "answer": "The heading will be wrong and the robot will think it is turning a little. Because of that the position will be off too."
+    },
+    {
+      "sectionId": "theory-odometry",
+      "label": "incorrect",
+      "note": "Claims heading is unaffected.",
+      "answer": "A wider track width doesn't affect heading, it only makes the robot think it drove farther, so x is too big but the heading stays correct."
+    },
+
+    {
+      "sectionId": "theory-bezier",
+      "label": "correct",
+      "note": "Start, arcs toward but not through the control point, ends; obstacle/smoothness reason.",
+      "answer": "It starts at (24, 24), arcs upward toward the control point at (72, 96) without actually touching it, and ends at (120, 24), so it's a smooth symmetric hump because the control point is centered between the endpoints. You'd choose it to go around something on the field, like an obstacle or game element, or to approach the end from a better angle, while keeping the motion smooth instead of stop-and-turn."
+    },
+    {
+      "sectionId": "theory-bezier",
+      "label": "correct",
+      "note": "Compact; bows in +y, doesn't reach the control point, obstacle avoidance.",
+      "answer": "A single arc: it begins at (24,24), bows up in the positive y direction toward (72,96) but doesn't reach it, then comes back down to (120,24). Use it when a straight line would hit an obstacle or when you want a smooth continuous path rather than sharp corners."
+    },
+    {
+      "sectionId": "theory-bezier",
+      "label": "partial",
+      "note": "Thinks the curve passes through the control point; no reason for choosing it.",
+      "answer": "It makes a curve from the start to the end that goes through the control point at (72, 96)."
+    },
+    {
+      "sectionId": "theory-bezier",
+      "label": "incorrect",
+      "note": "Describes two straight lines with a corner.",
+      "answer": "The curve goes straight from (24,24) to (72,96) and then straight to (120,24) — two lines with a corner at the control point."
+    },
+
+    {
+      "sectionId": "theory-tuning",
+      "label": "correct",
+      "note": "Steady-state error; add I (impatience) and/or anti-gravity feedforward; warns about kP.",
+      "answer": "That's steady-state error: the proportional term is too small to overcome gravity and friction once the error is tiny — the spring is too weak at 8 degrees to lift the heavy arm. Add the integral term (the impatience term), which accumulates the leftover error over time and keeps pushing until it's gone, or add a feedforward anti-gravity term that supplies the constant power needed to hold the arm against gravity. Increasing kP a bit could help but risks oscillation."
+    },
+    {
+      "sectionId": "theory-tuning",
+      "label": "correct",
+      "note": "Same answer, informal.",
+      "answer": "The arm stops short because at a small error P alone doesn't produce enough power to fight gravity — steady-state error. Add kI (impatience — it builds up while the error persists) or an anti-gravity feedforward so there's a constant holding force. Don't just crank kP or you'll get oscillation."
+    },
+    {
+      "sectionId": "theory-tuning",
+      "label": "partial",
+      "note": "Only suggests raising kP; no integral/feedforward, no risk noted.",
+      "answer": "Increase kP so it pushes harder and reaches the target."
+    },
+    {
+      "sectionId": "theory-tuning",
+      "label": "incorrect",
+      "note": "Misuses the damper term.",
+      "answer": "Add more kD, the damper, because damping will push the arm the rest of the way to the target."
+    },
+
+    {
+      "sectionId": "theory-scientific-debugging",
+      "label": "correct",
+      "note": "Three genuinely different layers (hardware, configuration, input) each with a no-code test.",
+      "answer": "1) Hardware or wiring: the motor cable or port is bad — test by swapping the motor to a known-good port or running it from the Robot Controller's configuration test screen. 2) Configuration: the motor name in the config doesn't match the code — check the configuration on the Driver Hub and compare the name. 3) Input: the gamepad isn't registered as gamepad 1 or the A press isn't reaching the code — press Start+A to bind the gamepad and watch the gamepad indicator on the Driver Hub. Each test isolates one cause without touching the code."
+    },
+    {
+      "sectionId": "theory-scientific-debugging",
+      "label": "correct",
+      "note": "Compact version of the same three hypotheses and tests.",
+      "answer": "Could be the motor or wiring (test: run it from the config screen), the config name not matching (test: read the Driver Hub config against the code), or the gamepad not paired (test: press Start+A and check the gamepad icon). Those are different layers: hardware, configuration, input."
+    },
+    {
+      "sectionId": "theory-scientific-debugging",
+      "label": "partial",
+      "note": "Three variations of one idea (wiring), one test.",
+      "answer": "Maybe the motor is unplugged, maybe the wire is loose, or maybe the port is broken. Check the cable and plug it back in."
+    },
+    {
+      "sectionId": "theory-scientific-debugging",
+      "label": "incorrect",
+      "note": "Changes code, one hypothesis.",
+      "answer": "The code has a bug, so add a print statement and change the button to B to see if it works."
+    },
+
+    {
+      "sectionId": "theory-bug-taxonomy",
+      "label": "correct",
+      "note": "Intermittent/timing category, logging-and-compare approach.",
+      "answer": "That's an intermittent, timing-related bug — it depends on something that varies between runs like timing, sensor noise, loop speed or battery, not on logic that is wrong every time. The approach is to add logging and telemetry that record state transitions and sensor values every loop so you can capture what was different on the failing runs, look for a race between the follower being busy and the state machine advancing, and check any timeout or isBusy() condition that can flicker."
+    },
+    {
+      "sectionId": "theory-bug-taxonomy",
+      "label": "correct",
+      "note": "Short; intermittent, log everything, compare good vs bad runs.",
+      "answer": "It's an intermittent timing bug. Since it isn't reproducible every time, log everything — state, sensor readings, loop time — and compare a good run with a bad run to find the difference, instead of guessing."
+    },
+    {
+      "sectionId": "theory-bug-taxonomy",
+      "label": "partial",
+      "note": "Wrong category (deterministic logic), generic approach.",
+      "answer": "It's a logic bug in the state machine. Read through the code carefully to find the mistake and fix it."
+    },
+    {
+      "sectionId": "theory-bug-taxonomy",
+      "label": "incorrect",
+      "note": "Nonsense category.",
+      "answer": "It's a compile error that only happens sometimes; rebuild the code and it will go away."
+    },
+
+    {
+      "sectionId": "theory-root-cause",
+      "label": "correct",
+      "note": "Masks the cause, hurts loop timing, names concrete root causes and a telemetry investigation.",
+      "answer": "The sleep just masks the problem: it doesn't explain why the motor sometimes ignores the press, it only changes the timing so the failure is less visible, and it makes the whole loop slower so every other control feels laggy. The real cause is probably something like another piece of code overwriting the motor power later in the same loop, the loop being so slow that short presses are missed, or a state machine that resets. Investigate by adding telemetry for the button state and the motor power each loop to see what actually happens on a missed press."
+    },
+    {
+      "sectionId": "theory-root-cause",
+      "label": "correct",
+      "note": "Symptom vs cause stated, loop stall, override/timing/config candidates.",
+      "answer": "Adding sleep treats the symptom — the intake still fails for the same reason, it's just hidden, and now the loop stalls for 200 ms which hurts driving. Look for what's overriding the motor power (two places setting it), whether the button read is being missed because of loop timing, or a wiring or config issue, using telemetry to watch the values."
+    },
+    {
+      "sectionId": "theory-root-cause",
+      "label": "partial",
+      "note": "Notices the slowdown but no root-cause reasoning or investigation.",
+      "answer": "Sleep makes the code slow so you should remove it and try again."
+    },
+    {
+      "sectionId": "theory-root-cause",
+      "label": "incorrect",
+      "note": "Defends the sleep as the fix.",
+      "answer": "It is a root cause fix because the motor needs time to respond; the real problem is that 200 ms is not enough, so use 500 ms."
+    },
+
+    {
+      "sectionId": "theory-triage",
+      "label": "correct",
+      "note": "Ordered checks (OpMode/init, config/hub, code-side block via telemetry) and a park-only fallback.",
+      "answer": "First, check the obvious physical things: is the right OpMode selected, did the robot actually finish init (telemetry shows it), is battery voltage okay. Second, check configuration: was the robot configuration changed or the wrong config active, and does the Driver Hub show any warning. Third, check for a code-side block: something after waitForStart like a sensor init, a path build crash, or a timer that started before Start — look at telemetry to see where it's stuck. Fallback: switch to the simpler backup autonomous (drive forward and park) that's already loaded so you still score the park points, and fix the real one between matches."
+    },
+    {
+      "sectionId": "theory-triage",
+      "label": "correct",
+      "note": "Numbered steps, same order, backup auto.",
+      "answer": "1) Right OpMode selected and init actually completed? 2) Config file and hub status — any errors, correct robot config? 3) Read telemetry for where it's stuck after Start (sensor, path build, exception). If nothing works in 4 minutes, run the basic park-only backup auto and debug later."
+    },
+    {
+      "sectionId": "theory-triage",
+      "label": "partial",
+      "note": "Restart only, no diagnostic order, no fallback plan.",
+      "answer": "Restart the robot and try again. If it still doesn't work, restart it again and hope it works in the match."
+    },
+    {
+      "sectionId": "theory-triage",
+      "label": "incorrect",
+      "note": "Unrealistic and not a diagnostic process.",
+      "answer": "Rewrite the autonomous from scratch in the 4 minutes — there's enough time if you type fast."
+    }
+  ]
+}
