@@ -1,47 +1,18 @@
-# === API Keys & Sensitive Config ===
-config.js
-.env
-.env.local
-.env.production
-*.env
-
-# === Firebase ===
-.firebase/
-firebase-debug.log
-firebase-debug.*.log
-.firebaserc
-
-# === Dependencies ===
+# Dependencies
 node_modules/
-functions/node_modules/
-package-lock.json
-functions/package-lock.json
 
-# === OS Files ===
-.DS_Store
-.DS_Store?
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# Local tooling
+.claude/settings.local.json
+.env
+.env.*
 
-# === IDE / Editor ===
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# === Logs ===
-*.log
-debug.log
-npm-debug.log*
-
-# === Test Artifacts ===
+# Test output
 test-results/
-pw-screenshots.spec.js
 playwright-report/
 
-# === Build Artifacts ===
-dist/
-build/
-.cache/
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

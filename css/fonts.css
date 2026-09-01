@@ -1,0 +1,12 @@
+/* ── Self-hosted Inter (variable) ─────────────────────────────────────────────
+   Replaces the Google Fonts <link>. The font file lives in assets/fonts/ and is
+   served from this origin only; url() resolves relative to this stylesheet, so
+   the same file works from / and /pages/. Licensed under the SIL OFL 1.1
+   (assets/fonts/OFL.txt). Fallback stack is used until the file loads. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/InterVariable.woff2') format('woff2');
+}
