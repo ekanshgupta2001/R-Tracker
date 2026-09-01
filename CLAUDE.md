@@ -169,7 +169,7 @@ R-Tracker/
 ### CSS
 - Color scheme: burgundy `#800020` + matte black `#1a1a1a` + white. Accent `#c73e5a` (borders, text,
   thin lines). Hover accent `#d4456a`.
-- Light mode: `.light-mode` class on `<html>` with overrides in each CSS file. **All CSS changes must
+- Light mode: the theme script adds the `light` class to `<html>`; rules use the `html.light` selector with overrides in each CSS file. **All CSS changes must
   include light-mode variants.**
 - Keep the `prefers-reduced-motion` media query support.
 - Font: Inter, self-hosted via `css/fonts.css` (variable woff2 in `assets/fonts/`), with a system fallback.

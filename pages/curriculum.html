@@ -3,22 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description" content="FTC Programming Curriculum — R-Tracker structured learning path.">
   <title>Curriculum — R-Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../css/fonts.css">
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/sidebar.css">
-  <link rel="stylesheet" href="../css/login.css">
   <link rel="stylesheet" href="../css/curriculum.css">
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="../config.js"></script>
-  <script src="../js/firebase-init.js"></script>
-  <script src="../js/auth.js"></script>
+  <script src="../js/schema.js"></script>
+  <script src="../js/store.js"></script>
   <script defer src="../js/sidebar.js"></script>
-  <script defer src="../js/curriculum/gemini.js"></script>
+  <script defer src="../js/grader.js"></script>
+  <script defer src="../js/code-check.js"></script>
   <script defer src="../js/curriculum/lessons.js"></script>
 </head>
 
@@ -544,14 +542,10 @@ telemetry.<span class="syn-fn">update</span>();</div>
     /* ══════════════════════════════════════════════════════════════════════════
        STATE
        ══════════════════════════════════════════════════════════════════════ */
-    var currData = {};       // phase data from Firestore
+    var currData = {};       // alias of RTStore.get().curriculum.phases (set in loadCurriculumData)
     var activePhase = null;  // currently selected phase id
     var quizAnswers = {};    // { questionIndex: selectedOption }
     var quizDone = false;
-    var currentUid = null;
-    var viewingUid = null;   // whose curriculum we're viewing (coach can view students)
-    var isCoach = false;
-    var teamMembers = [];    // [{uid, name, email}] for coach student selector
 
     /* ══════════════════════════════════════════════════════════════════════════
        HELPERS
@@ -570,16 +564,27 @@ telemetry.<span class="syn-fn">update</span>();</div>
       var phase = PHASES.find(function(p) { return p.id === phaseId; });
       if (!phase || !phase.unlockReq) return false;
       var req = currData[phase.unlockReq];
-      return !req || req.status !== 'verified';
+      // 'submitted' (sent for mentor review) also unlocks the next phase; it is never shown as verified.
+      return !req || (req.status !== 'verified' && req.status !== 'submitted');
     }
 
-    function savePhaseData(phaseId, data) {
-      var uid = viewingUid || currentUid;
-      if (!uid) return Promise.resolve();
-      console.log('[Curriculum] savePhaseData:', phaseId, JSON.stringify(data), 'for user:', uid);
-      return rtDb.collection('users').doc(uid)
-        .collection('curriculum').doc(phaseId)
-        .set(data, { merge: true });
+    // Merge a patch into the phase entry in RTStore. Synchronous; returns a resolved
+    // promise so the existing .then() chains keep working.
+    function savePhaseData(phaseId, patch) {
+      RTStore.update(function (s) {
+        var cur = s.curriculum.phases[phaseId];
+        var base = RTSchema.createEmptyPhase(phaseId);
+        if (!cur) {
+          cur = base;
+          s.curriculum.phases[phaseId] = cur;
+        } else {
+          // Entries created inline as bare objects get the schema defaults backfilled
+          Object.keys(base).forEach(function (k) { if (cur[k] === undefined) cur[k] = base[k]; });
+        }
+        Object.assign(cur, patch || {});
+      });
+      currData = RTStore.get().curriculum.phases;
+      return Promise.resolve();
     }
 
     /* ══════════════════════════════════════════════════════════════════════════
@@ -610,7 +615,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
         if (isActive) cls += ' tl-active';
         if (isCurrent) cls += ' tl-current';
 
-        var pillLabels = { locked: 'Locked', not_started: 'Not Started', in_progress: 'In Progress', submitted: 'Submitted', pending_mentor: 'Mentor Review', verified: 'Completed' };
+        var pillLabels = { locked: 'Locked', not_started: 'Not Started', in_progress: 'In Progress', submitted: 'Submitted', verified: 'Completed' };
         var pillCls = 'tl-status-pill tl-pill-' + status.replace(/_/g, '-');
 
         html += '<div class="' + cls + '" data-status="' + status + '" data-phase="' + phase.id + '" onclick="selectPhase(\'' + phase.id + '\')">';
@@ -669,19 +674,6 @@ telemetry.<span class="syn-fn">update</span>();</div>
       var data = currData[phase.id] || {};
 
       var html = '';
-
-      // Coach mentor tools bar
-      if (isCoach) {
-        html += renderCoachToolbar(phase.id, status, data);
-      }
-
-      // Coach feedback banner (if student was rejected with feedback)
-      if (!isCoach && data.coachFeedback && status === 'in_progress') {
-        html += '<div class="coach-feedback-banner">';
-        html += '<div class="coach-feedback-title">&#128172; Mentor Feedback</div>';
-        html += '<div class="coach-feedback-text">' + esc(data.coachFeedback) + '</div>';
-        html += '</div>';
-      }
 
       // Header
       html += '<div class="curr-phase-header">';
@@ -743,8 +735,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
         locked: '🔒 Locked',
         not_started: 'Not Started',
         in_progress: 'In Progress',
-        submitted: 'Submitted for Review',
-        pending_mentor: '🔍 Mentor Review Requested',
+        submitted: 'Submitted (unchecked)',
         verified: '✓ Completed'
       };
       return '<span class="curr-badge curr-badge-' + status + '">' + (labels[status] || status) + '</span>';
@@ -757,16 +748,10 @@ telemetry.<span class="syn-fn">update</span>();</div>
       }
       if (status === 'in_progress') {
         if (phaseId === 'phase0') return ''; // quiz handles submission
-        return '<button class="curr-action-btn btn-submit" onclick="submitPhase(\'' + phaseId + '\')">Submit Deliverable</button>';
+        return '<button class="curr-action-btn btn-submit" onclick="submitPhase(\'' + phaseId + '\')">Submit for Mentor Review</button>';
       }
-      if (status === 'submitted' || status === 'pending_mentor') {
-        var waitLabel = status === 'pending_mentor' ? 'Awaiting mentor review (AI decision disputed)' : 'Waiting for mentor verification';
-        var html = '<span class="curr-waiting"><span class="curr-waiting-icon">⏱</span> ' + waitLabel + '</span>';
-        if (isCoach) {
-          html += '<button class="curr-action-btn btn-verify" onclick="verifyPhase(\'' + phaseId + '\')" style="margin-left:8px">Verify</button>';
-          html += '<button class="curr-action-btn btn-reject" onclick="rejectPhase(\'' + phaseId + '\')" style="margin-left:4px">Request Changes</button>';
-        }
-        return html;
+      if (status === 'submitted') {
+        return '<span class="curr-waiting"><span class="curr-waiting-icon">&#128196;</span> Submitted &mdash; stored in your progress file for a mentor to review. The next phase is unlocked.</span>';
       }
       if (status === 'verified') {
         return '<span class="curr-completed">&#10003; Completed</span>';
@@ -826,6 +811,11 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       // Save progress after each answer
       saveQuizProgress();
+      RTStore.logAttempt({
+        kind: 'mc', phaseId: 'phase0', sectionId: 'q' + qIdx, graded: true,
+        correct: isCorrect, score: isCorrect ? 100 : 0,
+        attempt: ((currData.phase0 && currData.phase0.attempts) || 0) + 1
+      });
 
       // Check if all questions answered
       if (Object.keys(quizAnswers).length === QUIZ.length) {
@@ -834,15 +824,12 @@ telemetry.<span class="syn-fn">update</span>();</div>
     };
 
     function saveQuizProgress() {
-      if (!window.rtUser || !window.rtDb) return;
       var answers = {};
       Object.keys(quizAnswers).forEach(function(k) {
         answers['q' + k] = quizAnswers[k] === QUIZ[k].correct;
       });
-      window.rtDb.collection('users').doc(window.rtUser.uid)
-        .collection('curriculum').doc('phase0')
-        .set({ quizAnswers: answers, status: 'in_progress' }, { merge: true })
-        .catch(function() {});
+      var wasVerified = currData.phase0 && currData.phase0.status === 'verified';
+      savePhaseData('phase0', { quizAnswers: answers, status: wasVerified ? 'verified' : 'in_progress' });
     }
 
     function showQuizResults() {
@@ -874,17 +861,18 @@ telemetry.<span class="syn-fn">update</span>();</div>
       // Scroll results into view
       setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
 
-      // Save to Firestore
+      // Save to local progress
+      var wasVerified = currData.phase0 && currData.phase0.status === 'verified';
       var saveData = {
-        status: passed ? 'verified' : (currData.phase0 && currData.phase0.status === 'in_progress' ? 'in_progress' : 'not_started'),
+        status: (passed || wasVerified) ? 'verified' : (currData.phase0 && currData.phase0.status === 'in_progress' ? 'in_progress' : 'not_started'),
         score: pct,
-        passed: passed,
+        passed: passed || !!(currData.phase0 && currData.phase0.passed),
         attempts: attempts,
-        lastAttempt: firebase.firestore.FieldValue.serverTimestamp()
+        lastAttempt: Date.now()
       };
-      if (passed) {
-        saveData.verifiedAt = firebase.firestore.FieldValue.serverTimestamp();
-        saveData.verifiedBy = null; // auto-verified
+      if (passed && !wasVerified) {
+        saveData.verifiedAt = Date.now();
+        saveData.verifiedBy = 'auto';
       }
 
       currData.phase0 = Object.assign(currData.phase0 || {}, saveData);
@@ -925,12 +913,8 @@ telemetry.<span class="syn-fn">update</span>();</div>
       if (!container) return;
       quizAnswers = {};
       quizDone = false;
-      // Clear saved progress
-      if (window.rtUser && window.rtDb) {
-        window.rtDb.collection('users').doc(window.rtUser.uid)
-          .collection('curriculum').doc('phase0')
-          .set({ quizAnswers: null }, { merge: true }).catch(function() {});
-      }
+      // Clear saved answers (attempt count and best result are kept)
+      savePhaseData('phase0', { quizAnswers: {} });
       // Re-render just the quiz
       container.outerHTML = renderQuiz(currData.phase0 || {});
     };
@@ -990,7 +974,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
       var checklist = data.checklist || def.checklist.map(function() { return false; });
       var notes = data.notes || '';
       var savedCode = data.submittedCode || '';
-      var bestScore = data.bestScore || data.aiScore || data.lastAIScore;
+      var bestScore = data.bestScore || 0;
 
       var html = '<div class="curr-deliverable">';
 
@@ -1022,25 +1006,20 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       // Action buttons — show on all unlocked phases including verified
       html += '<div class="code-actions">';
-      if (status !== 'submitted' && status !== 'pending_mentor') {
-        if (status === 'verified') {
-          // Verified: resubmit button with confirmation
-          html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="confirmResubmit(\'' + phaseId + '\')">Submit for AI Review</button>';
-          html += '<div class="resubmit-note">Your completion status is safe — resubmitting can only improve your score</div>';
-        } else {
-          // Not started or in progress: normal submit
-          html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="submitForAIReview(\'' + phaseId + '\')">Submit for AI Review</button>';
-        }
+      if (status === 'verified') {
+        // Verified: resubmit button with confirmation
+        html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="confirmResubmit(\'' + phaseId + '\')">Save &amp; Check Code</button>';
+        html += '<div class="resubmit-note">Your completion status is safe — resubmitting can only improve your score</div>';
+      } else {
+        html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="submitCodeForReview(\'' + phaseId + '\')">Save &amp; Check Code</button>';
       }
-      // AI reviews remaining counter
-      var rateInfo = window.getGeminiRateInfo ? window.getGeminiRateInfo() : { remaining: '?', max: 30 };
-      html += '<div class="ai-rate-info" id="ai-rate-info" style="font-size:11px;color:#666;margin-top:6px;">AI reviews remaining today: ' + rateInfo.remaining + '/' + rateInfo.max + '</div>';
+      html += '<div class="ai-rate-info" style="font-size:11px;color:#666;margin-top:6px;">Your code stays in this browser and in your exported progress file. Nothing is uploaded.</div>';
       html += '</div>';
 
-      // AI review loading state (hidden)
+      // Check loading state (hidden)
       html += '<div class="ai-review-loading" id="ai-loading-' + phaseId + '" style="display:none">';
       html += '<div class="ai-loading-spinner"></div>';
-      html += '<div class="ai-loading-text">AI mentor is reading your code<span class="ai-dots"></span></div>';
+      html += '<div class="ai-loading-text">Saving<span class="ai-dots"></span></div>';
       html += '</div>';
 
       // AI review result container (hidden)
@@ -1114,7 +1093,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
        ══════════════════════════════════════════════════════════════════════ */
     window.confirmResubmit = function(phaseId) {
       var data = currData[phaseId] || {};
-      var prevScore = data.bestScore || data.aiScore || data.lastAIScore || '—';
+      var prevScore = data.bestScore || '—';
       var phase = PHASES.find(function(p) { return p.id === phaseId; });
       var phaseNum = phase ? phase.num : phaseId;
 
@@ -1135,7 +1114,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
           '</div>' +
           '<div class="resubmit-modal-actions">' +
             '<button class="resubmit-modal-btn resubmit-cancel" onclick="closeResubmitModal()">Cancel</button>' +
-            '<button class="resubmit-modal-btn resubmit-confirm" onclick="closeResubmitModal(); submitForAIReview(\'' + phaseId + '\', true)">Resubmit</button>' +
+            '<button class="resubmit-modal-btn resubmit-confirm" onclick="closeResubmitModal(); submitCodeForReview(\'' + phaseId + '\', true)">Resubmit</button>' +
           '</div>' +
         '</div>';
 
@@ -1152,17 +1131,13 @@ telemetry.<span class="syn-fn">update</span>();</div>
     };
 
     /* ══════════════════════════════════════════════════════════════════════════
-       AI REVIEW
+       CODE CHECK (local, structural — js/code-check.js; never executes or uploads code)
        ══════════════════════════════════════════════════════════════════════ */
-    var aiReviewCooldown = false;
-
-    window.submitForAIReview = async function(phaseId, isResubmit) {
-      if (aiReviewCooldown) return;
-
+    window.submitCodeForReview = function(phaseId, isResubmit) {
       var codeEl = document.getElementById('code-editor-' + phaseId);
       var code = codeEl ? codeEl.value.trim() : '';
       if (!code) {
-        alert('Please paste your Java code before submitting for review.');
+        alert('Please paste your Java code before checking it.');
         return;
       }
       if (code.length < 30) {
@@ -1170,117 +1145,90 @@ telemetry.<span class="syn-fn">update</span>();</div>
         return;
       }
 
-      // Rate limit
-      aiReviewCooldown = true;
       var btn = document.getElementById('ai-review-btn-' + phaseId);
-      if (btn) { btn.disabled = true; btn.textContent = 'Reviewing...'; }
-      setTimeout(function() { aiReviewCooldown = false; }, 5000);
+      if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
 
-      // Show loading
       var loadingEl = document.getElementById('ai-loading-' + phaseId);
       var resultEl = document.getElementById('ai-result-' + phaseId);
       if (loadingEl) loadingEl.style.display = 'flex';
       if (resultEl) resultEl.innerHTML = '';
 
-      // Save code to Firestore
+      // Keep the code in local progress
       var data = currData[phaseId] || {};
       data.submittedCode = code;
       currData[phaseId] = data;
       savePhaseData(phaseId, { submittedCode: code });
 
       try {
-        console.log('[Curriculum] Submitting code for AI review, phase:', phaseId, 'code length:', code.length);
-        var review = await window.reviewStudentCode(phaseId, code);
-        if (!review) throw new Error('No review returned');
-        // Check for rate limit / validation errors
+        var review = window.checkCode(phaseId, code);
+        if (!review) throw new Error('No result returned');
         if (review.error) {
-          var btn = document.getElementById('ai-review-btn-' + phaseId);
-          if (btn) { btn.disabled = false; btn.textContent = 'Submit for AI Review'; }
-          document.getElementById('ai-loading-' + phaseId).style.display = 'none';
           alert(review.message);
           return;
         }
-        console.log('[Curriculum] AI review result:', JSON.stringify({ passed: review.passed, score: review.score, summary: review.summary }));
-        // Update remaining counter
-        var rateEl = document.getElementById('ai-rate-info');
-        if (rateEl && window.getGeminiRateInfo) { var ri = window.getGeminiRateInfo(); rateEl.textContent = 'AI reviews remaining today: ' + ri.remaining + '/' + ri.max; }
+        var graded = review.status === 'graded';
 
-        // Save review to Firestore
-        var uid = viewingUid || currentUid;
-        var reviewDoc = {
-          code: code,
-          review: review,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        await rtDb.collection('users').doc(uid)
-          .collection('curriculum').doc(phaseId)
-          .collection('reviews').add(reviewDoc);
-        console.log('[Curriculum] Review saved to Firestore');
+        // Append to this phase's check history (newest last, capped)
+        var reviews = (data.reviews || []).slice();
+        reviews.push({ ts: Date.now(), code: code, result: review });
+        var cap = RTSchema.LIMITS.reviewsPerPhase;
+        if (reviews.length > cap) reviews = reviews.slice(reviews.length - cap);
 
-        // Track whether this submission auto-verified the phase
-        var autoVerified = false;
-
-        // Determine previous best score and current status
         var wasAlreadyVerified = data.status === 'verified';
-        var prevBest = data.bestScore || data.aiScore || data.lastAIScore || 0;
-        var newBest = Math.max(prevBest, review.score);
+        var prevBest = data.bestScore || 0;
+        var newBest = graded ? Math.max(prevBest, review.score) : prevBest;
 
-        // Update phase data with AI result
-        data.aiPassed = review.passed;
-        data.lastAIScore = review.score;
+        data.lastStatus = review.status;
+        data.lastScore = graded ? review.score : null;
         data.bestScore = newBest;
+        data.reviews = reviews;
         currData[phaseId] = data;
+        savePhaseData(phaseId, { lastStatus: review.status, lastScore: data.lastScore, bestScore: newBest, reviews: reviews });
 
-        var saveObj = { aiPassed: review.passed, lastAIScore: review.score, bestScore: newBest };
-        console.log('Phase', phaseId, 'review complete, passed=' + review.passed + ', score=' + review.score + ', bestScore=' + newBest + ', updating Firestore...');
+        RTStore.logAttempt({
+          kind: 'code', phaseId: phaseId, sectionId: 'deliverable', graded: graded,
+          correct: graded ? review.passed === true : null,
+          score: graded ? review.score : null,
+          attempt: reviews.length
+        });
 
-        // If resubmitting a verified phase: NEVER downgrade status
-        if (wasAlreadyVerified) {
-          // Keep status as verified, just update score if higher
-          console.log('Phase', phaseId, 'was already verified — keeping verified status, bestScore:', newBest);
-          savePhaseData(phaseId, saveObj);
-          // Show review result (no auto-verify celebration since already verified)
-          if (resultEl) resultEl.innerHTML = renderAIReviewCard(review, phaseId, false, newBest, prevBest);
-        } else {
-          savePhaseData(phaseId, saveObj);
-
-          // Auto-verify if score >= 75 AND passed (first-time verification)
-          if (review.passed && review.score >= 75) {
-            autoVerified = true;
-            console.log('[Curriculum] Score >= 75 and passed, auto-verifying phase:', phaseId);
-            await autoVerifyPhase(phaseId, review);
-            // Save bestScore after verify
-            data.bestScore = newBest;
-            currData[phaseId] = data;
-            savePhaseData(phaseId, { bestScore: newBest });
-          } else {
-            console.log('[Curriculum] Not auto-verifying. passed:', review.passed, 'score:', review.score, '(need passed=true AND score>=75)');
-          }
-
-          // Render result
-          if (resultEl) resultEl.innerHTML = renderAIReviewCard(review, phaseId, autoVerified);
-
-          // Celebration animation for first-time verification
-          if (autoVerified) {
-            showCelebration(phaseId);
-            console.log('AI PASSED — verifying phase', phaseId, 'unlocking next phase');
-          }
+        // Auto-verify only on a real graded pass (never for ungraded/reflection results)
+        var autoVerified = false;
+        if (!wasAlreadyVerified && graded && review.passed && review.score >= 75) {
+          autoVerified = true;
+          verifyAndUnlockNext(phaseId, 'auto', {});
         }
 
-        // Refresh review history
+        if (resultEl) resultEl.innerHTML = renderAIReviewCard(review, phaseId, autoVerified, newBest, wasAlreadyVerified ? prevBest : undefined);
+        if (autoVerified) showCelebration(phaseId);
+
         loadReviewHistory(phaseId);
       } catch (err) {
-        console.error('AI review FAILED:', err);
+        console.error('Code check failed:', err);
         if (resultEl) {
-          resultEl.innerHTML = '<div class="ai-error"><span class="ai-error-icon">&#9888;</span> AI review unavailable. Please try again in a moment.<div class="ai-error-detail">' + esc(err.message) + '</div></div>';
+          resultEl.innerHTML = '<div class="ai-error"><span class="ai-error-icon">&#9888;</span> The code check could not run.<div class="ai-error-detail">' + esc(err.message) + '</div></div>';
         }
       } finally {
         if (loadingEl) loadingEl.style.display = 'none';
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit for AI Review'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Save & Check Code'; }
       }
     };
 
     function renderAIReviewCard(review, phaseId, autoVerified, newBest, prevBest) {
+      // Ungraded / reflection results get a neutral card — no score, no pass/fail.
+      if (review.status !== 'graded') {
+        var isReflection = review.status === 'reflection';
+        var uHtml = '<div class="ai-review-card ai-ungraded">';
+        uHtml += '<div class="ai-review-header">';
+        uHtml += '<div class="ai-review-title">' + (isReflection ? 'Saved for mentor review' : 'Saved — not graded') + '</div>';
+        uHtml += '<span class="ai-badge ai-badge-ungraded">' + (isReflection ? 'MENTOR REVIEW' : 'NOT GRADED') + '</span>';
+        uHtml += '</div>';
+        uHtml += '<div class="ai-summary">' + esc(review.summary || '') + '</div>';
+        uHtml += '<div class="ai-threshold-note">When you are ready, use "Submit for Mentor Review" above to mark this phase as submitted and unlock the next one.</div>';
+        uHtml += '</div>';
+        return uHtml;
+      }
+
       var scoreClass = review.score >= 80 ? 'ai-score-green' : (review.score >= 60 ? 'ai-score-orange' : 'ai-score-red');
       var didAutoPass = autoVerified === true;
       var isResub = prevBest !== undefined && prevBest > 0;
@@ -1298,7 +1246,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       // Header
       html += '<div class="ai-review-header">';
-      html += '<div class="ai-review-title">AI Code Review</div>';
+      html += '<div class="ai-review-title">Structural Code Check</div>';
       html += passBadge;
       html += '</div>';
 
@@ -1398,9 +1346,8 @@ telemetry.<span class="syn-fn">update</span>();</div>
       if (didAutoPass) {
         // Already verified — no action buttons needed beyond "Start Next Phase" above
       } else if (!review.passed || review.score < 75) {
-        // Failed or score too low — Revise & Resubmit + optional mentor disagree
+        // Failed or score too low — revise, or hand it to a mentor via "Submit for Mentor Review"
         html += '<button class="curr-action-btn btn-start" onclick="clearReviewAndRevise(\'' + phaseId + '\')">Revise &amp; Resubmit</button>';
-        html += '<button class="curr-action-btn btn-mentor-disagree" onclick="submitMentorDisagree(\'' + phaseId + '\')">Disagree? Request Mentor Review</button>';
         if (review.score < 75 && review.passed) {
           html += '<div class="ai-threshold-note">Score of 75+ required for auto-verification. Current: ' + review.score + '/100</div>';
         }
@@ -1411,8 +1358,8 @@ telemetry.<span class="syn-fn">update</span>();</div>
       return html;
     }
 
-    /* ── Verify phase and unlock next (shared by AI auto-verify and coach verify) */
-    async function verifyAndUnlockNext(phaseId, verifiedBy, extraData) {
+    /* ── Verify phase and unlock next ─────────────────────────────────────── */
+    function verifyAndUnlockNext(phaseId, verifiedBy, extraData) {
       var data = currData[phaseId] || {};
       data.status = 'verified';
       data.verifiedBy = verifiedBy;
@@ -1421,40 +1368,13 @@ telemetry.<span class="syn-fn">update</span>();</div>
       var saveObj = Object.assign({
         status: 'verified',
         verifiedBy: verifiedBy,
-        verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+        verifiedAt: Date.now()
       }, extraData || {});
-
-      console.log('[Curriculum] Verifying phase:', phaseId, 'by:', verifiedBy);
-      console.log('Saving phase', phaseId, 'as verified to Firestore...');
-      await savePhaseData(phaseId, saveObj);
-      console.log('Phase', phaseId, 'saved as verified');
+      savePhaseData(phaseId, saveObj);
 
       // Unlock next phase
       var phase = PHASES.find(function(p) { return p.id === phaseId; });
-      var phaseIdx = PHASES.indexOf(phase);
-      if (phaseIdx >= 0 && phaseIdx < PHASES.length - 1) {
-        var nextPhase = PHASES[phaseIdx + 1];
-        if (nextPhase.unlockReq === phaseId) {
-          var nextData = currData[nextPhase.id] || {};
-          if (!nextData.status || nextData.status === 'locked') {
-            nextData.status = 'not_started';
-            currData[nextPhase.id] = nextData;
-            console.log('AI PASSED — verifying phase', phaseId, 'unlocking phase', nextPhase.id);
-            await savePhaseData(nextPhase.id, { status: 'not_started' });
-            console.log('Phase', nextPhase.id, 'unlocked (status: not_started)');
-          }
-        }
-      }
-
-      // Sync curriculum progress to driverStats
-      if (window.saveCurriculumProgress) {
-        var verified = PHASES.filter(function(p) { return currData[p.id] && currData[p.id].status === 'verified'; });
-        var totalScore = 0;
-        verified.forEach(function(p) { totalScore += (currData[p.id].aiScore || currData[p.id].bestScore || 0); });
-        var avgScore = verified.length > 0 ? totalScore / verified.length : 0;
-        var highestVerified = verified.length > 0 ? verified[verified.length - 1].id : phaseId;
-        window.saveCurriculumProgress(verified.length, avgScore, highestVerified);
-      }
+      unlockNextPhase(phaseId);
 
       // Update timeline UI
       renderTimeline();
@@ -1472,10 +1392,19 @@ telemetry.<span class="syn-fn">update</span>();</div>
       }
     }
 
-    /* ── Auto-verify phase (AI passed with score >= 75) ─────────────────────── */
-    async function autoVerifyPhase(phaseId, review) {
-      console.log('[Curriculum] Auto-verifying phase:', phaseId, 'score:', review.score);
-      await verifyAndUnlockNext(phaseId, 'ai_reviewer', { aiScore: review.score });
+    /* ── Mark the phase after phaseId as not_started if it was locked ───────── */
+    function unlockNextPhase(phaseId) {
+      var phase = PHASES.find(function(p) { return p.id === phaseId; });
+      var phaseIdx = PHASES.indexOf(phase);
+      if (phaseIdx < 0 || phaseIdx >= PHASES.length - 1) return;
+      var nextPhase = PHASES[phaseIdx + 1];
+      if (nextPhase.unlockReq !== phaseId) return;
+      var nextData = currData[nextPhase.id] || {};
+      if (!nextData.status || nextData.status === 'locked') {
+        nextData.status = 'not_started';
+        currData[nextPhase.id] = nextData;
+        savePhaseData(nextPhase.id, { status: 'not_started' });
+      }
     }
 
     /* ── Celebration animation ──────────────────────────────────────────────── */
@@ -1514,109 +1443,56 @@ telemetry.<span class="syn-fn">update</span>();</div>
       if (codeEl) codeEl.focus();
     };
 
-    /* ── Disagree with AI — request mentor review ───────────────────────────── */
-    window.submitMentorDisagree = function(phaseId) {
-      var codeEl = document.getElementById('code-editor-' + phaseId);
-      var code = codeEl ? codeEl.value.trim() : '';
-      var data = currData[phaseId] || {};
-
-      data.status = 'pending_mentor';
-      data.submittedCode = code;
-      currData[phaseId] = data;
-
-      savePhaseData(phaseId, {
-        status: 'pending_mentor',
-        submittedCode: code,
-        submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        aiPassed: data.aiPassed,
-        lastAIScore: data.lastAIScore,
-        mentorRequestReason: 'student_disagrees_with_ai'
-      }).then(function() {
-        renderTimeline();
-        var resultEl = document.getElementById('ai-result-' + phaseId);
-        if (resultEl) {
-          resultEl.innerHTML = '<div class="ai-mentor-pending">' +
-            '<span class="ai-mentor-pending-icon">&#128269;</span>' +
-            '<div class="ai-mentor-pending-title">Mentor Review Requested</div>' +
-            '<div class="ai-mentor-pending-msg">Your submission and AI review have been sent to your mentor for manual review. You\'ll be notified when they respond.</div>' +
-            '</div>';
-        }
-      });
-    };
-
-    window.submitToMentor = function(phaseId) {
-      var codeEl = document.getElementById('code-editor-' + phaseId);
-      var code = codeEl ? codeEl.value.trim() : '';
-      var data = currData[phaseId] || {};
-
-      data.status = 'submitted';
-      data.submittedCode = code;
-      currData[phaseId] = data;
-
-      savePhaseData(phaseId, {
-        status: 'submitted',
-        submittedCode: code,
-        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        renderTimeline();
-        var phase = PHASES.find(function(p) { return p.id === phaseId; });
-        if (phase) renderContent(phase);
-      });
-    };
-
     /* ══════════════════════════════════════════════════════════════════════════
-       REVIEW HISTORY
+       CHECK HISTORY (from local progress)
        ══════════════════════════════════════════════════════════════════════ */
-    async function loadReviewHistory(phaseId) {
+    function loadReviewHistory(phaseId) {
       var listEl = document.getElementById('rh-list-' + phaseId);
-      var uid = viewingUid || currentUid;
-      if (!listEl || !uid) return;
+      if (!listEl) return;
 
-      try {
-        var snap = await rtDb.collection('users').doc(uid)
-          .collection('curriculum').doc(phaseId)
-          .collection('reviews')
-          .orderBy('timestamp', 'desc')
-          .limit(10)
-          .get();
+      var data = currData[phaseId] || {};
+      var reviews = (data.reviews || []).slice().reverse();
+      if (reviews.length === 0) {
+        listEl.innerHTML = '<div class="rh-empty">No previous checks yet.</div>';
+        return;
+      }
 
-        if (snap.empty) {
-          listEl.innerHTML = '<div class="rh-empty">No previous reviews yet.</div>';
-          return;
+      var html = '';
+      reviews.forEach(function(item) {
+        var r = item.result || {};
+        var ts = new Date(item.ts || 0);
+        var dateStr = ts.toLocaleDateString() + ' ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        var graded = r.status === 'graded';
+        var scoreHtml, passLabel, passClass;
+        if (graded) {
+          var scoreClass = r.score >= 80 ? 'ai-score-green' : (r.score >= 60 ? 'ai-score-orange' : 'ai-score-red');
+          scoreHtml = '<span class="rh-score ' + scoreClass + '">' + (r.score || 0) + '/100</span>';
+          passLabel = r.passed ? 'Passed' : 'Needs work';
+          passClass = r.passed ? 'rh-pass' : 'rh-fail';
+        } else {
+          scoreHtml = '<span class="rh-score">&mdash;</span>';
+          passLabel = r.status === 'reflection' ? 'Mentor review' : 'Not graded';
+          passClass = 'rh-ungraded';
         }
 
-        var html = '';
-        snap.forEach(function(doc) {
-          var d = doc.data();
-          var r = d.review || {};
-          var ts = d.timestamp ? d.timestamp.toDate() : new Date();
-          var dateStr = ts.toLocaleDateString() + ' ' + ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          var scoreClass = r.score >= 80 ? 'ai-score-green' : (r.score >= 60 ? 'ai-score-orange' : 'ai-score-red');
-          var passLabel = r.passed ? 'Passed' : 'Failed';
-          var passClass = r.passed ? 'rh-pass' : 'rh-fail';
+        html += '<div class="rh-item" onclick="this.querySelector(\'.rh-detail\').style.display=this.querySelector(\'.rh-detail\').style.display===\'none\'?\'block\':\'none\'">';
+        html += '<div class="rh-item-header">';
+        html += '<span class="rh-date">' + dateStr + '</span>';
+        html += scoreHtml;
+        html += '<span class="rh-pass-label ' + passClass + '">' + passLabel + '</span>';
+        html += '</div>';
+        html += '<div class="rh-detail" style="display:none">';
+        html += '<div class="rh-summary">' + esc(r.summary || '') + '</div>';
+        if (r.issues && r.issues.length > 0) {
+          html += '<div class="rh-issues">' + r.issues.length + ' issue' + (r.issues.length > 1 ? 's' : '') + ': ';
+          html += r.issues.map(function(i) { return esc(i.description); }).join('; ');
+          html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
 
-          html += '<div class="rh-item" onclick="this.querySelector(\'.rh-detail\').style.display=this.querySelector(\'.rh-detail\').style.display===\'none\'?\'block\':\'none\'">';
-          html += '<div class="rh-item-header">';
-          html += '<span class="rh-date">' + dateStr + '</span>';
-          html += '<span class="rh-score ' + scoreClass + '">' + (r.score || 0) + '/100</span>';
-          html += '<span class="rh-pass-label ' + passClass + '">' + passLabel + '</span>';
-          html += '</div>';
-          html += '<div class="rh-detail" style="display:none">';
-          html += '<div class="rh-summary">' + esc(r.summary || '') + '</div>';
-          if (r.issues && r.issues.length > 0) {
-            html += '<div class="rh-issues">' + r.issues.length + ' issue' + (r.issues.length > 1 ? 's' : '') + ': ';
-            html += r.issues.map(function(i) { return esc(i.description); }).join('; ');
-            html += '</div>';
-          }
-          html += '</div>';
-          html += '</div>';
-        });
-
-        listEl.innerHTML = html;
-      } catch (e) {
-        console.warn('Failed to load review history:', e.message);
-        listEl.innerHTML = '<div class="rh-empty">Could not load history.</div>';
-      }
+      listEl.innerHTML = html;
     }
 
     window.toggleReviewHistory = function(phaseId) {
@@ -1641,47 +1517,18 @@ telemetry.<span class="syn-fn">update</span>();</div>
       });
     };
 
+    // Hand the deliverable to a mentor: marks the phase submitted (never "verified") and unlocks the next one.
     window.submitPhase = function(phaseId) {
-      if (!confirm('Submit your deliverable for mentor review? Make sure you\'ve completed all checklist items.')) return;
+      if (!confirm('Submit this deliverable for mentor review?\n\nIt will be marked as submitted in your progress file (export it and share it with your mentor), and the next phase will unlock. Make sure you\'ve completed the checklist.')) return;
+      var codeEl = document.getElementById('code-editor-' + phaseId);
       var data = currData[phaseId] || {};
       data.status = 'submitted';
-      data.submittedAt = firebase.firestore.FieldValue.serverTimestamp();
+      data.submittedAt = Date.now();
+      data.mentorFlag = true;
+      if (codeEl && codeEl.value.trim()) data.submittedCode = codeEl.value.trim();
       currData[phaseId] = data;
-      savePhaseData(phaseId, { status: 'submitted', submittedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function() {
-        renderTimeline();
-        var phase = PHASES.find(function(p) { return p.id === phaseId; });
-        if (phase) renderContent(phase);
-      });
-    };
-
-    window.verifyPhase = async function(phaseId) {
-      console.log('[Curriculum] Coach verifying phase:', phaseId);
-      await verifyAndUnlockNext(phaseId, currentUid, {});
-      showCelebration(phaseId);
-      var phase = PHASES.find(function(p) { return p.id === phaseId; });
-      if (phase) renderContent(phase);
-    };
-
-    window.rejectPhase = function(phaseId) {
-      // Prompt coach for feedback
-      var feedbackInput = document.getElementById('coach-feedback-' + phaseId);
-      var feedback = feedbackInput ? feedbackInput.value.trim() : '';
-      if (!feedback) {
-        feedback = prompt('Enter feedback for the student (what needs to change):');
-        if (!feedback) return; // cancelled
-      }
-
-      console.log('[Curriculum] Coach rejecting phase:', phaseId, 'feedback:', feedback);
-      var data = currData[phaseId] || {};
-      data.status = 'in_progress';
-      data.coachFeedback = feedback;
-      currData[phaseId] = data;
-      savePhaseData(phaseId, {
-        status: 'in_progress',
-        coachFeedback: feedback,
-        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        rejectedBy: currentUid
-      }).then(function() {
+      savePhaseData(phaseId, { status: 'submitted', submittedAt: data.submittedAt, mentorFlag: true, submittedCode: data.submittedCode || '' }).then(function() {
+        unlockNextPhase(phaseId);
         renderTimeline();
         var phase = PHASES.find(function(p) { return p.id === phaseId; });
         if (phase) renderContent(phase);
@@ -1689,33 +1536,19 @@ telemetry.<span class="syn-fn">update</span>();</div>
     };
 
     /* ══════════════════════════════════════════════════════════════════════════
-       LOAD DATA FROM FIRESTORE
+       LOAD DATA FROM LOCAL PROGRESS
        ══════════════════════════════════════════════════════════════════════ */
-    async function loadCurriculumData(uid, isStudentView) {
-      if (!isStudentView) currentUid = uid;
-      viewingUid = uid;
-      currData = {};
-      console.log('[Curriculum] loadCurriculumData for uid:', uid, isStudentView ? '(coach viewing student)' : '(own data)');
-      try {
-        var snap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
-        snap.forEach(function(doc) {
-          currData[doc.id] = doc.data();
-          console.log('Loading phase:', doc.id, 'status:', (doc.data().status || 'none'));
-        });
-      } catch (e) {
-        console.warn('[Curriculum] Failed to load curriculum data:', e.message);
-      }
+    function loadCurriculumData() {
+      currData = RTStore.get().curriculum.phases;
 
-      // Ensure consistency: if a phase is verified, make sure the next phase is at least not_started
+      // Ensure consistency: if a phase is verified or submitted, the next phase is at least not_started
       PHASES.forEach(function(phase, i) {
         var data = currData[phase.id];
-        if (data && data.status === 'verified' && i < PHASES.length - 1) {
+        if (data && (data.status === 'verified' || data.status === 'submitted') && i < PHASES.length - 1) {
           var nextPhase = PHASES[i + 1];
           if (nextPhase.unlockReq === phase.id) {
             var nextData = currData[nextPhase.id];
             if (!nextData || !nextData.status || nextData.status === 'locked') {
-              currData[nextPhase.id] = Object.assign(nextData || {}, { status: 'not_started' });
-              // Persist fix to Firestore
               savePhaseData(nextPhase.id, { status: 'not_started' });
             }
           }
@@ -1724,7 +1557,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       // Phase 0 defaults to not_started (never locked)
       if (!currData.phase0) {
-        currData.phase0 = { status: 'not_started' };
+        savePhaseData('phase0', { status: 'not_started' });
       } else if (!currData.phase0.status) {
         currData.phase0.status = 'not_started';
       }
@@ -1743,139 +1576,16 @@ telemetry.<span class="syn-fn">update</span>();</div>
         if (first) selectPhase(first.id);
       }
     }
+    window.loadCurriculumData = loadCurriculumData;
 
     /* ══════════════════════════════════════════════════════════════════════════
-       COACH / MENTOR TOOLS
+       INIT — lessons.js is deferred, so wait for it before rendering
        ══════════════════════════════════════════════════════════════════════ */
-    function renderCoachToolbar(phaseId, status, data) {
-      var html = '<div class="coach-toolbar">';
-
-      // Student selector
-      html += '<div class="coach-selector-row">';
-      html += '<label class="coach-label">Viewing as:</label>';
-      html += '<select class="coach-student-select" id="coach-student-select" onchange="switchStudent(this.value)">';
-      html += '<option value="' + currentUid + '"' + (viewingUid === currentUid ? ' selected' : '') + '>My Progress (Coach)</option>';
-      teamMembers.forEach(function(m) {
-        var sel = viewingUid === m.uid ? ' selected' : '';
-        html += '<option value="' + m.uid + '"' + sel + '>' + esc(m.name || m.email) + '</option>';
-      });
-      html += '</select>';
-      html += '</div>';
-
-      // Coach actions for this phase (only when viewing a student)
-      if (viewingUid !== currentUid) {
-        var canVerify = status === 'submitted' || status === 'pending_mentor' || status === 'in_progress';
-        if (canVerify && status !== 'verified') {
-          html += '<div class="coach-actions">';
-          html += '<button class="curr-action-btn btn-verify" onclick="verifyPhase(\'' + phaseId + '\')">Verify &amp; Pass</button>';
-          html += '<div class="coach-reject-group">';
-          html += '<input type="text" class="coach-feedback-input" id="coach-feedback-' + phaseId + '" placeholder="Feedback for student...">';
-          html += '<button class="curr-action-btn btn-reject" onclick="rejectPhase(\'' + phaseId + '\')">Request Changes</button>';
-          html += '</div>';
-          html += '</div>';
-        }
-
-        // Show student's submitted code if any
-        if (data.submittedCode) {
-          html += '<div class="coach-code-preview">';
-          html += '<div class="coach-code-label">Student\'s Submitted Code:</div>';
-          html += '<pre class="coach-code-block">' + esc(data.submittedCode) + '</pre>';
-          html += '</div>';
-        }
-
-        // Show last AI review summary
-        if (data.lastAIScore !== undefined) {
-          html += '<div class="coach-ai-summary">';
-          html += 'Last AI Score: <strong>' + data.lastAIScore + '/100</strong>';
-          html += ' — AI ' + (data.aiPassed ? '<span style="color:#22c55e">Passed</span>' : '<span style="color:#ef4444">Failed</span>');
-          html += '</div>';
-        }
-      }
-
-      html += '</div>';
-      return html;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() { loadCurriculumData(); });
+    } else {
+      loadCurriculumData();
     }
-
-    window.switchStudent = async function(uid) {
-      console.log('[Curriculum] Coach switching to student:', uid);
-      activePhase = null;
-      await loadCurriculumData(uid, uid !== currentUid);
-    };
-
-    async function loadTeamMembers() {
-      if (!currentUid) return;
-      console.log('[Curriculum] Loading team members for coach');
-      try {
-        // Find teams where current user is a member
-        var teamsSnap = await rtDb.collection('teams')
-          .where('members', 'array-contains', currentUid)
-          .get();
-
-        if (teamsSnap.empty) {
-          // Try alternate structure: check user doc for teamId
-          var userDoc = await rtDb.collection('users').doc(currentUid).get();
-          var userData = userDoc.exists ? userDoc.data() : {};
-          if (userData.teamId) {
-            var teamDoc = await rtDb.collection('teams').doc(userData.teamId).get();
-            if (teamDoc.exists) {
-              teamsSnap = { forEach: function(fn) { fn(teamDoc); }, empty: false };
-            }
-          }
-        }
-
-        var memberUids = [];
-        teamsSnap.forEach(function(doc) {
-          var td = doc.data();
-          // Support both array of UIDs and subcollection
-          if (Array.isArray(td.members)) {
-            td.members.forEach(function(m) {
-              if (m !== currentUid && memberUids.indexOf(m) === -1) memberUids.push(m);
-            });
-          }
-          if (Array.isArray(td.memberList)) {
-            td.memberList.forEach(function(m) {
-              var mUid = typeof m === 'string' ? m : m.uid;
-              if (mUid && mUid !== currentUid && memberUids.indexOf(mUid) === -1) memberUids.push(mUid);
-            });
-          }
-        });
-
-        // Load user profiles for each member
-        teamMembers = [];
-        for (var i = 0; i < memberUids.length; i++) {
-          try {
-            var mDoc = await rtDb.collection('users').doc(memberUids[i]).get();
-            if (mDoc.exists) {
-              var md = mDoc.data();
-              teamMembers.push({
-                uid: memberUids[i],
-                name: md.displayName || md.name || '',
-                email: md.email || ''
-              });
-            }
-          } catch (e) {
-            console.warn('[Curriculum] Could not load member:', memberUids[i]);
-          }
-        }
-        console.log('[Curriculum] Loaded', teamMembers.length, 'team members');
-      } catch (e) {
-        console.warn('[Curriculum] Failed to load team members:', e.message);
-      }
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       INIT
-       ══════════════════════════════════════════════════════════════════════ */
-    initAuth(async function onSignedIn(user) {
-      isCoach = window.rtUserRole === 'coach';
-      console.log('[Curriculum] Signed in:', user.uid, 'isCoach:', isCoach);
-
-      if (isCoach) {
-        await loadTeamMembers();
-      }
-
-      loadCurriculumData(user.uid);
-    });
   </script>
 <script>
 (function() {
@@ -1895,6 +1605,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
     if (!link) return;
     var href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (link.hasAttribute('download') || href.startsWith('blob:')) return;
     if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
     if (link.target === '_blank') return;
     e.preventDefault();

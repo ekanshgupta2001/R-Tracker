@@ -2953,3 +2953,18 @@ html.light .score-same { background: #f9f9f9; color: #999; border-color: #e0e0e0
 html.light .score-lower { background: rgba(245, 158, 11, 0.04); }
 
 /* Code editor stays dark in both modes */
+
+/* ── v2: "saved but not graded" / mentor-review states ───────────────────── */
+.ai-review-card.ai-ungraded { border-top-color: #777; }
+.ai-review-card.ai-ungraded .ai-review-title { color: #bbb; }
+.ai-badge-ungraded { background: #3a3a3a; color: #cfcfcf; }
+.rh-pass-label.rh-ungraded { color: #999; }
+.theory-feedback.ungraded { border-color: #4a4a4a; background: #1f1f1f; }
+.theory-feedback.ungraded .score-badge { color: #bbb; }
+
+html.light .ai-review-card.ai-ungraded { border-top-color: #aaa; }
+html.light .ai-review-card.ai-ungraded .ai-review-title { color: #555; }
+html.light .ai-badge-ungraded { background: #e6e6e6; color: #555; }
+html.light .rh-pass-label.rh-ungraded { color: #777; }
+html.light .theory-feedback.ungraded { border-color: #ccc; background: #f7f7f7; }
+html.light .theory-feedback.ungraded .score-badge { color: #555; }

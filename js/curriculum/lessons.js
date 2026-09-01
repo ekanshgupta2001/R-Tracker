@@ -1709,84 +1709,70 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
             });
           }
 
-          // Load previously submitted answer from Firestore (both done and active)
-          if (window.rtUser && window.rtDb) {
-            window.rtDb.collection('users').doc(window.rtUser.uid)
-              .collection('curriculum').doc(phaseId).get()
-              .then(function (doc) {
-                if (!doc.exists) return;
-                var data = doc.data();
-                if (!data.theoryAnswers || !data.theoryAnswers[sid]) return;
+          // Restore a previously saved answer from local progress (both done and active)
+          var savedPhase = RTStore.get().curriculum.phases[phaseId];
+          var saved = savedPhase && savedPhase.theoryAnswers && savedPhase.theoryAnswers[sid];
+          if (saved) {
+            ta.value = saved.answer || '';
+            _theoryAttemptCounts[sid] = saved.attempts || 1;
+            var graded = saved.status === 'graded';
 
-                var saved = data.theoryAnswers[sid];
-                ta.value = saved.answer || '';
-                _theoryAttemptCounts[sid] = saved.attempts || 1;
+            // Show attempt count
+            var attemptsEl = document.getElementById('les-wattempts-' + sid);
+            if (attemptsEl && saved.attempts) {
+              attemptsEl.textContent = 'Submitted ' + saved.attempts + ' time' + (saved.attempts > 1 ? 's' : '') + (graded && saved.bestScore ? ' \u2022 Best: ' + saved.bestScore + '/100' : '');
+              attemptsEl.style.display = 'block';
+            }
 
-                // Show attempt count
-                var attemptsEl = document.getElementById('les-wattempts-' + sid);
-                if (attemptsEl && saved.attempts) {
-                  attemptsEl.textContent = 'Submitted ' + saved.attempts + ' time' + (saved.attempts > 1 ? 's' : '') + (saved.bestScore ? ' \u2022 Best: ' + saved.bestScore + '/100' : '');
-                  attemptsEl.style.display = 'block';
-                }
-
-                if (saved.passed) {
-                  ta.readOnly = true;
-                  ta.style.borderColor = '#22c55e';
-                  ta.style.opacity = '0.85';
-                  if (countEl) countEl.textContent = '\u2713 Passed \u2014 ' + (saved.bestScore || saved.score || '') + '/100';
-                  if (submitBtn) {
-                    submitBtn.style.display = 'none';
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('les-written-submitted');
-                  }
-                  var fbWrap = document.getElementById('les-wfeedback-' + sid);
-                  if (fbWrap) {
-                    var passHtml = '<div class="theory-feedback passed"><div class="score-badge">\u2713 Understanding Confirmed \u2014 ' + (saved.bestScore || saved.score || 70) + '/100</div>';
-                    if (saved.feedback) passHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
-                    passHtml += '</div>';
-                    passHtml += '<div class="les-written-resubmit-link" onclick="window._reviseTheoryAnswer(\'' + sid + '\', true)">Resubmit answer</div>';
-                    fbWrap.innerHTML = passHtml;
-                  }
-                  // For completed sections, also show the detail panel and hide the simple badge
-                  if (sectionDone) {
-                    var doneDetail = document.getElementById('les-wdone-' + sid);
-                    var doneBadge = document.getElementById('les-wdone-badge-' + sid);
-                    if (doneDetail) doneDetail.style.display = 'block';
-                    if (doneBadge) doneBadge.style.display = 'none';
-                  }
-                } else if (saved.score !== undefined && !saved.passed) {
-                  ta.readOnly = true;
-                  ta.style.borderColor = '#eab308';
-                  ta.style.opacity = '0.85';
-                  if (countEl) countEl.textContent = 'Score: ' + saved.score + '/100 \u2014 Revision needed';
-                  if (submitBtn) submitBtn.style.display = 'none';
-                  var fbWrap2 = document.getElementById('les-wfeedback-' + sid);
-                  if (fbWrap2) {
-                    var fbHtml = '<div class="theory-feedback failed"><div class="score-badge">\u26a0 Keep Thinking \u2014 ' + saved.score + '/100</div>';
-                    if (saved.feedback) fbHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
-                    fbHtml += '</div>';
-                    fbHtml += '<button class="les-written-submit les-written-revise" onclick="window._reviseTheoryAnswer(\'' + sid + '\', false)">Revise &amp; Resubmit</button>';
-                    fbWrap2.innerHTML = fbHtml;
-                  }
-                  if (sectionDone) {
-                    var doneDetail2 = document.getElementById('les-wdone-' + sid);
-                    var doneBadge2 = document.getElementById('les-wdone-badge-' + sid);
-                    if (doneDetail2) doneDetail2.style.display = 'block';
-                    if (doneBadge2) doneBadge2.style.display = 'none';
-                  }
-                } else {
-                  // Legacy: submitted without AI grading
-                  ta.readOnly = true;
-                  ta.style.borderColor = '#22c55e';
-                  ta.style.opacity = '0.85';
-                  if (countEl) countEl.textContent = '\u2713 Previously submitted';
-                  if (submitBtn) {
-                    submitBtn.textContent = '\u2713 Submitted';
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('les-written-submitted');
-                  }
-                }
-              }).catch(function () {});
+            var fbWrap = document.getElementById('les-wfeedback-' + sid);
+            if (!graded) {
+              // Saved but not graded (or a mentor-review reflection): stays editable, neutral card, never "passed"
+              ta.readOnly = false;
+              if (countEl) countEl.textContent = saved.status === 'reflection' ? 'Saved for mentor review' : 'Saved \u2014 not graded';
+              if (submitBtn) {
+                submitBtn.style.display = '';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Resubmit Answer';
+              }
+              if (fbWrap) fbWrap.innerHTML = _ungradedTheoryCard(saved.status, saved.feedback);
+            } else if (saved.passed) {
+              ta.readOnly = true;
+              ta.style.borderColor = '#22c55e';
+              ta.style.opacity = '0.85';
+              if (countEl) countEl.textContent = '\u2713 Passed \u2014 ' + (saved.bestScore || saved.score || '') + '/100';
+              if (submitBtn) {
+                submitBtn.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('les-written-submitted');
+              }
+              if (fbWrap) {
+                var passHtml = '<div class="theory-feedback passed"><div class="score-badge">\u2713 Understanding Confirmed \u2014 ' + (saved.bestScore || saved.score || 70) + '/100</div>';
+                if (saved.feedback) passHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
+                passHtml += '</div>';
+                passHtml += '<div class="les-written-resubmit-link" onclick="window._reviseTheoryAnswer(\'' + sid + '\', true)">Resubmit answer</div>';
+                fbWrap.innerHTML = passHtml;
+              }
+            } else {
+              ta.readOnly = true;
+              ta.style.borderColor = '#eab308';
+              ta.style.opacity = '0.85';
+              if (countEl) countEl.textContent = 'Score: ' + saved.score + '/100 \u2014 Revision needed';
+              if (submitBtn) submitBtn.style.display = 'none';
+              if (fbWrap) {
+                var fbHtml = '<div class="theory-feedback failed"><div class="score-badge">\u26a0 Keep Thinking \u2014 ' + saved.score + '/100</div>';
+                if (saved.feedback) fbHtml += '<div class="feedback-text">' + esc(saved.feedback) + '</div>';
+                fbHtml += '</div>';
+                fbHtml += '<button class="les-written-submit les-written-revise" onclick="window._reviseTheoryAnswer(\'' + sid + '\', false)">Revise &amp; Resubmit</button>';
+                fbWrap.innerHTML = fbHtml;
+              }
+            }
+            // For completed sections, also show the detail panel and hide the simple badge
+            if (sectionDone) {
+              var doneDetail = document.getElementById('les-wdone-' + sid);
+              var doneBadge = document.getElementById('les-wdone-badge-' + sid);
+              if (doneDetail) doneDetail.style.display = 'block';
+              if (doneBadge) doneBadge.style.display = 'none';
+            }
           }
         })(sections[wi].id, sections[wi].check.minLength || 50, wiDone);
       }
@@ -1863,6 +1849,10 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     var optEl = document.getElementById('les-opt-' + secId + '-' + optIdx);
     var explainEl = document.getElementById('les-explain-' + secId);
 
+    // Every click is an observation for mastery tracking (wrong answers included)
+    _mcAttempts[secId] = (_mcAttempts[secId] || 0) + 1;
+    RTStore.logAttempt({ kind: 'mc', phaseId: phaseId, sectionId: secId, graded: true, correct: !!opt.correct, score: opt.correct ? 100 : 0, attempt: _mcAttempts[secId] });
+
     if (opt.correct) {
       // Correct answer
       optEl.classList.add('les-correct');
@@ -1900,8 +1890,22 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
   /* ── Written answer submission ────────────────────────────────────────── */
   // Rate-limit tracker for theory submissions
   var _theorySubmitCooldown = {};
-  // Track attempt counts per section (loaded from Firestore)
+  // Track attempt counts per section (restored from local progress)
   var _theoryAttemptCounts = {};
+  // Multiple-choice click counts per section (for the attempts log)
+  var _mcAttempts = {};
+
+  // Neutral card for answers that are saved but not graded (or kept for a mentor)
+  function _ungradedTheoryCard(status, feedback) {
+    var isReflection = status === 'reflection';
+    var html = '<div class="theory-feedback ungraded">';
+    html += '<div class="score-badge">' + (isReflection ? '📝 Saved for mentor review' : '💾 Saved — not graded') + '</div>';
+    html += '<div class="feedback-text">' + esc(feedback || (isReflection
+      ? 'This is a reflection question. Your answer is kept in your progress file for your mentor to read.'
+      : 'Automatic grading is not available in this version. Your answer is kept in your progress file so a mentor can read it.')) + '</div>';
+    html += '</div>';
+    return html;
+  }
 
   window._submitWrittenAnswer = function (secId) {
     // Rate limit: 10s cooldown
@@ -1936,56 +1940,75 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     // Hide error
     if (errorEl) errorEl.style.display = 'none';
 
-    // Disable textarea and button during review
+    // Disable textarea and button while grading (local, synchronous)
     textarea.readOnly = true;
     textarea.style.opacity = '0.7';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'AI Mentor is reading your answer...';
+      submitBtn.textContent = 'Saving...';
       submitBtn.classList.add('les-written-loading');
     }
 
-    // Start cooldown
+    // Short cooldown against double-clicks
     _theorySubmitCooldown[secId] = true;
+    setTimeout(function () { delete _theorySubmitCooldown[secId]; }, 2000);
 
-    // Strip HTML tags from learn content for the prompt
-    var plainLearn = (sec.learn || '').replace(/<[^>]+>/g, '');
-    var phaseNum = phaseId.replace('phase', '');
-
-    // Call AI review
-    var doReview = function (retryCount) {
-      window.reviewTheoryAnswer(phaseNum, secId, sec.title, plainLearn, sec.check.question, answer)
-        .then(function (result) {
-          _renderTheoryFeedback(secId, result, answer, phaseId, textarea, submitBtn);
-        })
-        .catch(function (err) {
-          console.error('[Theory] AI review error:', err);
-          if (retryCount < 1 && err && String(err).indexOf('429') !== -1) {
-            if (submitBtn) submitBtn.textContent = 'AI mentor is busy. Retrying in 15s...';
-            setTimeout(function () { doReview(retryCount + 1); }, 15000);
-          } else {
-            _renderTheoryFeedback(secId, null, answer, phaseId, textarea, submitBtn);
-          }
-        });
-    };
-    doReview(0);
-
-    // Release cooldown after 10s
-    setTimeout(function () { delete _theorySubmitCooldown[secId]; }, 10000);
+    // Grade locally (js/grader.js). Nothing leaves the browser.
+    var result = window.gradeTheoryAnswer(phaseId, secId, sec.check.question, answer);
+    if (result && result.error) {
+      alert(result.message);
+      textarea.readOnly = false;
+      textarea.style.opacity = '1';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Answer';
+        submitBtn.classList.remove('les-written-loading');
+      }
+      return;
+    }
+    _renderTheoryFeedback(secId, result, answer, phaseId, textarea, submitBtn);
   };
 
   function _renderTheoryFeedback(secId, result, answer, phaseId, textarea, submitBtn) {
     var feedbackWrap = document.getElementById('les-wfeedback-' + secId);
     if (!feedbackWrap) return;
 
-    // If AI returned null (error), auto-pass with a note
-    if (!result) {
-      result = { passed: true, score: 70, feedback: 'AI review unavailable. Your answer has been accepted.', strengths: [], misconceptions: [], suggestion: '' };
+    // No result means the grader is unavailable: save as ungraded. Never auto-pass.
+    if (!result || !result.status) {
+      result = { status: 'ungraded', passed: null, score: null, feedback: '', strengths: [], misconceptions: [], suggestion: '' };
     }
 
-    var passed = result.passed && result.score >= 70;
     var attemptNum = (_theoryAttemptCounts[secId] || 0) + 1;
     _theoryAttemptCounts[secId] = attemptNum;
+
+    // Ungraded / reflection: save, show the neutral card, keep the answer editable
+    if (result.status !== 'graded') {
+      var isReflection = result.status === 'reflection';
+      feedbackWrap.innerHTML = _ungradedTheoryCard(result.status, result.feedback);
+      var attemptsElU = document.getElementById('les-wattempts-' + secId);
+      if (attemptsElU) {
+        attemptsElU.textContent = 'Submitted ' + attemptNum + ' time' + (attemptNum > 1 ? 's' : '');
+        attemptsElU.style.display = 'block';
+      }
+      _saveTheoryAnswer(secId, answer, result, false, attemptNum, phaseId);
+      RTStore.logAttempt({ kind: 'theory', phaseId: phaseId, sectionId: secId, graded: false, correct: null, score: null, attempt: attemptNum });
+      textarea.readOnly = false;
+      textarea.style.opacity = '1';
+      textarea.style.borderColor = '';
+      if (submitBtn) {
+        submitBtn.style.display = '';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Resubmit Answer';
+        submitBtn.classList.remove('les-written-loading');
+      }
+      // A reflection counts as complete once saved; an ungraded answer does not.
+      if (isReflection && lessonState.completed.indexOf(secId) === -1) {
+        setTimeout(function () { _doCompleteSection(secId); }, 800);
+      }
+      return;
+    }
+
+    var passed = result.passed === true && result.score >= 70;
 
     // Build feedback card HTML
     var html = '<div class="theory-feedback ' + (passed ? 'passed' : 'failed') + '">';
@@ -2028,8 +2051,9 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       attemptsEl.style.display = 'block';
     }
 
-    // Save to Firestore with history
-    _saveTheoryToFirestore(secId, answer, result, passed, attemptNum, phaseId);
+    // Save locally with history, and log the graded attempt for mastery tracking
+    _saveTheoryAnswer(secId, answer, result, passed, attemptNum, phaseId);
+    RTStore.logAttempt({ kind: 'theory', phaseId: phaseId, sectionId: secId, graded: true, correct: passed, score: result.score, attempt: attemptNum });
 
     if (passed) {
       lessonState.answeredChecks[secId] = true;
@@ -2056,53 +2080,35 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     }
   }
 
-  function _saveTheoryToFirestore(secId, answer, result, passed, attemptNum, phaseId) {
-    if (!window.rtUser || !window.rtDb) return;
-    var uid = window.rtUser.uid;
-    var docRef = window.rtDb.collection('users').doc(uid).collection('curriculum').doc(phaseId);
-
-    docRef.get().then(function (doc) {
-      var existing = {};
-      if (doc.exists && doc.data().theoryAnswers && doc.data().theoryAnswers[secId]) {
-        existing = doc.data().theoryAnswers[secId];
+  // Persist a theory answer (with capped history) into the phase entry in RTStore.
+  function _saveTheoryAnswer(secId, answer, result, passed, attemptNum, phaseId) {
+    RTStore.update(function (s) {
+      var ph = s.curriculum.phases[phaseId];
+      if (!ph) {
+        ph = RTSchema.createEmptyPhase(phaseId);
+        s.curriculum.phases[phaseId] = ph;
       }
+      if (!ph.theoryAnswers) ph.theoryAnswers = {};
+      var existing = ph.theoryAnswers[secId] || {};
+      var graded = result.status === 'graded';
+      var now = Date.now();
 
-      var history = existing.history || [];
-      history.push({
+      var history = (existing.history || []).slice();
+      history.push({ ts: now, answer: answer, status: result.status, score: graded ? result.score : null });
+      var cap = RTSchema.LIMITS.theoryHistoryPerSection;
+      if (history.length > cap) history = history.slice(history.length - cap);
+
+      ph.theoryAnswers[secId] = {
         answer: answer,
-        score: result.score,
-        timestamp: new Date().toISOString()
-      });
-
-      var bestScore = Math.max(result.score, existing.bestScore || 0);
-
-      var answerData = {};
-      answerData[secId] = {
-        answer: answer,
-        score: result.score,
-        passed: passed || existing.passed || false,
-        bestScore: bestScore,
+        status: result.status,
+        score: graded ? result.score : null,
+        passed: graded ? (passed || existing.passed || false) : (existing.passed || false),
+        bestScore: graded ? Math.max(result.score, existing.bestScore || 0) : (existing.bestScore || 0),
         feedback: result.feedback || '',
         attempts: attemptNum,
-        lastAttempt: new Date().toISOString(),
+        lastAttempt: now,
         history: history
       };
-
-      docRef.set({ theoryAnswers: answerData }, { merge: true });
-    }).catch(function (e) {
-      // Fallback: save without history merge
-      var answerData = {};
-      answerData[secId] = {
-        answer: answer,
-        score: result.score,
-        passed: passed,
-        bestScore: result.score,
-        feedback: result.feedback || '',
-        attempts: attemptNum,
-        lastAttempt: new Date().toISOString()
-      };
-      docRef.set({ theoryAnswers: answerData }, { merge: true });
-      console.warn('[Lessons] Saved theory answer (no history merge):', e.message);
     });
   }
 
@@ -2271,21 +2277,20 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     _saveLessonProgress(phaseId, lessonState.completed);
   }
 
-  /* ── Firestore persistence ────────────────────────────────────────────── */
+  /* ── Local persistence ────────────────────────────────────────────────── */
   function _saveLessonProgress(phaseId, completedIds) {
-    if (!window.rtUser) return;
-    var uid = window.rtUser.uid;
-    try {
-      window.rtDb.collection('users').doc(uid)
-        .collection('curriculum').doc(phaseId)
-        .set({ lessonProgress: completedIds }, { merge: true });
-    } catch (e) {
-      console.warn('[Lessons] Failed to save progress:', e.message);
-    }
+    RTStore.update(function (s) {
+      var ph = s.curriculum.phases[phaseId];
+      if (!ph) {
+        ph = RTSchema.createEmptyPhase(phaseId);
+        s.curriculum.phases[phaseId] = ph;
+      }
+      ph.lessonProgress = completedIds.slice();
+    });
   }
 
   /**
-   * Load lesson progress from Firestore data.
+   * Load lesson progress from the phase entry in local progress.
    * @param {string} phaseId
    * @param {Object} phaseData - the currData[phaseId] object
    * @returns {Array} completed section IDs
