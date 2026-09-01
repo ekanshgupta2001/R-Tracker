@@ -333,6 +333,7 @@ function finishLevel(success) {
   console.log(`[Level ${lvl.id}] Finished: ${success ? 'PASSED' : 'FAILED (time out)'}. Waypoints hit: ${Math.max(0, lvl.nextCp - 1)}/${def.path.length - 1}. Accuracy: ${Math.round(avgAcc * 100)}%. Time: ${lvl.elapsed.toFixed(1)}s / ${def.timeLimit}s`);
 
   if (!success) {
+    recordLevelAttempt(lvl.id, { success: false });
     lvl.phase = 'fail';
     showFailCard(def, avgAcc);
   } else {
@@ -350,8 +351,7 @@ function finishLevel(success) {
     driverMetrics.pathAccuracyHistory.push(avgAcc);
     driverMetrics.levelsCompleted++;
 
-    saveLevelResult(lvl.id, starCount, lvl.elapsed, avgAcc);
-    saveLeaderboardEntry(lvl.id, starCount, lvl.elapsed, avgAcc);
+    recordLevelAttempt(lvl.id, { success: true, stars: starCount, time: lvl.elapsed, accuracy: avgAcc });
 
     lvl.phase = 'result';
     showResultCard(stars, avgAcc, lvl.elapsed, def);
@@ -490,9 +490,7 @@ function renderLevelsSidebar() {
           <div class="lvl-meta">${ld.timeLimit}s limit &middot; ${ld.path.length-1} CP</div>
           ${comp ? `<div class="lvl-stars">${starsHtml}</div>` : ''}
         </div>
-        ${unlocked
-          ? `<button class="lvl-lb-btn" onclick="event.stopPropagation();openLeaderboard(${ld.id})" title="Leaderboard">&#127942;</button>`
-          : '<span class="lvl-lock-icon">&#128274;</span>'}
+        ${unlocked ? '' : '<span class="lvl-lock-icon">&#128274;</span>'}
       </div>`;
     }
   }

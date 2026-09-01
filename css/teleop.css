@@ -467,13 +467,6 @@ canvas { border: none; }
 
 .lvl-lock-icon { font-size: 13px; color: #333; }
 
-.lvl-lb-btn {
-  background: none; border: none; color: #445; cursor: pointer;
-  font-size: 13px; padding: 2px 5px; flex-shrink: 0;
-  transition: color 0.2s;
-}
-.lvl-lb-btn:hover { color: #ffd700; }
-
 /* ── Attempt Panel ───────────────────────────────────────────────────────── */
 #attempt-panel {
   background: #222;
@@ -751,53 +744,6 @@ canvas { border: none; }
 .coach-cmp-up   { color: #4aff88; font-weight: 600; }
 .coach-cmp-down { color: #ff5544; font-weight: 600; }
 .coach-cmp-neu  { color: #778; }
-
-/* ── Leaderboard Modal ───────────────────────────────────────────────────── */
-#lb-backdrop {
-  position: fixed; inset: 0; z-index: 1500;
-  background: rgba(0,0,0,0.78);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.25s;
-}
-
-#lb-backdrop.open { opacity: 1; pointer-events: all; }
-
-#lb-modal {
-  background: #1e1e1e; border: 1px solid #333; border-top: 2px solid var(--burgundy-accent);
-  border-radius: 14px; padding: 22px 24px; width: 400px; max-width: 95vw;
-  max-height: 85vh; overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.85), 0 -2px 12px rgba(199, 62, 90, 0.3);
-  transform: scale(0.9);
-  transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
-}
-
-#lb-backdrop.open #lb-modal { transform: scale(1); }
-
-.lb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a; }
-.lb-title  { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--burgundy-accent); text-shadow: var(--burgundy-glow-text); }
-.lb-close  { background: none; border: none; color: #445; cursor: pointer; font-size: 16px; font-family: inherit; }
-.lb-close:hover { color: #dde; }
-
-.lb-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 10px; border-radius: 7px;
-  background: #252525; border: 1px solid #2a2a2a;
-  margin-bottom: 6px; transition: border-color 0.2s;
-}
-
-.lb-row.mine    { border-color: var(--burgundy-accent); background: #2a1a1e; }
-.lb-rank        { width: 24px; text-align: center; font-size: 13px; font-weight: 700; color: #667; flex-shrink: 0; }
-.lb-rank.gold   { color: #ffd700; }
-.lb-rank.silver { color: #c0c0c0; }
-.lb-rank.bronze { color: #cd7f32; }
-.lb-name        { flex: 1; min-width: 0; font-size: 13px; color: #ccd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lb-time        { font-size: 12px; color: #99a; font-weight: 600; flex-shrink: 0; }
-.lb-stars       { font-size: 11px; flex-shrink: 0; }
-.lb-star-lit    { color: #ffcc00; }
-.lb-star-dim    { color: #333; }
-.lb-empty       { font-size: 12px; color: #445; text-align: center; padding: 24px 0; }
-.lb-you         { font-size: 10px; color: var(--burgundy-accent); text-shadow: var(--burgundy-glow-text); margin-left: 4px; }
 
 /* ── Home Button ─────────────────────────────────────────────────────────── */
 .home-btn {
@@ -1157,10 +1103,6 @@ html.light .lvl-lock-icon {
   color: #ccc;
 }
 
-html.light .lvl-lb-btn {
-  color: #999;
-}
-
 /* ── Attempt Panel ────────────────────────────────────────────────────────── */
 html.light #attempt-panel {
   background: #fff;
@@ -1323,58 +1265,6 @@ html.light .coach-plan-item {
 
 html.light .coach-comparison-row {
   color: #666;
-}
-
-/* ── Leaderboard Modal ────────────────────────────────────────────────────── */
-html.light #lb-backdrop {
-  background: rgba(0,0,0,0.35);
-}
-
-html.light #lb-modal {
-  background: #fff;
-  border-color: #ddd;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.18), 0 -2px 12px rgba(199,62,90,0.15);
-}
-
-html.light .lb-header {
-  border-bottom-color: #ddd;
-}
-
-html.light .lb-close {
-  color: #999;
-}
-
-html.light .lb-close:hover {
-  color: #333;
-}
-
-html.light .lb-row {
-  background: #f5f5f5;
-  border-color: #ddd;
-}
-
-html.light .lb-row.mine {
-  background: #fff0f3;
-}
-
-html.light .lb-rank {
-  color: #888;
-}
-
-html.light .lb-name {
-  color: #444;
-}
-
-html.light .lb-time {
-  color: #555;
-}
-
-html.light .lb-star-dim {
-  color: #ddd;
-}
-
-html.light .lb-empty {
-  color: #999;
 }
 
 /* ── Home Button ──────────────────────────────────────────────────────────── */

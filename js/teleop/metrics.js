@@ -182,7 +182,7 @@ function percentileFromRating(r) {
 }
 
 function openDriverReport() {
-  saveDriverStats();
+  flushDriverStats();
   _coachGenerated = false;
   switchReportTab('stats');
   const scores = computeScores();

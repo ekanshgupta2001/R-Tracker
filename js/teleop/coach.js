@@ -16,7 +16,7 @@ function generateCoachReport() {
   const scores = computeScores();
   const rating = computeOverallRating();
   const m = driverMetrics;
-  const name = (window.rtUser && (window.rtUser.displayName || window.rtUser.email.split('@')[0])) || 'Driver';
+  const name = (RTStore.get().profile.displayName || 'Driver');
 
   const breakdown = [
     { label: 'Smoothness', val: scores.smoothness, key: 'smoothness' },
@@ -240,79 +240,41 @@ function renderCoachPanel() {
     typewriter(document.getElementById('coach-summary-text'), report.overallSummary, 9);
   }, 200);
 
-  saveCoachReportToFirestore(report);
-  loadPreviousCoachReport(report);
+  saveCoachReport(report);          // js/teleop/persist.js → RTStore (stays in the browser)
+  renderCoachComparison(report);
 }
 
-async function saveCoachReportToFirestore(report) {
-  if (!window.rtUser) return;
-  try {
-    const ts = Date.now();
-    await rtDb.collection('users').doc(rtUser.uid)
-      .collection('coachReports').doc(String(ts)).set({
-        ...report,
-        comparisonToLast: null,
-        generatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        metricsSnapshot: {
-          totalDistance: Math.round(driverMetrics.totalDistance),
-          totalInputs: driverMetrics.totalInputs,
-          levelsCompleted: driverMetrics.levelsCompleted,
-          sessionMs: Math.round(performance.now() - driverMetrics.sessionStart),
-        },
-      });
-
-    const name = rtUser.displayName || rtUser.email.split('@')[0];
-    var teamId = window.rtUserTeamId;
-    if (!teamId) { console.warn('No teamId, skipping activity write'); return; }
-    await rtDb.collection('teams').doc(teamId).collection('activity').doc(String(ts)).set({
-      userName: name,
-      action: `generated a new AI driver report`,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (e) {
-    console.warn('Failed to save coach report:', e.message);
-  }
-}
-
-async function loadPreviousCoachReport(currentReport) {
+// Compare this report with the previous stored one (if any).
+function renderCoachComparison(currentReport) {
   const compEl = document.getElementById('coach-comparison-content');
-  if (!window.rtUser) { compEl.textContent = 'Sign in to track progress over time.'; return; }
-  try {
-    const snap = await rtDb.collection('users').doc(rtUser.uid)
-      .collection('coachReports').orderBy('generatedAt', 'desc').limit(2).get();
-
-    if (snap.size < 2) {
-      compEl.textContent = 'No previous session data yet — come back after your next practice!';
-      return;
-    }
-
-    const prev = snap.docs[1].data();
-    const cur = currentReport;
-    const ratingDelta = cur.overallScore - (prev.overallScore || 0);
-    const rows = [];
-
-    const rSign = ratingDelta > 0 ? '+' : '';
-    const rCls = ratingDelta > 0 ? 'coach-cmp-up' : ratingDelta < 0 ? 'coach-cmp-down' : 'coach-cmp-neu';
-    const rArr = ratingDelta > 0 ? '&#9650;' : ratingDelta < 0 ? '&#9660;' : '&#9679;';
-    rows.push(`<div class="coach-comparison-row">Overall Rating: ${prev.overallScore || '—'} &rarr; ${cur.overallScore}<span class="${rCls}">${rArr} ${rSign}${ratingDelta}</span></div>`);
-
-    const skillKeys = ['smoothness', 'stability', 'strafe', 'turn', 'levelScore', 'recovery'];
-    const skillNames = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn Ctrl', levelScore: 'Path Acc.', recovery: 'Recovery' };
-    for (const key of skillKeys) {
-      const pv = prev.scores ? (prev.scores[key] || 0) : 0;
-      const cv = cur.scores ? (cur.scores[key] || 0) : 0;
-      const d = cv - pv;
-      if (d === 0) continue;
-      const cls = d > 0 ? 'coach-cmp-up' : 'coach-cmp-down';
-      const arr = d > 0 ? '&#9650;' : '&#9660;';
-      const sign = d > 0 ? '+' : '';
-      const note = d < 0 ? ' — needs attention' : '';
-      rows.push(`<div class="coach-comparison-row">${skillNames[key]}: ${pv} &rarr; ${cv}<span class="${cls}">${arr} ${sign}${d}</span>${note ? `<span style="color:#556;font-size:10px">${note}</span>` : ''}</div>`);
-    }
-
-    compEl.innerHTML = rows.join('');
-  } catch (e) {
-    compEl.textContent = 'Could not load previous session data.';
-    console.warn('Failed to load previous coach report:', e.message);
+  const prev = getPreviousCoachReport();
+  if (!prev) {
+    compEl.textContent = 'No previous session data yet — come back after your next practice!';
+    return;
   }
+
+  const cur = currentReport;
+  const ratingDelta = cur.overallScore - (prev.overallScore || 0);
+  const rows = [];
+
+  const rSign = ratingDelta > 0 ? '+' : '';
+  const rCls = ratingDelta > 0 ? 'coach-cmp-up' : ratingDelta < 0 ? 'coach-cmp-down' : 'coach-cmp-neu';
+  const rArr = ratingDelta > 0 ? '&#9650;' : ratingDelta < 0 ? '&#9660;' : '&#9679;';
+  rows.push(`<div class="coach-comparison-row">Overall Rating: ${prev.overallScore || '—'} &rarr; ${cur.overallScore}<span class="${rCls}">${rArr} ${rSign}${ratingDelta}</span></div>`);
+
+  const skillKeys = ['smoothness', 'stability', 'strafe', 'turn', 'levelScore', 'recovery'];
+  const skillNames = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn Ctrl', levelScore: 'Path Acc.', recovery: 'Recovery' };
+  for (const key of skillKeys) {
+    const pv = prev.scores ? (prev.scores[key] || 0) : 0;
+    const cv = cur.scores ? (cur.scores[key] || 0) : 0;
+    const d = cv - pv;
+    if (d === 0) continue;
+    const cls = d > 0 ? 'coach-cmp-up' : 'coach-cmp-down';
+    const arr = d > 0 ? '&#9650;' : '&#9660;';
+    const sign = d > 0 ? '+' : '';
+    const note = d < 0 ? ' — needs attention' : '';
+    rows.push(`<div class="coach-comparison-row">${skillNames[key]}: ${pv} &rarr; ${cv}<span class="${cls}">${arr} ${sign}${d}</span>${note ? `<span style="color:#556;font-size:10px">${note}</span>` : ''}</div>`);
+  }
+
+  compEl.innerHTML = rows.length ? rows.join('') : '<div class="coach-comparison-row">No change from your previous session.</div>';
 }

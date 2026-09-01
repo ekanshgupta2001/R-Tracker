@@ -71,6 +71,4 @@ cfgUpdate();
 renderLevelsSidebar();
 requestAnimationFrame(loop);
 
-initAuth(function onSignedIn(user) {
-  loadLevelProgress();
-});
+hydrateCompletedLevels();
