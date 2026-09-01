@@ -259,111 +259,6 @@
   box-shadow: var(--burgundy-glow-sm);
 }
 
-/* ── Legacy grid fallback (hidden, kept for coach cards) ────────────────── */
-.home-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-grow: 0;
-  flex-shrink: 0;
-}
-
-.home-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 28px;
-  height: 350px !important;
-  min-height: 350px !important;
-  max-height: 350px !important;
-  flex-grow: 0 !important;
-  flex-shrink: 0 !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  animation: cardGlow 3s ease-in-out infinite;
-  transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.home-card:hover {
-  background: #222;
-  border-color: var(--burgundy-accent);
-  transform: translateY(-5px) scale(1.01);
-  box-shadow:
-    0 0 18px rgba(199, 62, 90, 0.4),
-    0 0 36px rgba(199, 62, 90, 0.2),
-    0 4px 20px rgba(0, 0, 0, 0.4);
-  animation: none;
-  transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.home-card:active {
-  transform: translateY(-2px) scale(0.98);
-  transition: transform 0.1s ease;
-}
-
-/* Slower fade out on hover-out */
-.home-card:not(:hover) {
-  transition: border-color 0.6s ease, background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease;
-}
-
-/* Coach cards (inside carousel) */
-#coach-carousel .home-card {
-  padding: 28px;
-  height: 450px !important;
-  min-height: 450px !important;
-  max-height: 450px !important;
-}
-
-#coach-carousel .home-card-icon {
-  font-size: 56px;
-}
-
-#coach-carousel .home-card-title {
-  font-size: 22px;
-}
-
-#coach-carousel .home-card-desc {
-  font-size: 14px;
-}
-
-/* Coach view — more space below title */
-body.coach-view .home-hero {
-  margin-bottom: 58px;
-}
-
-.home-card-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  line-height: 1;
-  transition: transform 0.3s ease;
-}
-
-.home-card:hover .home-card-icon {
-  transform: scale(1.12);
-}
-
-.home-card-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 10px;
-  text-shadow: 0 0 12px rgba(199, 62, 90, 0.35);
-}
-
-.home-card-desc {
-  font-size: 13px;
-  color: #bbb;
-  line-height: 1.5;
-  max-width: 300px;
-}
-
 /* ── Driver Report Bar ─────────────────────────────────────────────────── */
 .home-report-btn {
   display: flex;
@@ -764,33 +659,10 @@ html.light .home-welcome {
   color: #666;
 }
 
-html.light .home-card {
-  background: #ffffff;
-  border-color: #e0e0e0;
-  animation-name: cardGlowLight;
-}
 
-html.light .home-card:hover {
-  background: #f8f8f8;
-  border-color: rgba(128, 0, 32, 0.6);
-  box-shadow:
-    0 0 18px rgba(128, 0, 32, 0.2),
-    0 0 36px rgba(128, 0, 32, 0.1),
-    0 4px 20px rgba(0, 0, 0, 0.08);
-  animation: none;
-}
 
-html.light .home-card-title {
-  color: #1a1a1a;
-}
 
-html.light .home-card-desc {
-  color: #666;
-}
 
-html.light .home-card-title {
-  text-shadow: 0 0 10px rgba(128, 0, 32, 0.2);
-}
 
 html.light .home-report-btn {
   background: #ffffff;

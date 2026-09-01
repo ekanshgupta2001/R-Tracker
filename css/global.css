@@ -167,58 +167,6 @@ body.rt-entering {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
-/* ── Page loader (highest z-index, covers everything) ───────────────────── */
-#rt-page-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  opacity: 1;
-  pointer-events: all;
-  transition: opacity 0.3s ease;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-#rt-page-loader.rt-loader-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.rt-loader-logo {
-  font-size: 34px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
-  line-height: 1;
-  animation: rt-logo-pulse 1.8s ease-in-out infinite;
-}
-
-.rt-logo-r {
-  background: linear-gradient(135deg, #a0334a, #800020);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.rt-logo-t { color: var(--text); }
-
-.rt-loader-tagline {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--text-muted);
-  opacity: 0.4;
-}
-
-@keyframes rt-logo-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.97); }
-  50%       { opacity: 1;   transform: scale(1); }
-}
-
 /* ── Reduced Motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

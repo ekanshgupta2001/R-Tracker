@@ -1542,7 +1542,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
    * @param {string} phaseId - e.g. 'phase1'
    * @param {Array} sections - array of section objects
    * @param {string} containerId - DOM id to render into
-   * @param {Array} completedSections - previously completed section IDs from Firestore
+   * @param {Array} completedSections - previously completed section IDs from local progress
    */
   window.renderLessons = function (phaseId, sections, containerId, completedSections) {
     lessonState.phaseId = phaseId;
@@ -1624,7 +1624,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
           // Already answered MC — show collapsed success
           html += '<div class="les-check-done">&#10003; Correct</div>';
         } else if (isDone && isWritten) {
-          // Completed written answer — show read-only textarea + feedback wrap for Firestore to populate
+          // Completed written answer — show read-only textarea + feedback wrap restored from local progress
           html += '<div class="les-check-done" id="les-wdone-badge-' + sec.id + '">&#10003; Submitted</div>';
           html += '<div class="les-written-done-detail" id="les-wdone-' + sec.id + '" style="display:none">';
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
@@ -1690,7 +1690,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
 
     el.innerHTML = html;
 
-    // Attach listeners and load Firestore data for ALL written-answer sections (active AND completed)
+    // Attach listeners and restore saved answers for ALL written-answer sections (active AND completed)
     for (var wi = 0; wi < sections.length; wi++) {
       if (sections[wi].check && sections[wi].check.type === 'written_answer') {
         var wiDone = lessonState.completed.indexOf(sections[wi].id) !== -1;
@@ -2273,7 +2273,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       }
     }
 
-    // Save progress to Firestore
+    // Save progress locally
     _saveLessonProgress(phaseId, lessonState.completed);
   }
 

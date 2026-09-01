@@ -1,29 +1,28 @@
-/* ── Client-side validation for Firestore writes ──────────────────────── */
+/* ── Client-side validation & escaping helpers ────────────────────────────
+   Pure functions, no network. Range checks delegate to RTSchema when loaded. */
 (function () {
   'use strict';
 
-  var VALID_STATUSES = ['locked', 'not_started', 'in_progress', 'submitted', 'verified'];
+  var FALLBACK_STATUSES = ['locked', 'not_started', 'in_progress', 'submitted', 'verified'];
 
-  window.validateCurriculumWrite = function (data) {
-    if (!data || typeof data !== 'object') return false;
-    if (data.status && VALID_STATUSES.indexOf(data.status) === -1) return false;
-    if (data.aiScore !== undefined && (typeof data.aiScore !== 'number' || data.aiScore < 0 || data.aiScore > 100)) return false;
-    if (data.score !== undefined && (typeof data.score !== 'number' || data.score < 0 || data.score > 100)) return false;
-    if (data.verifiedBy && data.verifiedBy !== 'ai_reviewer' && data.verifiedBy.length > 50) return false;
-    return true;
+  window.isScore = function (n) {
+    if (window.RTSchema) return window.RTSchema.isScore(n);
+    return typeof n === 'number' && isFinite(n) && n >= 0 && n <= 100;
   };
 
-  window.validateProfileWrite = function (data) {
-    if (!data || typeof data !== 'object') return false;
-    if (data.role && ['player', 'coach'].indexOf(data.role) === -1) return false;
-    if (data.displayName && data.displayName.length > 100) return false;
-    return true;
+  window.isStars = function (n) {
+    if (window.RTSchema) return window.RTSchema.isStars(n);
+    return typeof n === 'number' && isFinite(n) && Math.floor(n) === n && n >= 0 && n <= 3;
   };
 
-  window.validateTeamMemberWrite = function (data) {
+  // Shape check for a patch merged into a curriculum phase entry.
+  window.validatePhasePatch = function (data) {
     if (!data || typeof data !== 'object') return false;
-    if (data.overallScore !== undefined && (typeof data.overallScore !== 'number' || data.overallScore < 0 || data.overallScore > 100)) return false;
-    if (data.levelsCompleted !== undefined && (typeof data.levelsCompleted !== 'number' || data.levelsCompleted < 0 || data.levelsCompleted > 50)) return false;
+    var statuses = window.RTSchema ? window.RTSchema.VALID_STATUSES : FALLBACK_STATUSES;
+    if (data.status && statuses.indexOf(data.status) === -1) return false;
+    if (data.score !== undefined && !window.isScore(data.score)) return false;
+    if (data.bestScore !== undefined && !window.isScore(data.bestScore)) return false;
+    if (data.lastScore !== undefined && data.lastScore !== null && !window.isScore(data.lastScore)) return false;
     return true;
   };
 

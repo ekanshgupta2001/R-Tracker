@@ -488,7 +488,7 @@
     }
   }
 
-  // ── Save / Load (Firebase) ─────────────────────────────────────────────────
+  // ── Save / Load (local progress) ─────────────────────────────────────────────────
   window.openStratModal = function (mode) {
     var backdrop = document.getElementById('strat-modal-backdrop');
     var saveRow = document.getElementById('sm-save-row');
@@ -514,85 +514,85 @@
     document.getElementById('strat-modal-backdrop').classList.remove('open');
   };
 
+  // Strategies are kept in local progress (RTStore.strategies); nothing leaves the browser.
+  function newStrategyId() { return 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
   window.saveStrategy = function () {
     var nameInput = document.getElementById('sm-name-input');
     var msg = document.getElementById('sm-msg');
     var name = (nameInput.value || '').trim();
     if (!name) { msg.textContent = 'Enter a name.'; msg.className = 'sm-msg err'; return; }
-    if (!window.rtUser) { msg.textContent = 'Sign in first.'; msg.className = 'sm-msg err'; return; }
+    if (name.length > RTSchema.LIMITS.nameMaxLen) { msg.textContent = 'That name is too long.'; msg.className = 'sm-msg err'; return; }
 
-    var teamId = window.rtUserTeamId;
     var notes = (document.getElementById('strategyNotes') || {}).value || '';
+    var now = Date.now();
 
-    var collection = teamId
-      ? window.rtDb.collection('teams').doc(teamId).collection('strategies')
-      : window.rtDb.collection('users').doc(window.rtUser.uid).collection('strategies');
-
-    collection.doc(name).set({
-      name: name,
-      annotations: JSON.stringify(annotations),
-      notes: notes,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy: window.rtUser.displayName || window.rtUser.email
-    }).then(function () {
-      msg.textContent = 'Saved!';
-      msg.className = 'sm-msg';
-      nameInput.value = '';
-      setTimeout(closeStratModal, 800);
-    }).catch(function (e) {
-      msg.textContent = 'Error: ' + e.message;
-      msg.className = 'sm-msg err';
+    RTStore.update(function (s) {
+      var data = {
+        name: name,
+        annotations: JSON.parse(JSON.stringify(annotations)),
+        notes: notes,
+        updatedAt: now
+      };
+      var existing = null;
+      for (var i = 0; i < s.strategies.length; i++) {
+        if (s.strategies[i].name === name) { existing = s.strategies[i]; break; }
+      }
+      if (existing) {
+        Object.assign(existing, data);
+      } else {
+        s.strategies.push(Object.assign({ id: newStrategyId(), createdAt: now }, data));
+        var cap = RTSchema.LIMITS.strategiesMax;
+        if (s.strategies.length > cap) {
+          s.strategies.sort(function (a, b) { return (a.updatedAt || 0) - (b.updatedAt || 0); });
+          s.strategies.splice(0, s.strategies.length - cap);
+        }
+      }
     });
+
+    msg.textContent = 'Saved to your progress.';
+    msg.className = 'sm-msg';
+    nameInput.value = '';
+    setTimeout(closeStratModal, 800);
   };
 
   function loadStratList() {
     var list = document.getElementById('sm-strat-list');
     if (!list) return;
-    list.innerHTML = '<div class="sm-empty">Loading...</div>';
 
-    if (!window.rtUser) { list.innerHTML = '<div class="sm-empty">Sign in first.</div>'; return; }
+    var items = RTStore.get().strategies.slice().sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
+    if (items.length === 0) { list.innerHTML = '<div class="sm-empty">No saved strategies yet.</div>'; return; }
 
-    var teamId = window.rtUserTeamId;
-    var collection = teamId
-      ? window.rtDb.collection('teams').doc(teamId).collection('strategies')
-      : window.rtDb.collection('users').doc(window.rtUser.uid).collection('strategies');
+    list.innerHTML = '';
+    items.forEach(function (d) {
+      var item = document.createElement('div');
+      item.className = 'sm-item';
+      var when = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
+      item.innerHTML =
+        '<div><div class="sm-item-name">' + escH(d.name) + '</div>' +
+        '<div class="sm-item-meta">' + escH(when) + '</div></div>' +
+        '<button class="sm-item-del" data-id="' + escH(d.id) + '" title="Delete">&#10005;</button>';
 
-    collection.orderBy('updatedAt', 'desc').get().then(function (snap) {
-      if (snap.empty) { list.innerHTML = '<div class="sm-empty">No saved strategies yet.</div>'; return; }
-
-      list.innerHTML = '';
-      snap.forEach(function (doc) {
-        var d = doc.data();
-        var item = document.createElement('div');
-        item.className = 'sm-item';
-        var when = d.updatedAt ? new Date(d.updatedAt.seconds * 1000).toLocaleDateString() : '';
-        item.innerHTML =
-          '<div><div class="sm-item-name">' + escH(d.name) + '</div>' +
-          '<div class="sm-item-meta">' + escH(when) + (d.updatedBy ? ' by ' + escH(d.updatedBy) : '') + '</div></div>' +
-          '<button class="sm-item-del" data-id="' + escH(doc.id) + '" title="Delete">&#10005;</button>';
-
-        item.addEventListener('click', function (e) {
-          if (e.target.closest('.sm-item-del')) return;
-          loadStrategy(d);
-        });
-
-        item.querySelector('.sm-item-del').addEventListener('click', function (e) {
-          e.stopPropagation();
-          deleteStrategy(doc.id);
-        });
-
-        list.appendChild(item);
+      item.addEventListener('click', function (e) {
+        if (e.target.closest('.sm-item-del')) return;
+        loadStrategy(d);
       });
-    }).catch(function () {
-      list.innerHTML = '<div class="sm-empty">Error loading strategies.</div>';
+
+      item.querySelector('.sm-item-del').addEventListener('click', function (e) {
+        e.stopPropagation();
+        deleteStrategy(d.id);
+      });
+
+      list.appendChild(item);
     });
   }
 
   function loadStrategy(data) {
-    try {
-      annotations = JSON.parse(data.annotations || '[]');
-    } catch (e) {
-      annotations = [];
+    if (Array.isArray(data.annotations)) {
+      annotations = JSON.parse(JSON.stringify(data.annotations));
+    } else {
+      // Older exports stored annotations as a JSON string
+      try { annotations = JSON.parse(data.annotations || '[]'); } catch (e) { annotations = []; }
     }
     undoStack = [];
     redoStack = [];
@@ -617,16 +617,10 @@
 
   function deleteStrategy(id) {
     if (!confirm('Delete this strategy?')) return;
-    var teamId = window.rtUserTeamId;
-    var collection = teamId
-      ? window.rtDb.collection('teams').doc(teamId).collection('strategies')
-      : window.rtDb.collection('users').doc(window.rtUser.uid).collection('strategies');
-    collection.doc(id).delete().then(function () {
-      loadStratList();
-    }).catch(function () {
-      var msg = document.getElementById('sm-msg');
-      if (msg) { msg.textContent = 'Delete failed.'; msg.className = 'sm-msg err'; }
+    RTStore.update(function (s) {
+      s.strategies = s.strategies.filter(function (x) { return x.id !== id; });
     });
+    loadStratList();
   }
 
   function escH(s) {

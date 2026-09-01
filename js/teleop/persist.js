@@ -1,4 +1,4 @@
-// ── R-Tracker TeleOp — local persistence (replaces the v1 Firestore helpers) ──
+// ── R-Tracker TeleOp — local persistence (replaces the v1 cloud helpers) ──
 // Everything here reads/writes RTStore only. Nothing leaves the browser.
 // Globals used from other teleop modules: completedLevels, driverMetrics,
 // computeScores(), computeOverallRating(), gradeFromRating(), renderLevelsSidebar().

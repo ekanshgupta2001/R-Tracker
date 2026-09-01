@@ -4,29 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta property="og:title" content="R-Tracker — FTC Driver Practice & Programming Curriculum">
-  <meta property="og:description" content="Practice driving, plan autonomous paths, and learn FTC programming with AI-powered code review.">
+  <meta property="og:description" content="Practice driving, plan autonomous paths, and learn FTC programming. Everything stays in your browser.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://r-tracker-liard.vercel.app">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="R-Tracker — FTC Driver Practice & Programming Curriculum">
-  <meta name="twitter:description" content="Practice driving, plan autonomous paths, and learn FTC programming with AI-powered code review.">
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta name="twitter:description" content="Practice driving, plan autonomous paths, and learn FTC programming. Everything stays in your browser.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
   <meta name="description"
     content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
   <title>R-Tracker — Rundle Robotics Visualizer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/global.css">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/login.css">
   <link rel="stylesheet" href="css/home.css">
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
-  <script src="js/firebase-init.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/schema.js"></script>
+  <script src="js/store.js"></script>
   <script defer src="js/sidebar.js"></script>
 </head>
 
@@ -80,38 +75,7 @@
         <div class="carousel-dots" id="player-dots"></div>
       </div>
 
-      <!-- Coach Carousel (hidden by default) -->
-      <div class="carousel-section" id="coach-carousel" style="display:none;">
-        <div class="home-carousel-container">
-          <button class="carousel-arrow carousel-left">&#8249;</button>
-          <div class="home-carousel-track" id="coach-track">
-            <a href="pages/manage-team.html" class="carousel-card">
-              <div class="card-icon">👥</div>
-              <div class="card-title">Manage Team</div>
-              <div class="card-desc">Create your team, generate invite codes, add players, and manage your roster.</div>
-            </a>
-            <a href="pages/dashboard.html" class="carousel-card">
-              <div class="card-icon">📊</div>
-              <div class="card-title">Team Dashboard</div>
-              <div class="card-desc">View driver rankings and performance comparisons. Get AI-powered driver recommendations.</div>
-            </a>
-            <a href="pages/strategy.html" class="carousel-card">
-              <div class="card-icon">📋</div>
-              <div class="card-title">Strategy Planner</div>
-              <div class="card-desc">Draw on the field to plan match strategy with your team. Save and present strategies.</div>
-            </a>
-            <a href="pages/curriculum.html" class="carousel-card">
-              <div class="card-icon">📚</div>
-              <div class="card-title">Curriculum</div>
-              <div class="card-desc">Review student progress through the FTC programming learning path.</div>
-            </a>
-          </div>
-          <button class="carousel-arrow carousel-right">&#8250;</button>
-        </div>
-        <div class="carousel-dots" id="coach-dots"></div>
-      </div>
-
-      <!-- Driver Report Bar (players only) -->
+      <!-- Driver Report Bar -->
       <div class="report-stats-bar" id="report-stats-bar">
         <div class="report-bar-label">YOUR DRIVER RATING</div>
         <a href="pages/report.html" class="report-bar-row">
@@ -151,19 +115,7 @@
 
   <script defer src="js/utils/validators.js"></script>
   <script>
-    /* ── Update User / Cards ─────────────────────────────────────────────── */
-    function updateHomeUser(user, role) {
-      if (role === 'coach') {
-        document.getElementById('player-carousel').style.display = 'none';
-        document.getElementById('coach-carousel').style.display = 'block';
-        document.getElementById('report-stats-bar').style.display = 'none';
-        document.body.classList.add('coach-view');
-      }
-      // Load report stats for players
-      if (role !== 'coach') loadReportBarStats(user);
-    }
-
-    /* ── Report Bar Stats ─────────────────────────────────────────────────── */
+    /* ── Report Bar Stats (from local progress) ───────────────────────────── */
     function gradeColor(g) {
       if (g === 'S' || g === 'A') return '#22c55e';
       if (g === 'B') return '#3b82f6';
@@ -182,45 +134,34 @@
       return 'F';
     }
 
-    function loadReportBarStats(user) {
-      if (!window.rtDb || !user) return;
+    function loadReportBarStats() {
       var el = function(id) { return document.getElementById(id); };
-      var uid = user.uid;
+      var s = RTStore.get();
+      var d = s.driver.stats || {};
+      var score = Math.round(d.overallRating || 0);
+      var totalMs = d.totalPracticeMs || 0;
+      var mins = Math.floor(totalMs / 60000);
 
-      // Read from the same paths the Report page uses
-      Promise.all([
-        window.rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get(),
-        window.rtDb.collection('users').doc(uid).collection('levels').get()
-      ]).then(function(results) {
-        var statsDoc = results[0];
-        var lvlSnap = results[1];
+      // Count completed levels
+      var levelsDone = 0;
+      Object.keys(s.driver.levels || {}).forEach(function(id) {
+        var ld = s.driver.levels[id];
+        if (ld && ld.bestStars && ld.bestStars >= 1) levelsDone++;
+      });
 
-        var d = statsDoc.exists ? statsDoc.data() : {};
-        var score = Math.round(d.overallRating || 0);
-        var totalMs = d.totalPracticeMs || 0;
-        var mins = Math.floor(totalMs / 60000);
+      // Score and grade
+      var g = scoreToGrade(score);
+      var gc = gradeColor(g);
+      if (el('rbar-main-score')) el('rbar-main-score').textContent = score;
+      if (el('rbar-main-grade')) { el('rbar-main-grade').textContent = g; el('rbar-main-grade').style.color = gc; }
 
-        // Count completed levels
-        var levelsDone = 0;
-        lvlSnap.forEach(function(ldoc) {
-          var ld = ldoc.data();
-          if (ld.bestStars && ld.bestStars >= 1) levelsDone++;
-        });
-
-        // Score and grade
-        var g = scoreToGrade(score);
-        var gc = gradeColor(g);
-        el('rbar-main-score').textContent = score;
-        el('rbar-main-grade').textContent = g;
-        el('rbar-main-grade').style.color = gc;
-
-        // Stat boxes
-        if (el('rbar-level')) el('rbar-level').textContent = levelsDone + '/12';
-        if (el('rbar-time')) el('rbar-time').textContent = mins >= 60 ? Math.floor(mins / 60) + 'h' : mins + 'm';
-        if (el('rbar-score')) el('rbar-score').textContent = score;
-        if (el('rbar-grade')) { el('rbar-grade').textContent = g; el('rbar-grade').style.color = gc; }
-      }).catch(function() {});
+      // Stat boxes
+      if (el('rbar-level')) el('rbar-level').textContent = levelsDone + '/12';
+      if (el('rbar-time')) el('rbar-time').textContent = mins >= 60 ? Math.floor(mins / 60) + 'h' : mins + 'm';
+      if (el('rbar-score')) el('rbar-score').textContent = score;
+      if (el('rbar-grade')) { el('rbar-grade').textContent = g; el('rbar-grade').style.color = gc; }
     }
+    window.loadReportBarStats = loadReportBarStats;
 
     /* ── Circular Carousel (3-card, rubber-band drag, smooth transitions) ── */
     function initCarousel(sectionId) {
@@ -479,13 +420,9 @@
     }
 
     initCarousel('player-carousel');
-    initCarousel('coach-carousel');
 
     /* ── Init ───────────────────────────────────────────────────────────────── */
-    initAuth(function onSignedIn(user) {
-      var role = window.rtUserRole || 'player';
-      updateHomeUser(user, role);
-    });
+    loadReportBarStats();
   </script>
 <script>
 (function() {
@@ -505,6 +442,7 @@
     if (!link) return;
     var href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (link.hasAttribute('download') || href.startsWith('blob:')) return;
     if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
     if (link.target === '_blank') return;
     e.preventDefault();

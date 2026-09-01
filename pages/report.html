@@ -3,20 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
-  <meta name="description" content="Driver Report — R-Tracker performance analysis and AI coaching.">
+  <meta name="description" content="Driver Report — R-Tracker performance analysis and coaching.">
   <title>Driver Report — R-Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../css/fonts.css">
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/sidebar.css">
-  <link rel="stylesheet" href="../css/login.css">
   <link rel="stylesheet" href="../css/report.css">
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="../config.js"></script>
-  <script src="../js/firebase-init.js"></script>
-  <script src="../js/auth.js"></script>
+  <script src="../js/schema.js"></script>
+  <script src="../js/store.js"></script>
   <script defer src="../js/sidebar.js"></script>
 </head>
 
@@ -58,9 +55,9 @@
         </div>
       </div>
 
-      <!-- Section 3: AI Coach Analysis -->
+      <!-- Section 3: Coach Analysis -->
       <div class="rpt-card rpt-animate" id="rpt-ai">
-        <div class="rpt-card-title">AI Coach Analysis</div>
+        <div class="rpt-card-title">Coach Analysis</div>
         <div id="ai-content">
           <div class="skeleton skel-line" style="width:40%;height:14px"></div>
           <div class="skeleton skel-line" style="width:90%;height:12px;margin-top:12px"></div>
@@ -186,49 +183,33 @@
     }, { threshold: 0.2 });
 
     /* ── Section 1: Driver Overview ────────────────────────────────────────── */
-    async function loadOverview(uid) {
+    function loadOverview(stats, lastReport) {
       var el = document.getElementById('overview-content');
-      try {
-        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
-        if (!doc.exists) {
-          el.innerHTML = '<div class="rpt-empty">Start practicing to see your stats here. <a href="teleop.html">Go to TeleOp Practice</a></div>';
-          return null;
-        }
-        var d = doc.data();
-        var g = d.grade || 'F';
-        var score = d.overallRating || 0;
-        var percentile = d.percentile || null;
-
-        var profileName = 'Driver';
-        try {
-          var rpSnap = await rtDb.collection('users').doc(uid)
-            .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
-          if (!rpSnap.empty) {
-            var rp = rpSnap.docs[0].data();
-            if (rp.driverProfile) {
-              profileName = rp.driverProfile.split(' — ')[0] || 'Driver';
-            }
-          }
-        } catch (_) {}
-
-        var html = '<div class="ov-row">';
-        html += '<div class="ov-score-wrap">';
-        html += '<span class="ov-score ' + scoreColorClass(score) + '">' + score + '</span>';
-        html += '<span class="ov-grade" style="color:' + gradeColor(g) + '">' + g + '</span>';
-        html += '</div>';
-        html += '<div class="ov-info">';
-        html += '<div class="ov-badge">' + esc(profileName).toUpperCase() + '</div>';
-        if (percentile) {
-          html += '<div class="ov-percentile">Top ' + percentile + '% of drivers</div>';
-        }
-        html += '</div>';
-        html += '</div>';
-        el.innerHTML = html;
-        return d;
-      } catch (e) {
-        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load overview</div>';
-        return null;
+      if (!stats || !stats.lastUpdated) {
+        el.innerHTML = '<div class="rpt-empty">Start practicing to see your stats here. <a href="teleop.html">Go to TeleOp Practice</a></div>';
+        return;
       }
+      var g = stats.grade || 'F';
+      var score = stats.overallRating || 0;
+      var percentile = lastReport && lastReport.percentile ? lastReport.percentile : null;
+      var profileName = 'Driver';
+      if (lastReport && lastReport.driverProfile) {
+        profileName = lastReport.driverProfile.split(' — ')[0] || 'Driver';
+      }
+
+      var html = '<div class="ov-row">';
+      html += '<div class="ov-score-wrap">';
+      html += '<span class="ov-score ' + scoreColorClass(score) + '">' + score + '</span>';
+      html += '<span class="ov-grade" style="color:' + gradeColor(g) + '">' + g + '</span>';
+      html += '</div>';
+      html += '<div class="ov-info">';
+      html += '<div class="ov-badge">' + esc(profileName).toUpperCase() + '</div>';
+      if (percentile) {
+        html += '<div class="ov-percentile">' + esc(percentile) + '</div>';
+      }
+      html += '</div>';
+      html += '</div>';
+      el.innerHTML = html;
     }
 
     /* ── Section 2: Skill Breakdown ────────────────────────────────────────── */
@@ -265,19 +246,15 @@
       if (skillsCard) scrollObserver.observe(skillsCard);
     }
 
-    /* ── Section 3: AI Coach Analysis ──────────────────────────────────────── */
-    async function loadAICoach(uid) {
+    /* ── Section 3: Coach Analysis (rule-based, generated in TeleOp Practice) ── */
+    function loadAICoach(rp, prevRp) {
       var el = document.getElementById('ai-content');
-      try {
-        var snap = await rtDb.collection('users').doc(uid)
-          .collection('coachReports').orderBy('generatedAt', 'desc').limit(1).get();
-
-        if (snap.empty) {
-          el.innerHTML = '<div class="rpt-empty">Complete some practice sessions to unlock AI coaching insights. <a href="teleop.html">Start Practicing</a></div>';
+      {
+        if (!rp) {
+          el.innerHTML = '<div class="rpt-empty">Open the Driver Report in TeleOp Practice after a session to generate coaching insights. <a href="teleop.html">Start Practicing</a></div>';
           return;
         }
 
-        var rp = snap.docs[0].data();
         var profileName = rp.driverProfile ? rp.driverProfile.split(' — ')[0] : 'Driver';
         var profileDesc = rp.driverProfile && rp.driverProfile.includes(' — ') ? rp.driverProfile.split(' — ')[1] : '';
         var strengths = rp.strengths || [];
@@ -286,8 +263,8 @@
         var summary = rp.summary || rp.overallSummary || '';
         var detailed = rp.detailedAnalysis || '';
 
-        var prevScore = rp.previousScore;
-        var curScore = rp.currentScore || rp.overallRating;
+        var prevScore = prevRp ? prevRp.overallScore : undefined;
+        var curScore = rp.overallScore;
 
         var html = '';
 
@@ -339,73 +316,54 @@
           html += '</ol>';
         }
 
-        html += '<button class="ai-generate-btn" onclick="regenerateReport()">Generate New Report</button>';
+        html += '<a class="ai-generate-btn" href="teleop.html">Generate a new report in TeleOp Practice</a>';
 
         el.innerHTML = html;
 
-        // Observe AI section for typing animation
+        // Observe section for typing animation
         var aiCard = document.getElementById('rpt-ai');
         if (aiCard) scrollObserver.observe(aiCard);
-      } catch (e) {
-        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load AI coach data</div>';
-        console.warn('loadAICoach:', e.message);
-      }
-    }
-
-    async function regenerateReport() {
-      var btn = document.querySelector('.ai-generate-btn');
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-      }
-      if (window.rtUser) {
-        await loadAICoach(window.rtUser.uid);
       }
     }
 
     /* ── Section 4: All-Time Stats ─────────────────────────────────────────── */
-    async function loadAllTimeStats(uid) {
+    function loadAllTimeStats(d, levels, phases) {
       var el = document.getElementById('alltime-content');
-      try {
-        var doc = await rtDb.collection('users').doc(uid).collection('stats').doc('driverStats').get();
-
-        // Also read levels to get accurate counts
-        var lvlSnap = await rtDb.collection('users').doc(uid).collection('levels').get();
-
-        // Count completed curriculum phases
-        var phasesCompleted = 0;
-        try {
-          var currSnap = await rtDb.collection('users').doc(uid).collection('curriculum').get();
-          currSnap.forEach(function(cdoc) {
-            var cd = cdoc.data();
-            if (cd.status === 'verified' || cd.status === 'submitted') phasesCompleted++;
-          });
-        } catch (e) { /* no curriculum data yet */ }
+      {
         var levelsDone = 0;
         var bestLevel = 0;
-        lvlSnap.forEach(function(ldoc) {
-          var ld = ldoc.data();
-          if (ld.bestStars && ld.bestStars >= 1) {
+        Object.keys(levels || {}).forEach(function(id) {
+          var ld = levels[id];
+          if (ld && ld.bestStars && ld.bestStars >= 1) {
             levelsDone++;
-            var n = parseInt(ldoc.id);
+            var n = parseInt(id);
             if (!isNaN(n) && n > bestLevel) bestLevel = n;
           }
         });
 
-        if (!doc.exists && levelsDone === 0) {
+        var phasesCompleted = 0;
+        var gradedScores = [];
+        Object.keys(phases || {}).forEach(function(pid) {
+          var cd = phases[pid];
+          if (!cd) return;
+          if (cd.status === 'verified' || cd.status === 'submitted') phasesCompleted++;
+          if (typeof cd.bestScore === 'number' && cd.bestScore > 0) gradedScores.push(cd.bestScore);
+        });
+        var avgCode = gradedScores.length ? Math.round(gradedScores.reduce(function(a, b) { return a + b; }, 0) / gradedScores.length) : null;
+
+        if ((!d || !d.lastUpdated) && levelsDone === 0 && phasesCompleted === 0) {
           el.innerHTML = '<div class="rpt-empty">No stats yet.</div>';
           return;
         }
-        var d = doc.exists ? doc.data() : {};
+        d = d || {};
         var score = d.overallRating || 0;
-        var cs = d.curriculumScore || {};
         var stats = [
           { val: fmtTime(d.totalPracticeMs || 0), label: 'Practice Time', cls: 'clr-cyan' },
           { val: levelsDone + '/12', label: 'Levels Done', cls: 'clr-gold' },
           { val: score, label: 'Best Score', cls: scoreColorClass(score) },
           { val: bestLevel > 0 ? bestLevel : '—', label: 'Best Level', cls: 'clr-gold' },
           { val: phasesCompleted, label: 'Curriculum Phases', cls: 'clr-green' },
-          { val: cs.averageAIScore ? cs.averageAIScore + '%' : '—', label: 'Avg AI Score', cls: 'clr-purple' },
+          { val: avgCode !== null ? avgCode + '%' : '—', label: 'Avg Code Score', cls: 'clr-purple' },
         ];
 
         var html = '<div class="rpt-stats-grid">';
@@ -414,20 +372,14 @@
         });
         html += '</div>';
         el.innerHTML = html;
-      } catch (e) {
-        el.innerHTML = '<div class="rpt-empty" style="color:#ef4444">Failed to load stats</div>';
       }
     }
 
     /* ── Section 5: Levels Progress ────────────────────────────────────────── */
-    async function loadLevelsGrid(uid) {
+    function loadLevelsGrid(levels) {
       var el = document.getElementById('levels-content');
       try {
-        var snap = await rtDb.collection('users').doc(uid).collection('levels').get();
-        var userLevels = {};
-        snap.forEach(function (doc) {
-          userLevels[doc.id] = doc.data();
-        });
+        var userLevels = levels || {};
         var completed = Object.values(userLevels).filter(function (l) { return l.bestStars && l.bestStars >= 1; }).length;
 
         var bestLevel = 0;
@@ -503,74 +455,51 @@
       }, { once: true });
     }
 
-    /* ── Section 6: Session History ────────────────────────────────────────── */
-    async function loadSessionHistory(uid, teamId) {
+    /* ── Section 6: Session History (from local practice sessions) ─────────── */
+    function loadSessionHistory(sessions) {
       var el = document.getElementById('history-content');
-      try {
-        if (!teamId) {
-          el.innerHTML = '<div class="rpt-empty">Join a team to see session history</div>';
-          return;
-        }
-        var items = [];
-        if (teamId) {
-          var snap = await rtDb.collection('teams').doc(teamId).collection('activity')
-            .orderBy('timestamp', 'desc').limit(20).get();
-          snap.forEach(function (doc) {
-            var d = doc.data();
-            if (d.userName && d.timestamp) items.push(d);
-          });
-          var userName = (window.rtUser.displayName || window.rtUser.email.split('@')[0]).toLowerCase().split(' ')[0];
-          var userItems = items.filter(function (i) {
-            return i.userName && i.userName.toLowerCase().indexOf(userName) !== -1;
-          });
-          items = userItems.length > 0 ? userItems.slice(0, 15) : items.slice(0, 15);
-        }
+      var items = (sessions || []).slice(-15).reverse();
 
-        if (items.length === 0) {
-          el.innerHTML = '<div class="rpt-empty">No session history yet — <a href="teleop.html">start practicing!</a></div>';
-          return;
-        }
-
-        var html = '<div class="sh-list">';
-        items.forEach(function (i) {
-          var date = i.timestamp ? i.timestamp.toDate() : new Date();
-          var duration = i.durationMs ? Math.round(i.durationMs / 60000) + 'min' : '';
-          var scoreChange = '';
-          if (i.scoreBefore !== undefined && i.scoreAfter !== undefined) {
-            var delta = i.scoreAfter - i.scoreBefore;
-            var deltaStr = delta > 0 ? '+' + delta : '' + delta;
-            var deltaCls = delta > 0 ? 'clr-green' : delta < 0 ? 'clr-red' : '';
-            scoreChange = ' · ' + i.scoreBefore + '→' + i.scoreAfter + ' <span class="' + deltaCls + '">(' + deltaStr + ')</span>';
-          }
-          html += '<div class="sh-item">';
-          html += '<span class="sh-text">' + fmtDate(date) + (duration ? ' · <span class="clr-cyan">' + duration + '</span>' : '') + scoreChange + '</span>';
-          html += '<span class="sh-action">' + esc(i.action) + '</span>';
-          html += '</div>';
-        });
-        html += '</div>';
-        el.innerHTML = html;
-      } catch (e) {
-        // Firestore query failed (collection may not exist) — show friendly empty state
+      if (items.length === 0) {
         el.innerHTML = '<div class="rpt-empty" style="text-align:center;padding:24px;">' +
           '<div style="font-size:24px;margin-bottom:8px;">&#128202;</div>' +
           '<p style="font-size:13px;color:#888;">Session history will appear here as you practice.</p>' +
-          '<p style="font-size:12px;color:#666;">Complete TeleOp sessions to build your history.</p></div>';
+          '<p style="font-size:12px;color:#666;">Complete TeleOp sessions (30 seconds or longer) to build your history.</p></div>';
+        return;
       }
+
+      var html = '<div class="sh-list">';
+      items.forEach(function (i) {
+        var duration = i.durationMs ? Math.max(1, Math.round(i.durationMs / 60000)) + 'min' : '';
+        var action = 'Practiced ' + (i.levelsAttempted || 0) + ' level run' + (i.levelsAttempted === 1 ? '' : 's');
+        if (i.levelsCompleted) action += ' · ' + i.levelsCompleted + ' completed';
+        var rating = (typeof i.ratingAtEnd === 'number') ? ' · rating <span class="' + scoreColorClass(i.ratingAtEnd) + '">' + i.ratingAtEnd + '</span>' : '';
+        html += '<div class="sh-item">';
+        html += '<span class="sh-text">' + fmtDate(i.startedAt || 0) + (duration ? ' · <span class="clr-cyan">' + duration + '</span>' : '') + rating + '</span>';
+        html += '<span class="sh-action">' + esc(action) + '</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
     }
 
-    /* ── Init ───────────────────────────────────────────────────────────────── */
-    initAuth(function onSignedIn(user) {
-      var uid = user.uid;
-      var teamId = window.rtUserTeamId || null;
+    /* ── Init — everything comes from local progress (RTStore) ─────────────── */
+    function renderReport() {
+      var s = RTStore.get();
+      var reports = s.driver.coachReports || [];
+      var last = reports.length ? reports[reports.length - 1] : null;
+      var prev = reports.length >= 2 ? reports[reports.length - 2] : null;
+      var stats = s.driver.stats || {};
 
-      loadOverview(uid).then(function (stats) {
-        loadSkills(stats);
-      });
-      loadAICoach(uid);
-      loadAllTimeStats(uid);
-      loadLevelsGrid(uid);
-      loadSessionHistory(uid, teamId);
-    });
+      loadOverview(stats, last);
+      loadSkills(stats.lastUpdated ? stats : null);
+      loadAICoach(last, prev);
+      loadAllTimeStats(stats, s.driver.levels, s.curriculum.phases);
+      loadLevelsGrid(s.driver.levels);
+      loadSessionHistory(s.driver.sessions);
+    }
+    window.renderReport = renderReport;
+    renderReport();
   </script>
 <script>
 (function() {
@@ -590,6 +519,7 @@
     if (!link) return;
     var href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (link.hasAttribute('download') || href.startsWith('blob:')) return;
     if (href.startsWith('http') && href.indexOf(location.host) === -1) return;
     if (link.target === '_blank') return;
     e.preventDefault();

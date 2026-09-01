@@ -1,7 +1,8 @@
 // ── R-Tracker Sidebar ────────────────────────────────────────────────────────
 // Dynamically injects the sidebar and hamburger into every page.
-// Load AFTER css/sidebar.css is linked. Call initSidebar() on DOMContentLoaded.
-// Exposes: window.toggleSidebar(), window.toggleTheme(), window.initSidebar()
+// Load AFTER css/sidebar.css is linked. Auto-inits on DOMContentLoaded.
+// Exposes: window.toggleSidebar(), window.toggleTheme(), window.initSidebar(), window.escSidebar()
+// The #sidebar-progress slot is filled by the Export/Import controls (Phase 2).
 
 (function () {
   'use strict';
@@ -20,8 +21,6 @@
     { id: 'strategy', href: root + 'pages/strategy.html', icon: '📋', label: 'Strategy' },
     { id: 'curriculum', href: root + 'pages/curriculum.html', icon: '📚', label: 'Curriculum' },
     { id: 'report', href: root + 'pages/report.html', icon: '📄', label: 'Driver Report' },
-    { id: 'dashboard', href: root + 'pages/dashboard.html', icon: '📊', label: 'Dashboard', coachOnly: true },
-    { id: 'manage-team', href: root + 'pages/manage-team.html', icon: '👥', label: 'Manage Team', coachOnly: true },
     { id: 'about', href: root + 'pages/about.html', icon: 'ℹ️', label: 'About' },
   ];
 
@@ -29,8 +28,7 @@
   function buildSidebarHTML() {
     const navItems = NAV_ITEMS.map(item => {
       const active = item.id === pageName ? ' active' : '';
-      const coachAttr = item.coachOnly ? ' data-coach="true" style="display:none"' : '';
-      return `<a href="${item.href}" class="nav-item${active}"${coachAttr}><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
+      return `<a href="${item.href}" class="nav-item${active}"><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
     }).join('');
 
     return `
@@ -42,9 +40,8 @@
           <div class="sidebar-tagline">Rundle Robotics Visualizer</div>
         </div>
         <ul class="sidebar-nav">${navItems}</ul>
-        <div class="sidebar-team-section" id="sidebar-team-section"></div>
+        <div class="sidebar-progress" id="sidebar-progress"></div>
         <div class="sidebar-footer">
-          <!-- rt-user-section injected here by auth.js -->
           <div class="theme-toggle" onclick="toggleTheme()">
             <span>Toggle Theme</span>
             <span class="theme-toggle-icon" id="themeIcon">🌙</span>
@@ -66,10 +63,9 @@
   }
 
   // ── Theme ──────────────────────────────────────────────────────────────────
-  // Read initial state from localStorage (inline <head> script already applied the class)
+  // The only localStorage key in the app: a UI preference, not student data (see AUDIT.md).
   let isDark = !document.documentElement.classList.contains('light');
 
-  // Sync the theme icon on init (after sidebar is injected)
   function syncThemeIcon() {
     const icon = document.getElementById('themeIcon');
     if (icon) icon.textContent = isDark ? '🌙' : '☀️';
@@ -79,11 +75,6 @@
     isDark = !isDark;
     document.documentElement.classList.toggle('light', !isDark);
     try { localStorage.setItem('rt-theme', isDark ? 'dark' : 'light'); } catch (e) {}
-    // Save to Firebase if signed in
-    if (window.rtUser && window.rtDb) {
-      window.rtDb.collection('users').doc(window.rtUser.uid)
-        .set({ theme: isDark ? 'dark' : 'light' }, { merge: true }).catch(() => {});
-    }
     const icon = document.getElementById('themeIcon');
     if (!icon) return;
     icon.classList.add('spin');
@@ -119,9 +110,6 @@
     });
   }
 
-  // ── Page Transitions (inline script in each HTML file) ─────────────────────
-  function setupPageTransitions() { /* noop — handled by inline script */ }
-
   // ── Resize ────────────────────────────────────────────────────────────────
   window.addEventListener('resize', () => {
     if (window.innerWidth > 820) {
@@ -132,137 +120,9 @@
     }
   });
 
-  // ── Role-based nav visibility (called by auth.js after role resolves) ─────
-  window.updateSidebarRole = function (role) {
-    document.querySelectorAll('[data-coach="true"]').forEach(el => {
-      el.style.display = role === 'coach' ? 'flex' : 'none';
-    });
-    // Update team section in sidebar
-    updateSidebarTeamSection(role);
-  };
-
-  // ── Team Section in Sidebar ────────────────────────────────────────────────
-  function updateSidebarTeamSection(role) {
-    const el = document.getElementById('sidebar-team-section');
-    if (!el) return;
-
-    const teamId = window.rtUserTeamId || null;
-
-    if (role === 'coach') {
-      if (teamId) {
-        // Coach with a team — show team name + Leave button
-        window.rtDb.collection('teams').doc(teamId).get().then(doc => {
-          const name = doc.exists ? (doc.data().name || 'Your Team') : 'Your Team';
-          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">' + escSidebar(name) + '</span> <button class="sb-team-leave" onclick="sidebarLeaveTeam()">Leave</button></div>';
-        }).catch(() => {
-          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">Your Team</span> <button class="sb-team-leave" onclick="sidebarLeaveTeam()">Leave</button></div>';
-        });
-      } else {
-        el.innerHTML = '<a href="' + root + 'pages/manage-team.html" class="sb-team-create">+ Create Team</a>';
-      }
-    } else {
-      // Player
-      if (teamId) {
-        window.rtDb.collection('teams').doc(teamId).get().then(doc => {
-          const name = doc.exists ? (doc.data().name || 'Your Team') : 'Your Team';
-          el.innerHTML = '<div class="sb-team-info"><span class="sb-team-label">Team:</span> <span class="sb-team-name">' + escSidebar(name) + '</span> <button class="sb-team-leave" onclick="sidebarLeaveTeam()">Leave</button></div>';
-        }).catch(() => {
-          el.innerHTML = '';
-        });
-      } else {
-        el.innerHTML =
-          '<div class="sb-join-team">' +
-            '<div class="sb-join-row">' +
-              '<input class="sb-join-input" id="sb-join-code" type="text" maxlength="6" placeholder="Invite code" autocomplete="off" spellcheck="false">' +
-              '<button class="sb-join-btn" id="sb-join-btn" onclick="sidebarJoinTeam()">Join</button>' +
-            '</div>' +
-            '<div class="sb-join-msg" id="sb-join-msg"></div>' +
-          '</div>';
-      }
-    }
-  }
-
-  function escSidebar(s) {
+  // ── Escape helper (used by sidebar-injected content) ───────────────────────
+  window.escSidebar = function (s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  // ── Join Team (sidebar) ────────────────────────────────────────────────────
-  window.sidebarJoinTeam = async function () {
-    const input = document.getElementById('sb-join-code');
-    const msg = document.getElementById('sb-join-msg');
-    const btn = document.getElementById('sb-join-btn');
-    if (!input || !msg || !btn) return;
-
-    const raw = input.value.trim().toUpperCase();
-    msg.textContent = '';
-    msg.className = 'sb-join-msg';
-
-    if (!raw || raw.length < 4 || raw.length > 12) {
-      msg.textContent = 'Enter a valid invite code.';
-      msg.className = 'sb-join-msg error';
-      return;
-    }
-    if (!window.rtUser) return;
-
-    btn.disabled = true;
-
-    try {
-      const token = await window.rtUser.getIdToken();
-      const response = await fetch('/.netlify/functions/join-team', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ inviteCode: raw })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        msg.textContent = data.error || 'Failed to join team.';
-        msg.className = 'sb-join-msg error';
-        btn.disabled = false;
-        return;
-      }
-
-      window.rtUserTeamId = data.teamId;
-      msg.textContent = 'Joined ' + (data.teamName || 'team') + '!';
-      msg.className = 'sb-join-msg success';
-      setTimeout(function () { location.reload(); }, 1000);
-    } catch (e) {
-      msg.textContent = 'Failed: ' + (e.message || 'Network error');
-      msg.className = 'sb-join-msg error';
-      btn.disabled = false;
-    }
-  };
-
-  // ── Leave Team (sidebar) ───────────────────────────────────────────────────
-  window.sidebarLeaveTeam = async function () {
-    if (!window.rtUser) return;
-    if (!confirm('Leave this team? You will lose access to the dashboard, strategies, and activity feed.')) return;
-    try {
-      const token = await window.rtUser.getIdToken();
-      const response = await fetch('/.netlify/functions/leave-team', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        }
-      });
-      const data = await response.json();
-      if (data && data.needsCoachTransfer) {
-        alert(data.error);
-        return;
-      }
-      if (!response.ok) {
-        throw new Error((data && data.error) || ('Failed (' + response.status + ')'));
-      }
-      window.rtUserTeamId = null;
-      location.reload();
-    } catch (e) {
-      alert('Failed to leave team: ' + (e.message || 'Network error'));
-    }
   };
 
   // ── initSidebar ───────────────────────────────────────────────────────────
@@ -276,7 +136,7 @@
     document.body.classList.remove('sidebar-open');
     document.body.classList.add('sidebar-collapsed');
     animateNavItems();
-    setupPageTransitions();
+    if (typeof window.renderSidebarProgress === 'function') window.renderSidebarProgress();
   };
 
   // Auto-init when DOM is ready
