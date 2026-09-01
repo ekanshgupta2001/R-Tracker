@@ -59,6 +59,8 @@ function recordLevelAttempt(levelId, r) {
 
 // Write the current driver scores + cumulative practice time + this session's summary.
 function flushDriverStats(opts) {
+  // On pagehide, only record something if the student actually drove.
+  if (opts && opts.onlyIfActive && (driverMetrics.totalInputs || 0) < 10) return;
   var scores = computeScores();
   var rating = computeOverallRating();
   var now = Date.now();
@@ -67,7 +69,7 @@ function flushDriverStats(opts) {
   var levelCount = Object.keys(completedLevels).length;
   var distanceFt = Math.round(driverMetrics.totalDistance || 0);
   var sessionMs = now - _rtSessionStartTs;
-  var writeScores = !(opts && opts.onlyIfActive) || (driverMetrics.totalInputs || 0) >= 10;
+  var writeScores = true;
 
   RTStore.update(function (s) {
     var st = s.driver.stats;

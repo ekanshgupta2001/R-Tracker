@@ -39,6 +39,17 @@
         <div class="home-tagline">RUNDLE ROBOTICS PERSONALLY DESIGNED VISUALIZER</div>
       </header>
 
+      <!-- First-run panel: progress lives in this tab and in an exported file -->
+      <div class="first-run" id="rt-first-run" hidden>
+        <div class="first-run-title">Welcome to R-Tracker</div>
+        <div class="first-run-text">Your progress stays in this browser tab and in a file you export from the sidebar. Nothing is sent anywhere. Start fresh, or open a progress file you exported earlier.</div>
+        <div class="first-run-actions">
+          <input class="first-run-name" id="rt-first-run-name" type="text" maxlength="100" placeholder="Your name (optional — saved only in your file)" autocomplete="off">
+          <button class="first-run-btn primary" onclick="rtFirstRunStart()">Start fresh</button>
+          <button class="first-run-btn" onclick="rtImportProgress()">Open a progress file</button>
+        </div>
+      </div>
+
       <!-- Player Carousel -->
       <div class="carousel-section" id="player-carousel">
         <div class="home-carousel-container">
@@ -421,8 +432,27 @@
 
     initCarousel('player-carousel');
 
+    /* ── First-run panel ───────────────────────────────────────────────────── */
+    function initFirstRun() {
+      var panel = document.getElementById('rt-first-run');
+      if (!panel) return;
+      var s = RTStore.get();
+      panel.hidden = !!s.meta.firstRunDismissed;
+    }
+    window.rtFirstRunStart = function() {
+      var nameEl = document.getElementById('rt-first-run-name');
+      var name = nameEl ? (nameEl.value || '').trim().slice(0, 100) : '';
+      RTStore.update(function(s) {
+        s.meta.firstRunDismissed = true;
+        if (name) s.profile.displayName = name;
+      }, { silent: !name });
+      var panel = document.getElementById('rt-first-run');
+      if (panel) panel.hidden = true;
+    };
+
     /* ── Init ───────────────────────────────────────────────────────────────── */
     loadReportBarStats();
+    initFirstRun();
   </script>
 <script>
 (function() {

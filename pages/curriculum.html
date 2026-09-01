@@ -903,6 +903,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
           // Celebration
           showCelebration('phase0');
+          if (window.rtNudgeExport) window.rtNudgeExport('Phase 0 complete — export your progress so you don\'t lose it.');
         }
         renderTimeline();
       });
@@ -1375,6 +1376,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
       // Unlock next phase
       var phase = PHASES.find(function(p) { return p.id === phaseId; });
       unlockNextPhase(phaseId);
+      if (window.rtNudgeExport) window.rtNudgeExport('Phase complete — export your progress so you don\'t lose it.');
 
       // Update timeline UI
       renderTimeline();
@@ -1532,6 +1534,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
         renderTimeline();
         var phase = PHASES.find(function(p) { return p.id === phaseId; });
         if (phase) renderContent(phase);
+        if (window.rtNudgeExport) window.rtNudgeExport('Submitted — export your progress file and share it with your mentor.');
       });
     };
 

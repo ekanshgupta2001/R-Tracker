@@ -19,8 +19,11 @@
   'use strict';
 
   var STORAGE_KEY = 'rt-state';
+  var STL_KEY = 'rt-stl-model';   // the only other sessionStorage user (js/teleop/view3d.js)
 
-  if (typeof window.RT_STORAGE_BACKEND !== 'string') window.RT_STORAGE_BACKEND = 'memory';
+  // 'session' = sessionStorage (tab-scoped). The school rejected localStorage; the
+  // one-constant swap to 'memory' is the fallback if session storage is rejected too.
+  if (typeof window.RT_STORAGE_BACKEND !== 'string') window.RT_STORAGE_BACKEND = 'session';
 
   // ── Backends ──────────────────────────────────────────────────────────────
   function MemoryBackend() {
@@ -33,12 +36,45 @@
     };
   }
 
+  function SessionStorageBackend(key) {
+    var ss = window.sessionStorage;           // throws in some private modes
+    ss.setItem('__rt_probe__', '1');          // throws if storage is disabled
+    ss.removeItem('__rt_probe__');
+    return {
+      name: 'session',
+      read: function () { return ss.getItem(key); },
+      write: function (t) { ss.setItem(key, t); },
+      clear: function () { ss.removeItem(key); }
+    };
+  }
+
   function pickBackend() {
     var wanted = typeof window.__RT_BACKEND === 'string' ? window.__RT_BACKEND : window.RT_STORAGE_BACKEND;
-    if (wanted === 'session' && typeof window.RTSessionStorageBackend === 'function') {
-      try { return window.RTSessionStorageBackend(STORAGE_KEY); } catch (e) { console.warn('[RTStore] sessionStorage unavailable, using memory:', e && e.message); }
+    if (wanted === 'session') {
+      try { return SessionStorageBackend(STORAGE_KEY); } catch (e) { console.warn('[RTStore] sessionStorage unavailable, using memory:', e && e.message); }
     }
     return MemoryBackend();
+  }
+
+  function isQuotaError(e) {
+    return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+  }
+
+  // Drop the least valuable history so the state fits again. Returns true if anything changed.
+  function trimForQuota(s) {
+    var changed = false;
+    function cap(arr, n) {
+      if (Array.isArray(arr) && arr.length > n) { arr.splice(0, arr.length - n); changed = true; }
+    }
+    cap(s.driver.coachReports, 3);
+    cap(s.curriculum.attempts, 1000);
+    Object.keys(s.curriculum.phases).forEach(function (pid) {
+      var ph = s.curriculum.phases[pid];
+      if (!ph) return;
+      cap(ph.reviews, 3);
+      if (ph.theoryAnswers) Object.keys(ph.theoryAnswers).forEach(function (sid) { cap(ph.theoryAnswers[sid].history, 3); });
+    });
+    return changed;
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -55,13 +91,26 @@
 
   function save() {
     if (!state) return false;
+    var text;
+    try { text = JSON.stringify(state); } catch (e) { lastSaveError = 'serialize'; console.warn('[RTStore] state not serializable:', e && e.message); return false; }
     try {
-      backend.write(JSON.stringify(state));
+      backend.write(text);
       lastSaveError = null;
       return true;
     } catch (e) {
-      lastSaveError = (e && (e.name === 'QuotaExceededError' || e.code === 22)) ? 'quota' : 'write';
-      console.warn('[RTStore] save failed (' + lastSaveError + '):', e && e.message);
+      if (!isQuotaError(e)) {
+        lastSaveError = 'write';
+        console.warn('[RTStore] save failed:', e && e.message);
+        return false;
+      }
+      // Quota chain: (1) drop the cached 3D model, (2) trim history, (3) give up but keep state in memory.
+      try { window.sessionStorage.removeItem(STL_KEY); backend.write(text); lastSaveError = null; return true; } catch (e2) { /* continue */ }
+      if (trimForQuota(state)) {
+        try { backend.write(JSON.stringify(state)); lastSaveError = null; return true; } catch (e3) { /* continue */ }
+      }
+      lastSaveError = 'quota';
+      console.warn('[RTStore] storage quota exceeded — progress is kept in memory only; export now.');
+      notify('save-error');
       return false;
     }
   }
@@ -193,4 +242,15 @@
 
   load();
   window.RTStore.ready = true;
+
+  // Warn before the tab closes with unexported progress. In-app navigation sets
+  // sessionStorage 'rt-nav' just before it happens, so it never prompts.
+  window.addEventListener('beforeunload', function (e) {
+    try {
+      if (!state || !state.meta.dirtySinceExport) return;
+      if (window.sessionStorage.getItem('rt-nav') === '1') return;
+      e.preventDefault();
+      e.returnValue = '';
+    } catch (err) { /* never block unload */ }
+  });
 })();

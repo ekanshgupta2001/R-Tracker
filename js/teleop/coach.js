@@ -242,6 +242,7 @@ function renderCoachPanel() {
 
   saveCoachReport(report);          // js/teleop/persist.js → RTStore (stays in the browser)
   renderCoachComparison(report);
+  if (typeof window.rtNudgeExport === 'function') window.rtNudgeExport('Report saved — export your progress so you don\'t lose it.');
 }
 
 // Compare this report with the previous stored one (if any).

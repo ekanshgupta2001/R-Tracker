@@ -42,6 +42,13 @@ export function readState(page) {
   return page.evaluate(() => JSON.parse(JSON.stringify(window.RTStore.get())));
 }
 
+// The sidebar starts collapsed (export/import controls hidden); open it and wait for the Export button.
+export async function openSidebar(page) {
+  await page.waitForSelector('#sidebar');
+  await page.evaluate(() => { if (!document.body.classList.contains('sidebar-open')) window.toggleSidebar(); });
+  await page.waitForSelector('#sb-export-btn', { state: 'visible' });
+}
+
 // Click the correct option for every Phase 0 quiz question (curriculum page must be showing phase0).
 export async function answerQuizCorrectly(page) {
   const n = await page.evaluate(() => window.QUIZ.length);

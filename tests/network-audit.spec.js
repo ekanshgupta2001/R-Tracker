@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { answerQuizCorrectly, unlockPhase, readState } from './helpers/state.js';
+import { answerQuizCorrectly, unlockPhase, readState, openSidebar } from './helpers/state.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ALLOWED_EXT = ['.html', '.js', '.css', '.svg', '.webp', '.png', '.woff2', '.json', '.ico'];
@@ -31,7 +31,8 @@ test('full student session makes only same-origin static GETs', async ({ page, c
     if (!url.startsWith(ORIGIN)) { violations.push(url); return route.abort(); }
     return route.continue();
   });
-  page.on('request', r => requests.push({ url: r.url(), method: r.method(), postData: r.postData(), type: r.resourceType() }));
+  // blob: URLs are in-memory objects created by Export; they never leave the browser.
+  page.on('request', r => { if (!r.url().startsWith('blob:')) requests.push({ url: r.url(), method: r.method(), postData: r.postData(), type: r.resourceType() }); });
   page.on('response', r => {
     if (r.status() >= 400) badStatuses.push(r.status() + ' ' + r.url());
     if (r.url() === ORIGIN + '/' && !homeCspHeader) homeCspHeader = r.headers()['content-security-policy'] || null;
@@ -107,6 +108,13 @@ test('full student session makes only same-origin static GETs', async ({ page, c
   await visit('/pages/report.html');
   await expect(page.locator('#overview-content .skeleton')).toHaveCount(0);
   await visit('/pages/about.html');
+
+  // Export: a download, not a request
+  await openSidebar(page);
+  const countBefore = requests.length;
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#sb-export-btn')]);
+  expect(dl.suggestedFilename()).toMatch(/^rtracker-progress-/);
+  expect(requests.length).toBe(countBefore);
 
   // ── Assertions on the network ──
   expect(violations, 'cross-origin requests').toEqual([]);

@@ -911,3 +911,34 @@ html.light .hlg-cell.locked {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* ── First-run panel (v2: progress lives in this tab + an exported file) ─── */
+.first-run {
+  margin: 0 auto 14px; max-width: 640px; padding: 14px 18px; border-radius: 12px;
+  background: #1a1a1a; border: 1px solid #333; border-top: 2px solid var(--burgundy-accent, #c73e5a);
+  text-align: left; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+.first-run[hidden] { display: none; }
+.first-run-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.first-run-text { font-size: 12.5px; color: #bbb; line-height: 1.5; margin-bottom: 10px; }
+.first-run-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.first-run-name {
+  flex: 1 1 220px; min-width: 0; font-family: inherit; font-size: 12px; padding: 7px 10px;
+  border-radius: 6px; border: 1px solid #333; background: #111; color: #eee;
+}
+.first-run-name:focus { outline: none; border-color: var(--burgundy-accent, #c73e5a); }
+.first-run-btn {
+  font-family: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 6px;
+  border: 1px solid #333; background: #222; color: #ddd; cursor: pointer; white-space: nowrap;
+}
+.first-run-btn:hover { border-color: var(--burgundy-accent, #c73e5a); color: #fff; }
+.first-run-btn.primary { background: var(--burgundy, #800020); border-color: var(--burgundy, #800020); color: #fff; }
+.first-run-btn.primary:hover { background: #9a0028; }
+
+html.light .first-run { background: #fff; border-color: #ddd; box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+html.light .first-run-title { color: #222; }
+html.light .first-run-text { color: #555; }
+html.light .first-run-name { background: #fafafa; border-color: #ccc; color: #222; }
+html.light .first-run-btn { background: #f5f5f5; border-color: #ccc; color: #333; }
+html.light .first-run-btn:hover { color: #800020; }
+html.light .first-run-btn.primary { color: #fff; }

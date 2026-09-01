@@ -9,8 +9,8 @@ The deployed site is static. Every request the browser makes is a same-origin GE
 repository. No request ever carries student input. This is enforced by a Content-Security-Policy
 (`netlify.toml` header, an identical `<meta http-equiv>` on every page, and `tests/serve.js` in tests)
 and proven by `tests/network-audit.spec.js`, which scripts a full student session (home → teleop level →
-path planner save → strategy save → quiz → theory answer → report → about) and asserts that every
-request is same-origin, `GET`, has no query string and no body.
+path planner save → strategy save → quiz → theory answer → report → about → export) and asserts that
+every request is same-origin, `GET`, has no query string and no body.
 
 ## Status
 
@@ -18,21 +18,54 @@ request is same-origin, `GET`, has no query string and no body.
 |---|---|---|
 | 0 — freeze v1, docs, fixtures | done 2026-09-01 | `v1-final` |
 | 1 — kill the network | done 2026-09-01 | `v2-phase-1` |
-| 2 — local persistence (sessionStorage backend, export/import) | pending | |
+| 2 — local persistence (sessionStorage backend, export/import) | done 2026-09-01 | `v2-phase-2` |
 | 3 — report without Gemini | pending | |
 | 4 — theory grading without Gemini | pending | |
 | 5 — code checkpoints without Gemini | pending | |
 
-## Storage keys (after Phase 1)
+## Where student data lives
 
-`RT_STORAGE_BACKEND = 'memory'` in `js/store.js`: application state lives in a JavaScript variable and is
-lost on reload. Phase 2 switches it to `sessionStorage`.
+| Place | What | Lifetime | Who can see it |
+|---|---|---|---|
+| JavaScript memory | the live `RTStore` state | until the page unloads | the student |
+| `sessionStorage["rt-state"]` | the same state, serialized (see `js/schema.js`) | this browser **tab**; cleared when the tab closes; not shared with other tabs or users | the student, on that device |
+| `rtracker-progress-YYYY-MM-DD.json` | the full state, pretty-printed | until the student deletes it | whoever the student gives the file to |
+| Server | **nothing** — static files only | n/a | n/a |
+
+`RT_STORAGE_BACKEND = 'session'` in `js/store.js`. Changing it to `'memory'` (one constant) makes the app
+session-only with the export file as the sole persistence, the fallback if the school also rejects
+tab-scoped storage. Tests exercise both backends.
+
+## Browser storage keys
 
 | Key | Where | Contents | Lifetime | Student data? |
 |---|---|---|---|---|
-| `rt-theme` | localStorage | `"dark"` or `"light"` | device | no — UI preference |
+| `rt-state` | sessionStorage | `RTStore` state | tab | **yes** |
+| `rt-stl-model` | sessionStorage | base64 of an optional robot STL model uploaded for the 3D view (cached only if ≤ 2.5 M chars) | tab | no — a CAD file, not about the student; not exported |
 | `rt-nav` | sessionStorage | `"1"` for ~150 ms during an in-app page transition | milliseconds | no |
-| `rt_stl_model` | localStorage | base64 of an optional robot STL model uploaded for the 3D view | device | no (a CAD file, not about the student) — moves to sessionStorage in Phase 2 |
+| `rt-theme` | localStorage | `"dark"` or `"light"` | device | no — UI preference |
+
+Nothing else is written to any storage API (IndexedDB, cookies, Cache API are unused). The audit test
+asserts `localStorage` contains only `rt-theme` and `sessionStorage` only `rt-*` keys.
+
+### Quota handling
+`sessionStorage` is ~5 MB per origin. If a save hits the quota, `RTStore.save()` drops the cached STL, then
+trims history (coach reports to 3, attempts to 1000, code checks to 3 per phase, theory history to 3), and
+if that still fails keeps the state in memory and shows "Storage full — export now".
+
+## Export / Import
+
+- **Export** (`js/sidebar.js` → `rtExportProgress`): serializes the state to a `Blob` and clicks a detached
+  `<a download>`. The browser saves the file; no request is made (the audit test checks the request count
+  is unchanged and ignores `blob:` URLs, which are in-memory objects).
+- **Import** (`rtImportProgress`): a hidden `<input type="file">` read with `FileReader`; the JSON is
+  validated by `RTSchema.validateImport` (schema version, known keys, ranges, string/array caps, ≤ 4 MB),
+  the student confirms the overwrite, then the page reloads. Imported strings are **untrusted**: every
+  render path escapes them (`esc()`, `sanitizeHTML()`, `escSidebar()`), and `tests/persistence.spec.js`
+  imports an HTML-injection payload and asserts it renders inert.
+- Unexported changes are flagged by a sidebar status line and a bottom banner; milestones show a toast;
+  closing the tab with unexported progress triggers the browser's leave-page prompt (in-app navigation
+  never does — it sets `rt-nav` first).
 
 ## Outbound calls (grep gate 2) and why each is safe
 
@@ -62,16 +95,11 @@ Cloud Functions (`functions/`), `firestore.rules`, `firebase.json`, `.firebaserc
 team activity feeds, the coach dashboard and manage-team pages; Google Fonts and cdnjs/jsdelivr script tags;
 `build.js`/`build.sh`/`vercel.json`.
 
-Grading is stubbed: `js/grader.js` and `js/code-check.js` return `status: 'ungraded'`. Nothing auto-passes.
-A student can mark a deliverable **submitted** (for a mentor to read from their exported file), which unlocks
-the next phase but is never displayed as verified.
+Grading is stubbed until Phases 4–5: `js/grader.js` and `js/code-check.js` return `status: 'ungraded'`.
+Nothing auto-passes. A student can mark a deliverable **submitted** (for a mentor to read from their
+exported file), which unlocks the next phase but is never displayed as verified.
 
 ## Third-party code shipped (vendored, read, no runtime network)
 
 - three.js r128 (MIT): `vendor/three/three.min.js`, `STLLoader.js`, `OrbitControls.js` — SHA-256 in `vendor/three/SHA256SUMS`, sources in `vendor/README.md`.
 - Inter variable font (SIL OFL 1.1): `assets/fonts/InterVariable.woff2`, license in `assets/fonts/OFL.txt`.
-
-## Export file
-
-Phase 2. `rtracker-progress-YYYY-MM-DD.json` will contain the full `RTStore` state (see `js/schema.js`) and is
-created only when the student clicks Export.

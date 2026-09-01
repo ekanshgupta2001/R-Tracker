@@ -260,12 +260,18 @@
         var buf = evt.target.result;
         if (!is3DInit) init3D();
         applySTL(buf);
-        // Cache in localStorage
+        // Cache for this tab only (sessionStorage, key rt-stl-model). Not student data; not exported.
+        // Skipped for large models so the tab's storage stays free for progress (see AUDIT.md).
         try {
           var bytes = new Uint8Array(buf);
           var bin = '';
           for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-          localStorage.setItem('rt_stl_model', btoa(bin));
+          var b64 = btoa(bin);
+          if (b64.length <= 2500000) {
+            sessionStorage.setItem('rt-stl-model', b64);
+          } else {
+            console.info('STL not cached for this tab: model is too large. It stays loaded until you reload.');
+          }
         } catch (err) {
           console.warn('Could not cache STL:', err.message);
         }
@@ -339,14 +345,14 @@
       stlMesh = null;
     }
     defaultParts.forEach(function (p) { p.visible = true; });
-    localStorage.removeItem('rt_stl_model');
+    try { sessionStorage.removeItem('rt-stl-model'); } catch (e) { /* ignore */ }
     var btn = document.getElementById('stl-remove-btn');
     if (btn) btn.style.display = 'none';
   };
 
   function loadSavedSTL() {
     try {
-      var b64 = localStorage.getItem('rt_stl_model');
+      var b64 = sessionStorage.getItem('rt-stl-model');
       if (!b64) return;
       var raw = atob(b64);
       var buf = new ArrayBuffer(raw.length);
