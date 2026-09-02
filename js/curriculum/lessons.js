@@ -470,9 +470,23 @@ public class CleanTeleOp extends OpMode {
       isTheory: true,
       learn: 'A sensor doesn\u2019t tell you truth about the world. It gives you a <strong>number</strong> that is <strong>related</strong> to something physical \u2014 filtered through physics, electronics, and noise.<br><br>A color sensor has tiny photodiodes behind colored filters. When you call <code>colorSensor.red()</code> and get 180, that number depends on: how much red light the object reflects (what you care about), ambient room lighting (what you can\u2019t control), distance to the object (light drops with distance squared), sensor angle, and surface texture.<br><br>This is why the same red game element gives <code>red = 180</code> in your workshop but <code>red = 95</code> at competition \u2014 the gym lighting is completely different.',
       check: {
-        question: 'A color sensor reads red = 200 in your workshop but red = 110 at competition, even though you\'re reading the exact same red game element. Explain at least two physical reasons why the reading changed, and why this means you can\'t use a simple threshold like if (red > 150) to detect red reliably.',
+        question: 'A color sensor reads red = 200 in your workshop but red = 110 at competition, even though you\'re reading the exact same red game element. (1) Name at least two physical factors that change the reading (think about light, distance, angle, surface). (2) Explain why a fixed threshold like if (red > 150) is unreliable from one room to the next.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'lighting', label: 'ambient lighting differs between rooms', hint: 'The gym\'s lights are not the workshop\'s lights — ambient light adds to what the sensor sees.',
+              phrases: ['ambient light', 'ambient lighting', 'room lighting', 'gym lighting', 'gym lights', 'lighting is different', 'lighting changed', 'different lighting', 'lights are different', 'lighting', 'ambient', 'fluorescent', 'sunlight', 'brighter room', 'darker room'] },
+            { id: 'distance-angle', label: 'distance, angle or surface changes the reflected light', hint: 'Reflected light drops with distance (roughly distance squared) and depends on the sensor angle and the surface.',
+              phrases: ['distance', 'farther', 'closer', 'angle', 'distance squared', 'inverse square', 'surface', 'texture', 'reflect', 'how far'] },
+            { id: 'threshold-depends', label: 'a fixed threshold fails because the number depends on conditions, not just colour', hint: 'The raw value is not a property of the object alone, so one cutoff cannot be right in every room.',
+              phrases: ["can't use a", 'cannot use a', "won't work", 'wont work', "doesn't work", 'does not work', 'unreliable', 'not reliable', 'fails', 'breaks', 'depends on', 'varies with', 'changes with', 'different rooms', 'in one room', 'each room', 'every room', 'environment', 'conditions', 'not just the color', 'not just the colour', 'not just on the object'] }
+          ],
+          disqualifiers: [
+            { phrases: ['sensor is broken', 'broken sensor', 'sensor is faulty', 'battery was low', 'battery is low', 'low battery'], feedback: 'The reading changed because of the environment (lighting, distance, angle), not because the sensor or battery failed.' }
+          ]
+        }
       }
     },
     {
@@ -481,9 +495,23 @@ public class CleanTeleOp extends OpMode {
       isTheory: true,
       learn: 'RGB values change with lighting because they measure <strong>absolute light intensity</strong>. More ambient light = higher numbers across ALL channels.<br><br><strong>Hue</strong> (0-360\u00b0) is based on the <strong>ratio</strong> between RGB channels, not their absolute values. If your workshop has warm yellow lighting and the competition has cool fluorescents, absolute RGB changes dramatically \u2014 but the ratio stays roughly the same.<br><br>This is the same physics behind why your eyes can identify a red apple in sunlight, shade, or under fluorescent lights \u2014 your brain automatically adjusts for brightness and extracts the color ratio. <strong>Saturation</strong> tells you if it\u2019s a vivid color or just white/gray. <strong>Value</strong> tells you if the sensor sees something (bright) or empty air (dark).',
       check: {
-        question: 'Explain in your own words why Hue is more stable than raw RGB values across different lighting conditions. Your answer should reference the fact that Hue is based on ratios rather than absolute values.',
+        question: 'Explain in your own words why Hue is more stable than raw RGB values across different lighting conditions. Include: (1) what RGB values measure (absolute intensity), (2) what Hue is based on (the ratio between channels), and (3) what happens to each when the lighting changes.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'rgb-absolute', label: 'RGB measures absolute light intensity', hint: 'RGB numbers are raw brightness — more light raises every channel.',
+              phrases: ['absolute', 'brightness', 'intensity', 'raw light', 'how much light', 'all three channels', 'all channels', 'every channel', 'scale up', 'scale down', 'go up together', 'drop together', 'rise together'] },
+            { id: 'hue-ratio', label: 'Hue is a ratio between the channels', hint: 'Hue comes from how the red, green and blue channels compare to each other, not their size.',
+              phrases: ['ratio', 'ratios', 'relationship between', 'relative', 'proportion', 'proportions', 'compared to each other', 'relation between'] },
+            { id: 'lighting-effect', label: 'when light changes, RGB shifts but the ratio (Hue) stays about the same', hint: 'Dimmer light lowers all three channels together, so their ratio — and the Hue — barely moves.',
+              phrases: ['stays the same', 'stays roughly', 'stay the same', 'stays about', 'about the same', 'barely moves', 'stable', 'unchanged', 'roughly the same', "doesn't change", 'does not change', 'cancels out', 'cancel out', 'same amount', 'together'] }
+          ],
+          disqualifiers: [
+            { phrases: ['hue photodiode', 'measures hue directly', 'dedicated hue', 'not affected by light at all', 'hue sensor'], feedback: 'Hue is computed from the same RGB channels, not measured by a separate part; it is more stable because it is a ratio, not because it ignores light.' }
+          ]
+        }
       }
     },
     {
@@ -492,9 +520,23 @@ public class CleanTeleOp extends OpMode {
       isTheory: true,
       learn: 'Every sensor reading = <strong>signal</strong> (real value) + <strong>noise</strong> (random variation). Sources of noise in FTC: <strong>electronic noise</strong> (ADC precision limits cause \u00b11-3 count fluctuation), <strong>mechanical vibration</strong> (robot shakes while driving, sensor moves relative to surface), <strong>electromagnetic interference</strong> (spinning motors generate fields that induce currents in sensor wires).<br><br>A distance reading of 15.2cm means the wall is <strong>probably</strong> between 14.5-15.9cm. Next cycle it might read 14.8 or 15.5 even though nothing moved. Reacting to one reading is dangerous \u2014 one noisy spike of 8cm triggers your state transition when the wall is actually 14cm away.<br><br><strong>Filtering</strong> combats noise: threshold counting (require N consecutive readings), moving average (average last 5 readings), or exponential smoothing (<code>filtered = \u03b1 \u00d7 new + (1-\u03b1) \u00d7 previous</code>).',
       check: {
-        question: 'Your distance sensor reads: 15, 14, 3, 15, 14, 10, 9, 8. The reading of 3 is clearly noise. Explain why a moving average filter would handle this better than reacting to individual readings. What would the moving average (window size 3) show at the point where the raw reading was 3?',
+        question: 'Your distance sensor reads: 15, 14, 3, 15, 14, 10, 9, 8. The reading of 3 is clearly noise. (1) Say what goes wrong if the code reacts to that single reading. (2) Explain how a moving average handles a one-off spike. (3) Compute the moving average with window size 3 at the point where the raw reading was 3 — show the numbers.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 1.0,
+          concepts: [
+            { id: 'spike-reaction', label: 'reacting to one noisy reading causes a false reaction', hint: 'One glitch would make the robot think something is suddenly close and do the wrong thing.',
+              phrases: ['outlier', 'spike', 'glitch', 'false', 'overreact', 'over-react', 'wrong decision', 'wrong thing', 'trigger', 'react to', 'reacting to', 'one reading', 'single reading', 'one bad', 'one noisy', 'individual reading', 'suddenly'] },
+            { id: 'averaging', label: 'an average blends the spike with its neighbours', hint: 'Averaging the last few readings dilutes a single bad value instead of acting on it.',
+              phrases: ['average', 'averaging', 'averages', 'smooth', 'smooths', 'dilute', 'diluted', 'blend', 'blends', 'neighbours', 'neighbors', 'last three', 'last 3', 'window'] },
+            { id: 'value', label: 'the window-3 average at that point is (15 + 14 + 3) / 3 ≈ 10.7', hint: 'Average the reading with the two before it: (15 + 14 + 3) / 3 = 32 / 3 ≈ 10.7.',
+              phrases: ['10.7', '10.67', '10.6', '10.66', '32/3', '32 / 3', '10 2/3', 'about 11', 'around 11', 'approximately 11', 'roughly 11', 'nearly 11', '11'] }
+          ],
+          disqualifiers: [
+            { phrases: ['would show 15', 'would be 3', 'would show 3', 'ignores the bad value', 'ignore any reading', 'skips the bad', 'throws away'], feedback: 'A moving average includes every reading — it dilutes the spike rather than dropping it: (15 + 14 + 3) / 3 ≈ 10.7.' }
+          ]
+        }
       }
     },
     {
@@ -503,9 +545,26 @@ public class CleanTeleOp extends OpMode {
       isTheory: true,
       learn: 'The difference between a beginner and a competition-ready programmer is how they think about <strong>uncertainty</strong>.<br><br><strong>Open-loop thinking:</strong> "Set motor to 0.5 for 2 seconds and the robot will drive 40 inches." Assumes the world is deterministic.<br><br><strong>Closed-loop thinking:</strong> "I want the robot at position (36, 72). I\u2019ll continuously measure where it actually is, compare to where I want it, and adjust." Accepts that the world is noisy and builds correction into the system.<br><br>Every time you write sensor code, ask: <strong>"What happens if this reading is wrong?"</strong> If the answer is "the robot does something dangerous or stupid," you need a fallback.',
       check: {
-        question: 'Compare open-loop and closed-loop approaches to driving a robot to a specific position. Explain why the closed-loop approach is more reliable, and describe what the "loop" in "closed-loop" actually refers to physically \u2014 what information flows where?',
+        question: 'Compare open-loop and closed-loop approaches to driving a robot to a specific position. Include: (1) what open-loop relies on (a fixed command, no measurement), (2) what closed-loop does (measure, compare to the target, correct, repeat), (3) why closed-loop is more reliable \u2014 name a real source of variation, and (4) what physically flows around the "loop" and where.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.75,
+          concepts: [
+            { id: 'open-loop', label: 'open-loop runs a fixed command with no feedback', hint: 'Open-loop sets a power for a time and hopes; nothing checks the result.',
+              phrases: ['no feedback', 'without feedback', "doesn't check", 'does not check', 'hope', 'hopes', 'assumes', 'fixed time', 'fixed power', 'set time', 'just a command', 'blind', 'no sensor', 'no sensors', 'without sensors', "doesn't use sensors", 'does not use sensors', "doesn't measure", 'does not measure', 'without measuring', 'without checking', 'pre-planned', 'preplanned'] },
+            { id: 'closed-loop', label: 'closed-loop measures, compares and corrects repeatedly', hint: 'Closed-loop reads a sensor, compares to the target and adjusts the motors, over and over.',
+              phrases: ['measure', 'measures', 'measuring', 'sensor', 'sensors', 'compare', 'compares', 'correct', 'corrects', 'correcting', 'adjust', 'adjusts', 'adjusting', 'feedback'] },
+            { id: 'variation', label: 'closed-loop copes with real variation (battery, friction, slip)', hint: 'The same command gives different results when battery voltage, friction or wheel slip change.',
+              phrases: ['battery', 'voltage', 'friction', 'slip', 'slipping', 'wheel slip', 'weight', 'variation', 'varies', 'vary', 'noise', 'noisy', 'not deterministic', 'unpredictable'] },
+            { id: 'loop-flow', label: 'the loop is information flowing sensor \u2192 controller \u2192 motor \u2192 world \u2192 sensor', hint: 'The motors move the robot, the sensor measures the result, and that measurement feeds back into the controller.',
+              phrases: ['sensor to', 'sensors to', 'feeds back', 'fed back', 'flows back', 'back to the controller', 'back into', 'output feeds', 'controller', 'motor', 'motors', 'robot moves', 'measure the result', 'measures the result', 'reads again', 'read again', 'repeat', 'flow of information', 'information flows'] }
+          ],
+          disqualifiers: [
+            { phrases: ['while loop', 'infinite loop', 'for loop', 'stuck in a loop', 'code loop'], feedback: 'The "loop" is the physical flow of information (sensor \u2192 controller \u2192 motor \u2192 robot \u2192 sensor), not a loop statement in code.' },
+            { phrases: ['open-loop is better', 'open loop is better', 'open-loop is more reliable', 'open loop is more reliable'], feedback: 'Open-loop is simpler, but it cannot correct itself, so closed-loop is the more reliable approach.' }
+          ]
+        }
       }
     }
   ];
@@ -736,9 +795,23 @@ public void loop() {
       isTheory: true,
       learn: 'Imagine throwing a basketball at a hoop <strong>with your eyes closed</strong>. You line up, throw with a specific force, and hope. That\u2019s <strong>open-loop control</strong> \u2014 executing a pre-planned action without checking the result.<br><br>In FTC, open-loop looks like <code>setPower(0.5); sleep(2000);</code> \u2014 run at 50% for 2 seconds and hope it\u2019s the right distance. It fails because:<br><br><strong>Battery voltage drops</strong> during a match (13.5V \u2192 12.0V), so the same power command produces different speeds. <strong>Friction varies</strong> across the field \u2014 dusty tiles vs clean tiles. <strong>Weight changes</strong> when you pick up game elements, shifting the center of gravity. Open-loop assumes a perfectly predictable world. The world is not predictable.',
       check: {
-        question: 'Explain in 2-3 sentences why running a motor at 0.5 power for 2 seconds does NOT guarantee the robot travels the same distance every time. Mention at least two physical factors that cause variation.',
+        question: 'Explain in 2-3 sentences why running a motor at 0.5 power for 2 seconds does NOT guarantee the robot travels the same distance every time. Name at least two physical factors that cause variation (for example battery voltage, friction, wheel slip, weight), and say what is missing that would let the robot correct itself.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'battery', label: 'battery voltage changes the speed for the same power', hint: 'Motor power is a fraction of battery voltage, and the battery drains during a match.',
+              phrases: ['battery', 'voltage', 'drains', 'charge', 'volts'] },
+            { id: 'friction-slip-weight', label: 'friction, wheel slip, surface or weight vary', hint: 'Floor surface, dust, wheel slip, load and motor temperature all change how far the wheels move the robot.',
+              phrases: ['friction', 'slip', 'slipping', 'weight', 'load', 'heavier', 'carpet', 'tile', 'tiles', 'dust', 'dusty', 'temperature', 'surface', 'traction'] },
+            { id: 'no-feedback', label: 'nothing measures the distance, so nothing corrects the error', hint: 'Time-based driving has no feedback — no encoder or sensor tells the code how far it really went.',
+              phrases: ['no feedback', 'without feedback', 'nothing is measuring', 'nothing measures', 'not measuring', "doesn't measure", 'does not measure', 'never corrected', 'no correction', "can't correct", 'cannot correct', 'no sensor', 'no sensors', 'open loop', 'open-loop', 'blind', "doesn't check", 'no encoder', 'no encoders', 'time-based', 'time based', 'nothing to correct'] }
+          ],
+          disqualifiers: [
+            { phrases: ['does travel the same', 'always the same speed', 'same distance every time', 'travels the same distance', 'will be the same'], feedback: 'The same power command really does give different distances — battery voltage and friction change the result.' }
+          ]
+        }
       }
     },
     {
@@ -747,9 +820,23 @@ public void loop() {
       isTheory: true,
       learn: '<strong>P = A Spring.</strong> Attach a spring between your robot and the target. Far away \u2192 strong pull. Close \u2192 gentle pull. <code>force = kP \u00d7 error</code>. High kP = stiff spring (aggressive correction, might overshoot and oscillate). Low kP = loose spring (slow approach, might never arrive).<br><br><strong>D = A Shock Absorber.</strong> A spring alone oscillates \u2014 that\u2019s why cars have shock absorbers. D resists motion proportional to speed of approach. <code>braking = kD \u00d7 speed_of_approach</code>. It prevents the robot from blowing past the target.<br><br><strong>I = Impatience.</strong> Sometimes P gets you close but friction prevents the last bit of movement. I accumulates error over time, building up extra force until it pushes past friction. Danger: too much accumulation = <strong>integral windup</strong> = massive overshoot once the robot finally moves.<br><br><strong>F = Anti-Gravity.</strong> If an arm needs 0.15 power just to hold position against gravity, kF provides that baseline so PID only handles corrections. Remove the constant load so the fine-tuning system can focus.',
       check: {
-        question: 'In your own words, explain what happens physically when kP is set too high on a drivetrain. Use the spring analogy \u2014 describe what a "too-stiff spring" does to the robot\'s motion and why it causes oscillation.',
+        question: 'Using the spring analogy, explain what happens physically when kP is set too high on a drivetrain: (1) what a too-stiff spring does to the robot as it approaches the target, (2) why the robot ends up past the target, and (3) what the resulting back-and-forth motion is called.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'stiff-pull', label: 'a stiff spring pulls too hard / accelerates the robot aggressively', hint: 'With a high kP the "spring" is stiff: even a small error produces a strong pull.',
+              phrases: ['stiff', 'too strong', 'pulls too hard', 'pull too hard', 'pulled too hard', 'hard pull', 'aggressive', 'accelerates hard', 'too much force', 'yanks', 'yank', 'strong pull', 'too hard'] },
+            { id: 'overshoot', label: 'the robot overshoots because it cannot stop instantly', hint: 'Momentum carries the robot past the target.',
+              phrases: ['overshoot', 'past the target', 'past the setpoint', 'past it', "can't stop", 'cannot stop', 'momentum', 'carries it past', 'blows past', 'goes past', 'shoots past', 'flies past'] },
+            { id: 'oscillation', label: 'it gets pulled back and forth \u2014 oscillation', hint: 'Pulled back past the target again and again, the robot oscillates instead of settling.',
+              phrases: ['oscillat', 'back and forth', 'back-and-forth', 'bounce', 'bounces', 'bouncing', 'never settles', "doesn't settle", 'keeps correcting', 'keeps overshooting'] }
+          ],
+          disqualifiers: [
+            { phrases: ['too loose', 'loose spring', 'stops short', 'never reaches', 'weak spring', 'not enough pull'], feedback: 'A high kP is a stiff spring, not a loose one \u2014 it overshoots rather than stopping short.' }
+          ]
+        }
       }
     },
     {
@@ -758,9 +845,23 @@ public void loop() {
       isTheory: true,
       learn: 'Dead wheels are unpowered wheels with encoders that roll freely \u2014 no motor torque means no slip. Each loop cycle (50/sec), the system: reads encoder ticks \u2192 converts to distance \u2192 calculates heading change from left/right wheel difference \u2192 uses <strong>trigonometry</strong> to compute new (x, y).<br><br>The key math: <code>\u0394heading = (rightDistance - leftDistance) / trackWidth</code>. Then: <code>\u0394x = forwardDistance \u00d7 cos(heading)</code>, <code>\u0394y = forwardDistance \u00d7 sin(heading)</code>.<br><br><strong>Why calibration is critical:</strong> Heading calculation divides by track width. If track width is off by 1mm, every heading calculation is slightly wrong. Over 100 inches of driving, these errors <strong>compound</strong> \u2014 the robot thinks it\u2019s facing north when it\u2019s actually 5\u00b0 east. Then every position calculation uses the wrong heading for the trig, making (x, y) drift even on a straight path.',
       check: {
-        question: 'A robot drives in a straight line for 100 inches, but the odometry track width is calibrated 2mm too wide. Explain what effect this has on the robot\'s reported heading over time, and why this heading error makes the reported (x, y) position drift even on a perfectly straight path.',
+        question: 'A robot drives in a straight line for 100 inches, but the odometry track width is calibrated 2mm too wide. Explain: (1) how heading is computed from the two dead wheels (what the track width divides), (2) what a too-large track width does to the computed heading over time, and (3) why a wrong heading makes the reported (x, y) position drift even on a perfectly straight path.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'heading-formula', label: 'heading change = (right − left) ÷ track width', hint: 'The difference between the left and right wheel distances is divided by the track width.',
+              phrases: ['divid', 'divisor', 'difference between the left', 'difference between left', 'left and right wheel', 'left/right', 'right minus left', 'right - left', 'wheel difference', 'divided by'] },
+            { id: 'heading-drift', label: 'the computed heading under-reports turning and drifts from the true heading', hint: 'Dividing by a bigger number makes every heading change smaller than reality, and the error accumulates.',
+              phrases: ['heading drift', 'heading drifts', 'heading slowly', 'under-report', 'under report', 'underreport', 'less than the real', 'smaller than', 'changes less', 'drifts away', 'drift away', 'wrong heading', 'heading is wrong', 'heading will be wrong', 'heading error', 'accumulate', 'compound', 'builds up', 'too small', 'reported heading'] },
+            { id: 'position-drift', label: 'each position step is added along the wrong heading, so x/y curve away', hint: 'Every Δx/Δy uses cos/sin of the estimated heading — a wrong angle points each step slightly sideways.',
+              phrases: ['along the wrong heading', 'direction of the estimated heading', 'wrong direction', 'uses the heading', 'trig', 'cos', 'sin', 'x and y', 'x/y', 'curves away', 'sideways', 'position drift', 'position drifts', 'drift sideways', 'each step', 'every step', 'each little step', 'position update', 'position estimate', 'wrong angle'] }
+          ],
+          disqualifiers: [
+            { phrases: ["doesn't affect heading", 'does not affect heading', 'heading stays correct', 'heading stays the same', 'only makes the robot think it drove farther', 'only affects distance'], feedback: 'Track width is the divisor in the heading calculation, so a wrong value changes the heading estimate directly.' }
+          ]
+        }
       }
     },
     {
@@ -769,9 +870,24 @@ public void loop() {
       isTheory: true,
       learn: 'A Bezier curve uses <strong>control points</strong> that shape the path like magnets \u2014 they pull the curve toward them without the robot passing through them.<br><br>The math is nested linear interpolation. For a straight line: <code>P(t) = (1-t)\u00d7A + t\u00d7B</code> where t goes from 0 to 1. For a curve with control point C: interpolate A\u2192C, then C\u2192B, then interpolate between those two results. The result is a smooth arc.<br><br><strong>Why this matters:</strong> Jerky paths (drive, stop, turn 90\u00b0, drive) waste time accelerating and decelerating at every corner. Bezier curves let the robot maintain speed through turns by following a continuous arc. Control point placement determines the shape: close to start = tight initial turn, far from path = wide dramatic arc.',
       check: {
-        question: 'You have a start pose at (24, 24) and an end pose at (120, 24). You place a control point at (72, 96). Describe in words what shape the resulting Bezier curve will take \u2014 where does it start, which direction does it arc, and where does it end? Why would you choose this curve shape instead of a straight line?',
+        question: 'You have a start pose at (24, 24) and an end pose at (120, 24). You place a control point at (72, 96). Describe the resulting Bezier curve: (1) where it starts and ends, (2) which direction it arcs and whether it actually passes through the control point, and (3) one reason to choose this curve instead of a straight line.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'endpoints', label: 'starts at (24, 24) and ends at (120, 24)', hint: 'The curve begins at the start pose and finishes at the end pose.',
+              phrases: ['starts at', 'start at', 'begins at', 'ends at', 'end at', 'finishes at', '24 24', '120 24', 'from 24', 'to 120', 'start pose', 'end pose'] },
+            { id: 'arc-direction', label: 'it arcs upward toward the control point without passing through it', hint: 'The control point pulls the curve toward it like a magnet, but the path never reaches it.',
+              phrases: ['toward', 'towards', 'upward', 'upwards', 'bows', 'bow', 'arcs', 'arc', 'hump', 'bulge', 'bulges', 'curves up', 'positive y', '+y', 'higher y', 'does not touch', "doesn't touch", "doesn't pass through", 'does not pass through', 'without touching', 'without passing', "doesn't reach", 'does not reach', "won't touch", 'pulled toward', 'pulls the curve', 'magnet', 'never touches', 'never reaches'] },
+            { id: 'why-curve', label: 'a curve avoids obstacles or keeps the motion smooth and fast', hint: 'Curves go around things and let the robot keep speed instead of stop-and-turn corners.',
+              phrases: ['obstacle', 'obstacles', 'around', 'avoid', 'smooth', 'smoother', 'continuous', 'maintain speed', 'keep speed', 'keeps speed', 'without stopping', 'stop and turn', 'stop-and-turn', 'sharp corner', 'sharp corners', 'corners', 'approach angle', 'better angle', 'faster', 'saves time', 'wastes time', 'accelerat', 'decelerat'] }
+          ],
+          disqualifiers: [
+            { phrases: ['goes through the control point', 'passes through the control point', 'through the control point', 'reaches the control point', 'touches the control point', 'hits the control point'], feedback: 'A control point shapes the curve like a magnet \u2014 the path bends toward it but never passes through it.' },
+            { phrases: ['two lines', 'two straight', 'corner at the control', 'straight to 72', 'straight line to the control'], feedback: 'The result is one smooth arc, not two straight segments meeting at a corner.' }
+          ]
+        }
       }
     },
     {
@@ -780,9 +896,23 @@ public void loop() {
       isTheory: true,
       learn: 'Tuning is NOT guessing. It\u2019s systematic:<br><br><strong>1. Start with P only</strong> (I, D, F = 0). Increase kP until the system reaches target but overshoots slightly. The spring is the right stiffness, just missing the damper.<br><strong>2. Add D</strong> to kill overshoot. Increase until the system settles cleanly. You\u2019ve added the shock absorber.<br><strong>3. Check for steady-state error.</strong> If consistently stopping short, friction is winning. Add small kI with an integral cap.<br><strong>4. Add F for constant loads.</strong> Measure hold power, set as kF.<br><br><strong>Golden rule:</strong> Change ONE constant at a time. Observe. If you change two things and it improves, you don\u2019t know which helped. Systematic isolation beats shotgunning.',
       check: {
-        question: 'You\'re tuning a PID controller for a lift mechanism that holds a heavy arm. With kP = 0.05, the arm gets close to the target but stops about 8 degrees short and stays there. Explain which PID term(s) you would adjust and why, using the physical analogies (spring, damper, impatience, anti-gravity) to justify your answer.',
+        question: 'You\'re tuning a PID controller for a lift mechanism that holds a heavy arm. With kP = 0.05, the arm gets close to the target but stops about 8 degrees short and stays there. (1) Name this behaviour (the lesson calls it steady-state error) and say why P alone is stuck. (2) Say which term(s) you would add or adjust — the integral (impatience) and/or feedforward (anti-gravity) — and why, using the analogies. (3) Say why simply cranking kP is risky.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'steady-state', label: 'steady-state error: at a small error P is too weak to beat gravity/friction', hint: 'Near the target the error is tiny, so kP × error is not enough force to move a heavy arm.',
+              phrases: ['steady-state', 'steady state', 'stops short', 'stopping short', 'too weak', 'not enough power', 'not enough force', "can't overcome", 'cannot overcome', 'overcome gravity', 'fight gravity', 'against gravity', 'friction is winning', 'friction wins', 'spring is too weak', 'small error', 'tiny error', 'not enough to lift'] },
+            { id: 'integral-feedforward', label: 'add the integral (impatience) and/or feedforward (anti-gravity) term', hint: 'The integral term builds up while the error persists; a feedforward term supplies the constant holding force against gravity.',
+              phrases: ['integral', 'ki', 'impatience', 'impatient', 'accumulat', 'builds up', 'build up', 'feedforward', 'feed forward', 'feed-forward', 'kf', 'kg', 'anti-gravity', 'anti gravity', 'antigravity', 'holding force', 'constant power', 'baseline', 'constant force'] },
+            { id: 'kp-risk', label: 'raising kP alone risks overshoot and oscillation', hint: 'A stiffer spring may fix the short stop but will overshoot and oscillate.',
+              phrases: ['oscillat', 'overshoot', 'unstable', 'too stiff', 'bounce', "don't just", 'dont just', 'risk', 'risks', 'risky', 'crank', 'cranking', 'just raising kp', 'just increasing kp'] }
+          ],
+          disqualifiers: [
+            { phrases: ['damping will push', 'damper will push', 'add more kd', 'increase kd', 'raise kd', 'more kd'], feedback: 'The derivative term (the damper) only resists motion — it cannot push the arm the rest of the way.' }
+          ]
+        }
       }
     }
   ];
@@ -1000,9 +1130,25 @@ PathChain pickupPath = follower.pathBuilder()
       isTheory: true,
       learn: 'Random mutation debugging \u2014 changing things randomly until it works \u2014 is like a scientist randomly mixing chemicals. Even when it accidentally works, you don\u2019t know why, so the same bug class reappears.<br><br>The scientific method for debugging: <strong>1. Observe</strong> (what exactly happens \u2014 not "it doesn\u2019t work"), <strong>2. Hypothesize</strong> (list at least 3 possible causes before touching code), <strong>3. Predict & Test</strong> (test each hypothesis WITHOUT changing code \u2014 use telemetry), <strong>4. Isolate</strong> (narrow down by eliminating hypotheses), <strong>5. Fix</strong> (ONE change for the confirmed cause), <strong>6. Verify</strong> (confirm fix works AND nothing else broke).',
       check: {
-        question: 'Your robot\'s arm motor doesn\'t move when you press the A button. List three different hypotheses for why this might be happening (they should be meaningfully different \u2014 not three variations of the same idea). For each hypothesis, describe one test you could perform WITHOUT changing code to confirm or eliminate it.',
+        question: 'Your robot\'s arm motor doesn\'t move when you press the A button. List three meaningfully different hypotheses \u2014 for example one about hardware/wiring, one about configuration (Hardware Map names), and one about the gamepad/input \u2014 and for each, describe one test you could perform WITHOUT changing code to confirm or eliminate it.',
         type: 'written_answer',
-        minLength: 80
+        minLength: 80,
+        rubric: {
+          threshold: 0.75,
+          concepts: [
+            { id: 'hardware', label: 'a hardware or wiring hypothesis', hint: 'Could the motor, its cable, or the hub port be the problem?',
+              phrases: ['wiring', 'wire', 'wires', 'cable', 'cables', 'port', 'unplugged', 'plugged', 'motor is dead', 'motor itself', 'burned', 'burnt', 'hardware', 'hub', 'power', 'battery', 'loose connection', 'connector'] },
+            { id: 'config', label: 'a configuration hypothesis (Hardware Map name mismatch)', hint: 'Does the name in the code match the robot configuration on the Driver Hub?',
+              phrases: ['config', 'configuration', 'hardware map', 'hardwaremap', 'name', 'named', 'names', 'mismatch', 'driver hub', 'robot controller'] },
+            { id: 'input', label: 'an input hypothesis (gamepad not paired / wrong button)', hint: 'Is the gamepad registered as the right driver, and is the button press reaching the code?',
+              phrases: ['gamepad', 'controller', 'paired', 'pair', 'start+a', 'start a', 'start + a', 'button mapping', 'wrong button', 'input', 'joystick', 'registered'] },
+            { id: 'tests', label: 'tests that need no code change', hint: 'Swap a port, run the motor from the configuration screen, compare names, watch the gamepad indicator or telemetry.',
+              phrases: ['swap', 'swapping', 'config screen', 'configuration screen', 'test the motor', 'run it from', 'run the motor', 'check the name', 'compare the name', 'compare', 'read the', 'press start', 'indicator', 'icon', 'telemetry', 'check the', 'look at', 'watch', 'plug into', 'try a different', 'test screen', 'without touching the code', 'without changing code'] }
+          ],
+          disqualifiers: [
+            { phrases: ['change the code', 'add a print', 'change the button to', 'edit the code', 'rewrite the', 'add a print statement'], feedback: 'The tests must work without changing code \u2014 use the configuration screen, telemetry, port swaps and the gamepad indicator instead.' }
+          ]
+        }
       }
     },
     {
@@ -1011,9 +1157,24 @@ PathChain pickupPath = follower.pathBuilder()
       isTheory: true,
       learn: 'Not all bugs are the same. The <strong>category</strong> tells you where to look:<br><br><strong>Configuration bugs</strong> \u2014 code is correct but references wrong things. Hardware Map mismatches, wrong motor direction. Cause immediate crashes or obvious wrong behavior. Easiest to find.<br><br><strong>Logic bugs</strong> \u2014 code doesn\u2019t crash but does the wrong thing. Wrong state transitions, bad PID constants, wrong comparisons. No error message \u2014 code does exactly what you told it, which isn\u2019t what you wanted.<br><br><strong>Timing bugs</strong> \u2014 works sometimes, not always. Race conditions, wrong ordering, sensors checked before stabilizing. Hardest because they\u2019re intermittent.<br><br><strong>Integration bugs</strong> \u2014 two pieces work alone but break together. Two controllers fighting over one motor, double update() calls. Only appear when the full system is assembled.',
       check: {
-        question: 'You encounter a bug where your autonomous works perfectly 8 out of 10 times, but occasionally the robot stops mid-path and doesn\'t continue. Which category of bug is this most likely to be? Explain your reasoning and describe what debugging approach you would take based on that category.',
+        question: 'Your autonomous works perfectly 8 out of 10 times, but occasionally the robot stops mid-path and doesn\'t continue. (1) Name the bug category from this lesson (configuration, logic, timing or integration) that fits best. (2) Explain what about "8 out of 10" points to that category. (3) Describe a debugging approach suited to it.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.67,
+          concepts: [
+            { id: 'category', label: 'a timing (intermittent) or integration bug', hint: 'Bugs that appear only some of the time are timing bugs; two parts fighting is an integration bug.',
+              phrases: ['timing', 'intermittent', 'race condition', 'race', 'non-deterministic', 'nondeterministic', 'not deterministic', 'integration'] },
+            { id: 'reasoning', label: 'it only fails sometimes, so something varies between runs', hint: 'A bug that is not reproducible every run depends on something that changes — timing, sensor noise, loop speed.',
+              phrases: ["isn't reproducible", 'not reproducible', "doesn't happen every", 'not every time', 'only sometimes', 'varies between runs', 'something that varies', 'depends on', 'works sometimes', 'sometimes works', 'most of the time', '8 out of 10', '8/10', 'not consistent', 'inconsistent', 'random', 'sometimes fails', 'occasionally'] },
+            { id: 'approach', label: 'log/telemetry every loop and compare good and bad runs', hint: 'Record state transitions and sensor values each loop so you can see what was different when it failed.',
+              phrases: ['log', 'logging', 'telemetry', 'record', 'compare a good run', 'compare', 'reproduce', 'capture', 'isbusy', 'timeout', 'state transition', 'state transitions', 'watch', 'every loop', 'each loop'] }
+          ],
+          disqualifiers: [
+            { phrases: ['logic bug', 'configuration bug', 'config bug'], feedback: 'Logic and configuration bugs fail the same way every run; an 8-of-10 failure points to a timing (or integration) bug.' },
+            { phrases: ['compile error', 'syntax error', 'rebuild the code', 'rebuild it'], feedback: 'Code that compiles and runs 8 of 10 times has no compile error — this is a runtime, timing-type bug.' }
+          ]
+        }
       }
     },
     {
@@ -1022,9 +1183,25 @@ PathChain pickupPath = follower.pathBuilder()
       isTheory: true,
       learn: 'The most important debugging skill: distinguish between <strong>symptom</strong> (what you see) and <strong>root cause</strong> (why it happens).<br><br><strong>Example:</strong> Robot overshoots scoring position by 6 inches. Tempting fix: reduce target by 6 inches. Why this is wrong: tomorrow with a different battery, it overshoots by 4 inches \u2014 your offset is now wrong. Root cause: kP is too high. Real fix: tune kP properly.<br><br><strong>The "5 Whys" technique:</strong> Keep asking "why?" until you reach the actual cause. Why did it overshoot? Going too fast near target. Why? High motor power. Why? kP \u00d7 error still produces high output at small errors. Why? kP is too large. Fix at level 4, not level 1.',
       check: {
-        question: 'A team notices their robot\'s intake motor sometimes doesn\'t respond to button presses. They "fix" it by adding a 200ms sleep() after each button check to "give the motor time to respond." Explain why this is a symptom fix and not a root cause fix. What would you investigate to find the actual root cause?',
+        question: 'A team notices their robot\'s intake motor sometimes doesn\'t respond to button presses. They "fix" it by adding a 200ms sleep() after each button check to "give the motor time to respond." (1) Explain why this is a symptom fix — what does the sleep actually change, and what does it not explain? (2) Name a side effect of the sleep. (3) Name at least one likely root cause and how you would investigate it.',
         type: 'written_answer',
-        minLength: 50
+        minLength: 50,
+        rubric: {
+          threshold: 0.75,
+          concepts: [
+            { id: 'masks', label: 'the sleep masks the symptom without explaining the cause', hint: 'The motor still fails for the same underlying reason; the sleep just changes the timing so it shows less.',
+              phrases: ['mask', 'masks', 'hides', 'hide', 'hidden', 'symptom', "doesn't explain", 'does not explain', 'still fails', 'still happens', 'same reason', 'underlying', 'actual cause', 'real cause', 'root cause', 'covers up', 'papers over', 'band-aid', 'bandaid'] },
+            { id: 'side-effect', label: 'sleep stalls the loop and makes everything laggy', hint: 'A 200 ms sleep blocks the whole control loop, so every other control feels slow.',
+              phrases: ['slow', 'slower', 'lag', 'laggy', 'stall', 'stalls', 'blocks', 'blocking', 'loop time', 'freezes', 'delay', 'delays', 'unresponsive', 'other controls', 'whole loop', 'loop slower'] },
+            { id: 'root-cause', label: 'a plausible root cause: power overwritten elsewhere, missed short presses, loop timing, wiring/config', hint: 'Look for two places setting the motor power, a loop too slow to catch short presses, or a wiring/config issue.',
+              phrases: ['overwrit', 'overrid', 'two places', 'set twice', 'somewhere else', 'later in the loop', 'another', 'missed', 'misses', 'loop is too slow', 'loop too slow', 'short press', 'debounce', 'wiring', 'config', 'state machine', 'reset', 'conflict', 'fighting'] },
+            { id: 'investigate', label: 'investigate with telemetry/logging of the button and motor power', hint: 'Show the button state and the motor power each loop so you can see what happens on a missed press.',
+              phrases: ['telemetry', 'log', 'logging', 'print', 'watch', 'trace', 'look for', 'search', 'investigate', 'check whether', 'check if', 'check for', 'see what', 'find out'] }
+          ],
+          disqualifiers: [
+            { phrases: ['is a root cause fix', 'use 500', 'not enough time', 'needs time to respond', 'longer sleep', 'more sleep', '500 ms', '500ms'], feedback: 'A longer sleep is still a symptom fix — the motor does not need "time to respond"; something else is dropping the command.' }
+          ]
+        }
       }
     },
     {
@@ -1035,7 +1212,8 @@ PathChain pickupPath = follower.pathBuilder()
       check: {
         question: 'You\'re at competition. Your autonomous was working perfectly during practice matches, but in your first qualification match, the robot initializes and then does nothing when Start is pressed. You have 4 minutes until your next match. Walk through your diagnostic process step by step \u2014 what do you check first, second, and third? What\'s your fallback plan if you can\'t find the bug in time?',
         type: 'written_answer',
-        minLength: 80
+        minLength: 80,
+        graded: false   // reflection: there are many valid triage orders \u2014 kept for the mentor, never scored
       }
     }
   ];
@@ -1667,6 +1845,9 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
         } else if (isWritten) {
           // Written answer check
           html += '<div class="les-check-icon">&#9999;&#65039;</div>';
+          if (sec.check.graded === false) {
+            html += '<div class="les-reflection-label">&#128221; Reflection &mdash; share with your mentor. There is no single right answer; your answer is kept in your progress file and is not scored.</div>';
+          }
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
           html += '<textarea class="les-written-area" id="les-written-' + sec.id + '" placeholder="Type your answer here..." minlength="' + (sec.check.minLength || 50) + '"></textarea>';
           html += '<div class="les-written-footer">';
@@ -2035,7 +2216,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       return;
     }
 
-    var passed = result.passed === true && result.score >= 70;
+    var passed = result.passed === true;   // the rubric grader decides; score is informational
 
     // Build feedback card HTML
     var html = '<div class="theory-feedback ' + (passed ? 'passed' : 'failed') + '">';
@@ -2145,6 +2326,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
         return;
       }
     }
+    delete _theorySubmitCooldown[secId];   // revising is a deliberate action — allow an immediate resubmit
 
     var textarea = document.getElementById('les-written-' + secId);
     var submitBtn = document.getElementById('les-wsubmit-' + secId);

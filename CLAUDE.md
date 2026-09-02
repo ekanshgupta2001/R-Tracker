@@ -89,7 +89,7 @@ grep -rnE "\beval\(|new Function|new Worker|importScripts" --include='*.js' --in
 
 # 5. Tests (self-contained: playwright.config.js starts tests/serve.js)
 npm test
-node --test tests/
+npm run test:unit
 ```
 
 Gate 1 must return nothing. Gate 2 hits must each be annotated in `AUDIT.md` with why they are safe
@@ -205,7 +205,7 @@ R-Tracker/
 
 ## Testing
 - `npm test` runs Playwright; `playwright.config.js` starts `tests/serve.js` on `http://127.0.0.1:5501` (its own port, so VS Code Live Server on 5500 never interferes).
-  `npm run serve` starts the same server for manual use. `node --test tests/` runs fixture tests.
+  `npm run serve` starts the same server for manual use. `npm run test:unit` runs fixture tests.
 - Tests navigate with `page.goto`, never by clicking sidebar links (the page-transition script delays
   navigation). Wait on app globals with `waitForFunction`, never on `networkidle`.
 

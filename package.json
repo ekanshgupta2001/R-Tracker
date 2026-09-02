@@ -6,7 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:unit": "node --test tests/",
+    "test:unit": "node --test \"tests/**/*.test.js\"",
     "serve": "node tests/serve.js"
   },
   "devDependencies": {

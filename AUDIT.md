@@ -20,7 +20,7 @@ every request is same-origin, `GET`, has no query string and no body.
 | 1 — kill the network | done 2026-09-01 | `v2-phase-1` |
 | 2 — local persistence (sessionStorage backend, export/import) | done 2026-09-01 | `v2-phase-2` |
 | 3 — report without Gemini (BKT mastery, charts, rule-based text) | done 2026-09-01 | `v2-phase-3` |
-| 4 — theory grading without Gemini | pending | |
+| 4 — theory grading without Gemini (rubric grader) | done 2026-09-01 | `v2-phase-4` |
 | 5 — code checkpoints without Gemini | pending | |
 
 ## Where student data lives
@@ -95,9 +95,20 @@ Cloud Functions (`functions/`), `firestore.rules`, `firebase.json`, `.firebaserc
 team activity feeds, the coach dashboard and manage-team pages; Google Fonts and cdnjs/jsdelivr script tags;
 `build.js`/`build.sh`/`vercel.json`.
 
-Grading is stubbed until Phases 4–5: `js/grader.js` and `js/code-check.js` return `status: 'ungraded'`.
-Nothing auto-passes. A student can mark a deliverable **submitted** (for a mentor to read from their
-exported file), which unlocks the next phase but is never displayed as verified.
+## Grading (all local, deterministic)
+
+- **Theory answers** (`js/grader.js`, Phase 4): each written-answer check in `js/curriculum/lessons.js`
+  carries a rubric — required concepts with accepted phrasings and a hint, optional disqualifying
+  misconceptions, and a pass threshold. The answer is normalized and matched with substring / word-level
+  fuzzy matching (Levenshtein ≤ 1 for words of 5+ letters); score = concepts hit ÷ concepts required.
+  The answer text and result stay in `curriculum.phases[*].theoryAnswers` (exported for the mentor);
+  only the pass/fail signal feeds mastery (`js/bkt.js`). One question (`theory-triage`) is a
+  **reflection** (`graded: false`): stored for the mentor, never scored, excluded from mastery.
+  `tests/grader.test.js` checks the grader against `tests/fixtures/theory-samples.json` (52 hand-labeled
+  answers): agreement is 48/48 on the graded questions (≥ 90% is the gate).
+- **Code submissions** (`js/code-check.js`): still the Phase 1 stub returning `status: 'ungraded'` until
+  Phase 5. Nothing auto-passes. A student can mark a deliverable **submitted** (for a mentor to read from
+  their exported file), which unlocks the next phase but is never displayed as verified.
 
 ## Third-party code shipped (vendored, read, no runtime network)
 

@@ -2968,3 +2968,7 @@ html.light .ai-badge-ungraded { background: #e6e6e6; color: #555; }
 html.light .rh-pass-label.rh-ungraded { color: #777; }
 html.light .theory-feedback.ungraded { border-color: #ccc; background: #f7f7f7; }
 html.light .theory-feedback.ungraded .score-badge { color: #555; }
+
+/* ── v2: reflection (ungraded) theory questions ───────────────────────────── */
+.les-reflection-label { font-size: 12px; color: #c9a227; background: rgba(201,162,39,0.08); border: 1px solid rgba(201,162,39,0.35); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; line-height: 1.4; }
+html.light .les-reflection-label { color: #8a6a00; background: #fff8e1; border-color: #e6c760; }

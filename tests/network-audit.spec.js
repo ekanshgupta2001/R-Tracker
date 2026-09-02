@@ -86,7 +86,7 @@ test('full student session makes only same-origin static GETs', async ({ page, c
   s = await readState(page);
   expect(s.strategies.length).toBe(1);
 
-  // Curriculum: pass the quiz, then submit a theory answer in Phase 3 (stub → not graded)
+  // Curriculum: pass the quiz, then submit a theory answer in Phase 3 (graded locally by the rubric)
   await visit('/pages/curriculum.html');
   await page.waitForSelector('.tl-node');
   await answerQuizCorrectly(page);
@@ -97,12 +97,13 @@ test('full student session makes only same-origin static GETs', async ({ page, c
   await page.fill('#les-written-theory-sensor-physics', 'The gym lighting differs from the workshop and the sensor is at a different distance and angle, so the raw value changes with the environment. A single fixed threshold cannot work in both rooms.');
   await page.click('#les-wsubmit-theory-sensor-physics');
   const fb = page.locator('#les-wfeedback-theory-sensor-physics');
-  await expect(fb).toContainText(/not graded/i);
-  await expect(fb).not.toContainText('Understanding Confirmed');
+  await expect(fb).toContainText(/Understanding Confirmed|Keep Thinking/);
+  await expect(fb).toContainText(/\d+\/100/);
   s = await readState(page);
-  expect(s.curriculum.phases.phase3.theoryAnswers['theory-sensor-physics'].status).toBe('ungraded');
-  expect(s.curriculum.phases.phase3.lessonProgress).not.toContain('theory-sensor-physics');
-  expect(s.curriculum.attempts.some(a => a.kind === 'theory' && a.graded === false && a.correct === null)).toBe(true);
+  const ta = s.curriculum.phases.phase3.theoryAnswers['theory-sensor-physics'];
+  expect(ta.status).toBe('graded');
+  expect(typeof ta.score).toBe('number');
+  expect(s.curriculum.attempts.some(a => a.kind === 'theory' && a.graded === true && typeof a.correct === 'boolean')).toBe(true);
 
   // Report + About
   await visit('/pages/report.html');
