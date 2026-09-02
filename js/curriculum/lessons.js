@@ -1469,6 +1469,33 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     capstone: CAPSTONE_CONTENT
   };
 
+  // Phase order, names and unlock chain (mirrors PHASES in pages/curriculum.html; used by the report).
+  window.PHASE_META = [
+    { id: 'phase0', num: 0, name: 'Java Readiness', unlockReq: null },
+    { id: 'phase1', num: 1, name: 'Make It Move', unlockReq: 'phase0' },
+    { id: 'phase2', num: 2, name: 'Make It Structured', unlockReq: 'phase1' },
+    { id: 'phase3', num: 3, name: 'Make It Smart', unlockReq: 'phase2' },
+    { id: 'phase4', num: 4, name: 'Make It Precise', unlockReq: 'phase3' },
+    { id: 'phase5', num: 5, name: 'Make It Robust', unlockReq: 'phase4' },
+    { id: 'advanced_command', num: 'A1', name: 'Command-Based Programming', unlockReq: 'phase5' },
+    { id: 'advanced_strategy', num: 'A2', name: 'Competition Strategy', unlockReq: 'phase5' },
+    { id: 'capstone', num: 'C', name: 'Full Competition Autonomous', unlockReq: 'phase5' }
+  ];
+
+  // Bayesian Knowledge Tracing parameters (js/bkt.js). Tunable here without code changes.
+  //   prior = P(known before any evidence), learn = P(transition to known per attempt),
+  //   guess = P(correct | not known), slip = P(incorrect | known)
+  window.BKT_PARAMS = {
+    version: 'bkt-1',
+    defaults: { prior: 0.30, learn: 0.20, guess: 0.25, slip: 0.10 },
+    phases: {
+      phase0: { guess: 0.25 },                    // 4-option multiple choice
+      phase3: { prior: 0.25, guess: 0.15 },       // theory answers: harder to guess
+      phase4: { prior: 0.25, guess: 0.15 },
+      phase5: { prior: 0.25, guess: 0.15 }
+    }
+  };
+
   /* ══════════════════════════════════════════════════════════════════════════
      SYNTAX HIGHLIGHTER — inline styles, no CSS classes
      ══════════════════════════════════════════════════════════════════════ */

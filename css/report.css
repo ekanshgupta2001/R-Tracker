@@ -689,3 +689,64 @@ html.light .rlg-name {
 html.light .sh-action {
   color: #555;
 }
+
+/* ── v2 report: next step, callouts, consistency, curriculum & mastery ───── */
+.rpt-empty-banner {
+  margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; font-size: 13px; line-height: 1.5;
+  background: #241a1d; border: 1px solid var(--burgundy-accent, #c73e5a); color: #ddd;
+}
+.rpt-empty-banner[hidden] { display: none; }
+.rpt-empty-banner a { color: var(--burgundy-accent, #c73e5a); }
+.ov-text { font-size: 12.5px; color: #aab; margin-top: 8px; line-height: 1.5; }
+.rpt-next {
+  display: block; margin-top: 14px; padding: 12px 14px; border-radius: 10px; text-decoration: none;
+  background: linear-gradient(135deg, rgba(128,0,32,0.25), rgba(128,0,32,0.08));
+  border: 1px solid rgba(199,62,90,0.45); transition: border-color 0.2s, transform 0.2s;
+}
+.rpt-next:hover { border-color: var(--burgundy-accent, #c73e5a); transform: translateY(-1px); }
+.rpt-next-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--burgundy-accent, #c73e5a); margin-bottom: 4px; }
+.rpt-next-title { font-size: 15px; font-weight: 700; color: #fff; }
+.rpt-next-text { font-size: 12.5px; color: #bbc; margin-top: 3px; }
+.rpt-callouts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.rpt-callout { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: #222; border: 1px solid #333; color: #ccd; }
+.rpt-callout-icon { margin-right: 5px; }
+.rpt-headline { font-size: 14px; font-weight: 600; color: #eee; }
+.rpt-headline-sub { margin-top: 16px; }
+.rpt-detail { font-size: 12.5px; color: #99a; margin-top: 3px; margin-bottom: 10px; line-height: 1.5; }
+.rpt-stats-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.rpt-chart-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #778; margin: 12px 0 6px; }
+.rpt-chart-wrap { width: 100%; }
+.rpt-chart-wrap canvas { display: block; width: 100%; }
+.sk-layout { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.sk-radar-wrap { flex: 0 0 240px; display: flex; justify-content: center; }
+.sk-layout .sk-list { flex: 1 1 260px; }
+.rpt-phases { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+.rpt-phase-pill { font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid #333; background: #1f1f1f; color: #99a; }
+.rpt-pill-in-progress { border-color: #eab308; color: #eab308; }
+.rpt-pill-submitted { border-color: #3b82f6; color: #3b82f6; }
+.rpt-pill-verified { border-color: #22c55e; color: #22c55e; }
+.rpt-pill-not-started { color: #ccd; }
+.rpt-mastery { border-bottom: 1px solid #222; }
+.rpt-mastery summary { list-style: none; cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; }
+.rpt-mastery summary::-webkit-details-marker { display: none; }
+.rpt-mastery summary .sk-row { flex: 1 1 100%; }
+.rpt-mastery-meta { font-size: 10.5px; color: #667; margin: -4px 0 8px 0; padding-left: 2px; }
+.rpt-mastery-modules { padding: 2px 0 8px 14px; border-left: 2px solid #2a2a2a; margin: 0 0 8px 6px; }
+.sk-row-sub .sk-label { font-size: 11.5px; color: #99a; }
+
+html.light .rpt-empty-banner { background: #fff5f7; color: #333; }
+html.light .ov-text { color: #555; }
+html.light .rpt-next { background: linear-gradient(135deg, rgba(128,0,32,0.10), rgba(128,0,32,0.03)); }
+html.light .rpt-next-title { color: #222; }
+html.light .rpt-next-text { color: #555; }
+html.light .rpt-callout { background: #f5f5f5; border-color: #ddd; color: #444; }
+html.light .rpt-headline { color: #222; }
+html.light .rpt-detail { color: #666; }
+html.light .rpt-chart-label { color: #888; }
+html.light .rpt-phase-pill { background: #f7f7f7; border-color: #ddd; color: #666; }
+html.light .rpt-pill-not-started { color: #444; }
+html.light .rpt-mastery { border-bottom-color: #eee; }
+html.light .rpt-mastery-meta { color: #888; }
+html.light .rpt-mastery-modules { border-left-color: #e5e5e5; }
+html.light .sk-row-sub .sk-label { color: #666; }
+@media (max-width: 640px) { .rpt-stats-grid-4 { grid-template-columns: repeat(2, 1fr); } .sk-radar-wrap { flex-basis: 100%; } }

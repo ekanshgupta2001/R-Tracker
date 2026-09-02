@@ -19,7 +19,7 @@ every request is same-origin, `GET`, has no query string and no body.
 | 0 — freeze v1, docs, fixtures | done 2026-09-01 | `v1-final` |
 | 1 — kill the network | done 2026-09-01 | `v2-phase-1` |
 | 2 — local persistence (sessionStorage backend, export/import) | done 2026-09-01 | `v2-phase-2` |
-| 3 — report without Gemini | pending | |
+| 3 — report without Gemini (BKT mastery, charts, rule-based text) | done 2026-09-01 | `v2-phase-3` |
 | 4 — theory grading without Gemini | pending | |
 | 5 — code checkpoints without Gemini | pending | |
 

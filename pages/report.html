@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
-  <meta name="description" content="Driver Report — R-Tracker performance analysis and coaching.">
-  <title>Driver Report — R-Tracker</title>
+  <meta name="description" content="Progress Report — R-Tracker driver stats, practice consistency, curriculum mastery.">
+  <title>Progress Report — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../css/fonts.css">
   <link rel="stylesheet" href="../css/global.css">
@@ -15,6 +15,11 @@
   <script src="../js/schema.js"></script>
   <script src="../js/store.js"></script>
   <script defer src="../js/sidebar.js"></script>
+  <script defer src="../js/curriculum/lessons.js"></script>
+  <script defer src="../js/bkt.js"></script>
+  <script defer src="../js/charts.js"></script>
+  <script defer src="../js/report-templates.js"></script>
+  <script defer src="../js/report.js"></script>
 </head>
 
 <body>
@@ -22,13 +27,17 @@
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
   <header class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
-    <div class="topbar-right">Driver Report</div>
+    <div class="topbar-right">Progress Report</div>
   </header>
 
   <main class="main-wrap" id="main-content">
     <div class="report-content">
 
-      <!-- Section 1: Driver Overview -->
+      <div class="rpt-empty-banner" id="rpt-empty-banner" hidden>
+        Nothing here yet. Your report builds itself from what you do in <a href="teleop.html">TeleOp Practice</a> and the <a href="curriculum.html">Curriculum</a> — all of it stays in this browser.
+      </div>
+
+      <!-- Section 1: Driver Overview + next step -->
       <div class="rpt-card" id="rpt-overview">
         <div class="rpt-card-title">Driver Overview</div>
         <div id="overview-content">
@@ -45,461 +54,53 @@
       <!-- Section 2: Skill Breakdown -->
       <div class="rpt-card rpt-animate" id="rpt-skills">
         <div class="rpt-card-title">Skill Breakdown</div>
-        <div id="skills-content">
-          <div class="skeleton skel-bar"></div>
-          <div class="skeleton skel-bar"></div>
-          <div class="skeleton skel-bar"></div>
-          <div class="skeleton skel-bar"></div>
-          <div class="skeleton skel-bar"></div>
-          <div class="skeleton skel-bar"></div>
-        </div>
+        <div id="skills-content"><div class="skeleton skel-bar"></div><div class="skeleton skel-bar"></div><div class="skeleton skel-bar"></div></div>
       </div>
 
-      <!-- Section 3: Coach Analysis -->
+      <!-- Section 3: Practice Consistency -->
+      <div class="rpt-card rpt-animate" id="rpt-consistency">
+        <div class="rpt-card-title">Practice Consistency</div>
+        <div id="consistency-content"><div class="skeleton skel-line" style="width:60%;height:14px"></div></div>
+      </div>
+
+      <!-- Section 4: Curriculum & Mastery -->
+      <div class="rpt-card rpt-animate" id="rpt-curriculum">
+        <div class="rpt-card-title">Curriculum &amp; Mastery</div>
+        <div id="curriculum-content"><div class="skeleton skel-line" style="width:60%;height:14px"></div></div>
+      </div>
+
+      <!-- Section 5: Coach Analysis -->
       <div class="rpt-card rpt-animate" id="rpt-ai">
         <div class="rpt-card-title">Coach Analysis</div>
-        <div id="ai-content">
-          <div class="skeleton skel-line" style="width:40%;height:14px"></div>
-          <div class="skeleton skel-line" style="width:90%;height:12px;margin-top:12px"></div>
-          <div class="skeleton skel-line" style="width:80%;height:12px;margin-top:6px"></div>
-          <div class="skeleton skel-line" style="width:85%;height:12px;margin-top:6px"></div>
-        </div>
+        <div id="ai-content"><div class="skeleton skel-line" style="width:40%;height:14px"></div></div>
       </div>
 
-      <!-- Section 4: All-Time Stats -->
+      <!-- Section 6: All-Time Stats -->
       <div class="rpt-card rpt-animate" id="rpt-alltime">
         <div class="rpt-card-title">All-Time Stats</div>
-        <div id="alltime-content">
-          <div class="rpt-stats-grid">
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-            <div class="rpt-stat skeleton" style="height:80px"></div>
-          </div>
-        </div>
+        <div id="alltime-content"><div class="rpt-stats-grid"><div class="rpt-stat skeleton" style="height:80px"></div><div class="rpt-stat skeleton" style="height:80px"></div><div class="rpt-stat skeleton" style="height:80px"></div></div></div>
       </div>
 
-      <!-- Section 5: Levels Progress -->
+      <!-- Section 7: Levels Progress -->
       <div class="rpt-card rpt-animate" id="rpt-levels">
         <div class="rpt-card-title">Levels Progress</div>
-        <div id="levels-content">
-          <div class="rpt-levels-grid">
-            <div class="skeleton" style="width:100%;height:50px;border-radius:6px"></div>
-          </div>
-        </div>
+        <div id="levels-content"><div class="rpt-levels-grid"><div class="skeleton" style="width:100%;height:50px;border-radius:6px"></div></div></div>
       </div>
 
-      <!-- Section 6: Session History -->
+      <!-- Section 8: Session History -->
       <div class="rpt-card rpt-animate" id="rpt-history">
         <div class="rpt-card-title">Session History</div>
-        <div id="history-content">
-          <div class="skeleton skel-line" style="width:80%;height:12px"></div>
-          <div class="skeleton skel-line" style="width:60%;height:12px;margin-top:8px"></div>
-          <div class="skeleton skel-line" style="width:70%;height:12px;margin-top:8px"></div>
-        </div>
+        <div id="history-content"><div class="skeleton skel-line" style="width:80%;height:12px"></div></div>
       </div>
 
     </div>
   </main>
 
-  <script defer src="../js/utils/validators.js"></script>
   <script>
-    /* ── Level Definitions ──────────────────────────────────────────────────── */
-    var LEVEL_DEFS = [
-      { id: '1',  name: 'Straight Shot', tier: 'Beginner' },
-      { id: '2',  name: 'Side Step', tier: 'Beginner' },
-      { id: '3',  name: 'L-Shape', tier: 'Beginner' },
-      { id: '4',  name: 'The Square', tier: 'Intermediate' },
-      { id: '5',  name: 'Zigzag', tier: 'Intermediate' },
-      { id: '6',  name: 'Diamond', tier: 'Intermediate' },
-      { id: '7',  name: 'Specimen Run', tier: 'Advanced' },
-      { id: '8',  name: 'Sample Collect', tier: 'Advanced' },
-      { id: '9',  name: 'Spiral In', tier: 'Advanced' },
-      { id: '10', name: 'Speed Demon', tier: 'Expert' },
-      { id: '11', name: 'Threading the Needle', tier: 'Expert' },
-      { id: '12', name: 'The Gauntlet', tier: 'Expert' },
-    ];
-    var TIER_UNLOCK = { Beginner: 0, Intermediate: 3, Advanced: 6, Expert: 9 };
-
-    /* ── Helpers ────────────────────────────────────────────────────────────── */
-    function esc(s) {
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function fmtTime(ms) {
-      if (!ms || ms <= 0) return '0m';
-      var m = Math.floor(ms / 60000);
-      if (m < 60) return m + 'm';
-      return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
-    }
-
-    function skillClass(v) { return v >= 70 ? 'good' : v >= 40 ? 'ok' : 'poor'; }
-
-    function gradeColor(g) {
-      var map = { S: '#ffd700', A: '#4aff88', B: '#4a9eff', C: '#ffdd44', D: '#ff8844', F: '#ff4455' };
-      return map[g] || '#888';
-    }
-
-    function scoreColorClass(v) {
-      if (v >= 70) return 'clr-green';
-      if (v >= 40) return 'clr-orange';
-      return 'clr-red';
-    }
-
-    function fmtDate(date) {
-      return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-
-    /* ── IntersectionObserver for scroll-triggered animations ──────────────── */
-    var skillBarsLoaded = false;
-    var aiTypingTriggered = false;
-
-    var scrollObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-
-        // Trigger skill bar animation
-        if (id === 'rpt-skills' && !skillBarsLoaded) {
-          skillBarsLoaded = true;
-          requestAnimationFrame(function () {
-            document.querySelectorAll('.sk-bar').forEach(function (bar) {
-              bar.style.width = bar.style.getPropertyValue('--target-width');
-            });
-          });
-        }
-
-        // Trigger AI typing animation
-        if (id === 'rpt-ai' && !aiTypingTriggered) {
-          aiTypingTriggered = true;
-          var summary = document.querySelector('.ai-summary');
-          if (summary) {
-            summary.classList.add('ai-typing');
-          }
-        }
-      });
-    }, { threshold: 0.2 });
-
-    /* ── Section 1: Driver Overview ────────────────────────────────────────── */
-    function loadOverview(stats, lastReport) {
-      var el = document.getElementById('overview-content');
-      if (!stats || !stats.lastUpdated) {
-        el.innerHTML = '<div class="rpt-empty">Start practicing to see your stats here. <a href="teleop.html">Go to TeleOp Practice</a></div>';
-        return;
-      }
-      var g = stats.grade || 'F';
-      var score = stats.overallRating || 0;
-      var percentile = lastReport && lastReport.percentile ? lastReport.percentile : null;
-      var profileName = 'Driver';
-      if (lastReport && lastReport.driverProfile) {
-        profileName = lastReport.driverProfile.split(' — ')[0] || 'Driver';
-      }
-
-      var html = '<div class="ov-row">';
-      html += '<div class="ov-score-wrap">';
-      html += '<span class="ov-score ' + scoreColorClass(score) + '">' + score + '</span>';
-      html += '<span class="ov-grade" style="color:' + gradeColor(g) + '">' + g + '</span>';
-      html += '</div>';
-      html += '<div class="ov-info">';
-      html += '<div class="ov-badge">' + esc(profileName).toUpperCase() + '</div>';
-      if (percentile) {
-        html += '<div class="ov-percentile">' + esc(percentile) + '</div>';
-      }
-      html += '</div>';
-      html += '</div>';
-      el.innerHTML = html;
-    }
-
-    /* ── Section 2: Skill Breakdown ────────────────────────────────────────── */
-    function loadSkills(stats) {
-      var el = document.getElementById('skills-content');
-      if (!stats) {
-        el.innerHTML = '<div class="rpt-empty">No skill data yet.</div>';
-        return;
-      }
-
-      var skills = [
-        { label: 'Smoothness', val: stats.smoothness || 0 },
-        { label: 'Stability', val: stats.stability || 0 },
-        { label: 'Strafe', val: stats.strafe || 0 },
-        { label: 'Turn', val: stats.turn || 0 },
-        { label: 'Recovery', val: stats.recovery || 0 },
-        { label: 'Reaction Time', val: stats.reactionTime || 0 },
-      ];
-
-      var html = '<div class="sk-list">';
-      skills.forEach(function (s, i) {
-        var cls = skillClass(s.val);
-        html += '<div class="sk-row" style="animation-delay:' + (i * 80) + 'ms">';
-        html += '<span class="sk-label">' + s.label + '</span>';
-        html += '<div class="sk-bar-wrap"><div class="sk-bar sk-' + cls + '" style="--target-width:' + s.val + '%"></div></div>';
-        html += '<span class="sk-val ' + scoreColorClass(s.val) + '">' + s.val + '</span>';
-        html += '</div>';
-      });
-      html += '</div>';
-      el.innerHTML = html;
-
-      // Observe skills section for scroll-triggered animation
-      var skillsCard = document.getElementById('rpt-skills');
-      if (skillsCard) scrollObserver.observe(skillsCard);
-    }
-
-    /* ── Section 3: Coach Analysis (rule-based, generated in TeleOp Practice) ── */
-    function loadAICoach(rp, prevRp) {
-      var el = document.getElementById('ai-content');
-      {
-        if (!rp) {
-          el.innerHTML = '<div class="rpt-empty">Open the Driver Report in TeleOp Practice after a session to generate coaching insights. <a href="teleop.html">Start Practicing</a></div>';
-          return;
-        }
-
-        var profileName = rp.driverProfile ? rp.driverProfile.split(' — ')[0] : 'Driver';
-        var profileDesc = rp.driverProfile && rp.driverProfile.includes(' — ') ? rp.driverProfile.split(' — ')[1] : '';
-        var strengths = rp.strengths || [];
-        var weaknesses = rp.weaknesses || [];
-        var plan = rp.trainingPlan || [];
-        var summary = rp.summary || rp.overallSummary || '';
-        var detailed = rp.detailedAnalysis || '';
-
-        var prevScore = prevRp ? prevRp.overallScore : undefined;
-        var curScore = rp.overallScore;
-
-        var html = '';
-
-        html += '<div class="ai-profile-badge">' + esc(profileName) + '</div>';
-        if (profileDesc) {
-          html += '<div class="ai-profile-desc">' + esc(profileDesc) + '</div>';
-        }
-
-        if (prevScore !== undefined && curScore !== undefined) {
-          var delta = curScore - prevScore;
-          var deltaStr = delta > 0 ? '+' + delta : '' + delta;
-          var deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
-          html += '<div class="ai-comparison"><span class="ai-comp-label">Score:</span> ' + prevScore + ' → ' + curScore + ' <span class="ai-delta ' + deltaClass + '">(' + deltaStr + ')</span></div>';
-        }
-
-        if (summary) {
-          html += '<div class="ai-summary">' + esc(summary) + '</div>';
-        }
-
-        if (strengths.length) {
-          html += '<div class="ai-section-label">Strengths</div>';
-          html += '<div class="ai-list">';
-          strengths.forEach(function (s) {
-            html += '<div class="ai-item ai-strength"><span class="ai-icon">✓</span> ' + esc(s) + '</div>';
-          });
-          html += '</div>';
-        }
-
-        if (weaknesses.length) {
-          html += '<div class="ai-section-label">Areas to Improve</div>';
-          html += '<div class="ai-list">';
-          weaknesses.forEach(function (w) {
-            html += '<div class="ai-item ai-weakness"><span class="ai-icon">△</span> ' + esc(w) + '</div>';
-          });
-          html += '</div>';
-        }
-
-        if (detailed) {
-          html += '<div class="ai-section-label">Detailed Analysis</div>';
-          html += '<div class="ai-detailed">' + esc(detailed) + '</div>';
-        }
-
-        if (plan.length) {
-          html += '<div class="ai-section-label">Training Plan</div>';
-          html += '<ol class="ai-plan">';
-          plan.forEach(function (p) {
-            html += '<li>' + esc(p) + '</li>';
-          });
-          html += '</ol>';
-        }
-
-        html += '<a class="ai-generate-btn" href="teleop.html">Generate a new report in TeleOp Practice</a>';
-
-        el.innerHTML = html;
-
-        // Observe section for typing animation
-        var aiCard = document.getElementById('rpt-ai');
-        if (aiCard) scrollObserver.observe(aiCard);
-      }
-    }
-
-    /* ── Section 4: All-Time Stats ─────────────────────────────────────────── */
-    function loadAllTimeStats(d, levels, phases) {
-      var el = document.getElementById('alltime-content');
-      {
-        var levelsDone = 0;
-        var bestLevel = 0;
-        Object.keys(levels || {}).forEach(function(id) {
-          var ld = levels[id];
-          if (ld && ld.bestStars && ld.bestStars >= 1) {
-            levelsDone++;
-            var n = parseInt(id);
-            if (!isNaN(n) && n > bestLevel) bestLevel = n;
-          }
-        });
-
-        var phasesCompleted = 0;
-        var gradedScores = [];
-        Object.keys(phases || {}).forEach(function(pid) {
-          var cd = phases[pid];
-          if (!cd) return;
-          if (cd.status === 'verified' || cd.status === 'submitted') phasesCompleted++;
-          if (typeof cd.bestScore === 'number' && cd.bestScore > 0) gradedScores.push(cd.bestScore);
-        });
-        var avgCode = gradedScores.length ? Math.round(gradedScores.reduce(function(a, b) { return a + b; }, 0) / gradedScores.length) : null;
-
-        if ((!d || !d.lastUpdated) && levelsDone === 0 && phasesCompleted === 0) {
-          el.innerHTML = '<div class="rpt-empty">No stats yet.</div>';
-          return;
-        }
-        d = d || {};
-        var score = d.overallRating || 0;
-        var stats = [
-          { val: fmtTime(d.totalPracticeMs || 0), label: 'Practice Time', cls: 'clr-cyan' },
-          { val: levelsDone + '/12', label: 'Levels Done', cls: 'clr-gold' },
-          { val: score, label: 'Best Score', cls: scoreColorClass(score) },
-          { val: bestLevel > 0 ? bestLevel : '—', label: 'Best Level', cls: 'clr-gold' },
-          { val: phasesCompleted, label: 'Curriculum Phases', cls: 'clr-green' },
-          { val: avgCode !== null ? avgCode + '%' : '—', label: 'Avg Code Score', cls: 'clr-purple' },
-        ];
-
-        var html = '<div class="rpt-stats-grid">';
-        stats.forEach(function (s) {
-          html += '<div class="rpt-stat"><div class="rpt-stat-val ' + s.cls + '">' + esc(String(s.val)) + '</div><div class="rpt-stat-label">' + s.label + '</div></div>';
-        });
-        html += '</div>';
-        el.innerHTML = html;
-      }
-    }
-
-    /* ── Section 5: Levels Progress ────────────────────────────────────────── */
-    function loadLevelsGrid(levels) {
-      var el = document.getElementById('levels-content');
-      try {
-        var userLevels = levels || {};
-        var completed = Object.values(userLevels).filter(function (l) { return l.bestStars && l.bestStars >= 1; }).length;
-
-        var bestLevel = 0;
-        Object.keys(userLevels).forEach(function(id) {
-          var n = parseInt(id);
-          if (!isNaN(n) && userLevels[id].bestStars >= 1 && n > bestLevel) bestLevel = n;
-        });
-
-        var html = '<div class="rlg-summary">' + completed + '/12 LEVELS DONE</div>';
-        html += '<div class="rpt-levels-grid">';
-        LEVEL_DEFS.forEach(function (def, i) {
-          var lvl = userLevels[def.id];
-          var unlockReq = TIER_UNLOCK[def.tier] || 0;
-          var isLocked = completed < unlockReq;
-          var num = i + 1;
-
-          if (isLocked) {
-            html += '<div class="rlg-cell locked">';
-            html += '<div class="rlg-lock">&#128274;</div>';
-            html += '<div class="rlg-name">' + esc(def.name) + '</div>';
-            html += '</div>';
-          } else {
-            var cls = '';
-            var stars = 0;
-            if (lvl && lvl.bestStars) {
-              stars = lvl.bestStars;
-              if (stars === 3) cls = 'gold';
-              else if (stars === 2) cls = 'silver';
-              else if (stars >= 1) cls = 'bronze';
-            }
-            var ratingLabel = stars === 3 ? 'Gold' : stars === 2 ? 'Silver' : stars >= 1 ? 'Bronze' : '';
-
-            html += '<div class="rlg-cell' + (cls ? ' ' + cls : '') + '" onclick="toggleLevelDetail(this, event)" data-name="' + esc(def.name) + '" data-time="' + (lvl && lvl.bestTime ? lvl.bestTime.toFixed(2) : '') + '" data-rating="' + ratingLabel + '" data-attempts="' + (lvl ? (lvl.attempts || 0) : 0) + '" data-num="' + num + '">';
-            html += '<div class="rlg-num">' + num + '</div>';
-            if (stars > 0) {
-              var starHtml = '';
-              for (var s = 1; s <= 3; s++) {
-                starHtml += '<span class="rlg-star' + (s <= stars ? ' lit' : '') + '">' + (s <= stars ? '★' : '☆') + '</span>';
-              }
-              html += '<div class="rlg-stars">' + starHtml + '</div>';
-            }
-            html += '</div>';
-          }
-        });
-        html += '</div>';
-        el.innerHTML = html;
-      } catch (e) {
-        console.error('Failed to load levels:', e);
-        el.innerHTML = '<div class="rpt-empty">Failed to load levels</div>';
-      }
-    }
-
-    function toggleLevelDetail(cell, e) {
-      if (e) e.stopPropagation();
-      var existing = document.querySelector('.rlg-tooltip');
-      if (existing) { existing.remove(); return; }
-      var num = cell.getAttribute('data-num');
-      var name = cell.getAttribute('data-name');
-      var time = cell.getAttribute('data-time');
-      var rating = cell.getAttribute('data-rating');
-      var attempts = cell.getAttribute('data-attempts');
-      if (!name) return;
-      var tip = document.createElement('div');
-      tip.className = 'rlg-tooltip';
-      tip.innerHTML = '<div class="rlg-tip-title">Level ' + esc(num) + ': ' + esc(name) + '</div>'
-        + '<div class="rlg-tip-row"><span>Best Time:</span><span class="clr-cyan">' + (time ? time + 's' : '—') + '</span></div>'
-        + '<div class="rlg-tip-row"><span>Rating:</span><span class="clr-gold">' + (rating || 'Not completed') + '</span></div>'
-        + '<div class="rlg-tip-row"><span>Attempts:</span><span>' + (attempts || '0') + '</span></div>';
-      cell.appendChild(tip);
-      document.addEventListener('click', function dismiss() {
-        tip.remove();
-        document.removeEventListener('click', dismiss);
-      }, { once: true });
-    }
-
-    /* ── Section 6: Session History (from local practice sessions) ─────────── */
-    function loadSessionHistory(sessions) {
-      var el = document.getElementById('history-content');
-      var items = (sessions || []).slice(-15).reverse();
-
-      if (items.length === 0) {
-        el.innerHTML = '<div class="rpt-empty" style="text-align:center;padding:24px;">' +
-          '<div style="font-size:24px;margin-bottom:8px;">&#128202;</div>' +
-          '<p style="font-size:13px;color:#888;">Session history will appear here as you practice.</p>' +
-          '<p style="font-size:12px;color:#666;">Complete TeleOp sessions (30 seconds or longer) to build your history.</p></div>';
-        return;
-      }
-
-      var html = '<div class="sh-list">';
-      items.forEach(function (i) {
-        var duration = i.durationMs ? Math.max(1, Math.round(i.durationMs / 60000)) + 'min' : '';
-        var action = 'Practiced ' + (i.levelsAttempted || 0) + ' level run' + (i.levelsAttempted === 1 ? '' : 's');
-        if (i.levelsCompleted) action += ' · ' + i.levelsCompleted + ' completed';
-        var rating = (typeof i.ratingAtEnd === 'number') ? ' · rating <span class="' + scoreColorClass(i.ratingAtEnd) + '">' + i.ratingAtEnd + '</span>' : '';
-        html += '<div class="sh-item">';
-        html += '<span class="sh-text">' + fmtDate(i.startedAt || 0) + (duration ? ' · <span class="clr-cyan">' + duration + '</span>' : '') + rating + '</span>';
-        html += '<span class="sh-action">' + esc(action) + '</span>';
-        html += '</div>';
-      });
-      html += '</div>';
-      el.innerHTML = html;
-    }
-
-    /* ── Init — everything comes from local progress (RTStore) ─────────────── */
-    function renderReport() {
-      var s = RTStore.get();
-      var reports = s.driver.coachReports || [];
-      var last = reports.length ? reports[reports.length - 1] : null;
-      var prev = reports.length >= 2 ? reports[reports.length - 2] : null;
-      var stats = s.driver.stats || {};
-
-      loadOverview(stats, last);
-      loadSkills(stats.lastUpdated ? stats : null);
-      loadAICoach(last, prev);
-      loadAllTimeStats(stats, s.driver.levels, s.curriculum.phases);
-      loadLevelsGrid(s.driver.levels);
-      loadSessionHistory(s.driver.sessions);
-    }
-    window.renderReport = renderReport;
-    renderReport();
+    // Deferred scripts run before DOMContentLoaded; render once they are all in.
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.RTReport) window.RTReport.render();
+    });
   </script>
 <script>
 (function() {

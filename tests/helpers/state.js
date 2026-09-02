@@ -32,6 +32,63 @@ export function makeSampleState() {
   return s;
 }
 
+// A year of activity: ~120 practice sessions, graded attempts across phases 0–3, several verified phases.
+export function makeYearState() {
+  const S = loadSchema();
+  const s = S.createEmptyState();
+  const now = Date.now();
+  const DAY = 86400000;
+  let seed = 42;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+
+  for (let i = 0; i < 120; i++) {
+    const daysAgo = Math.floor(rnd() * 365);
+    const startedAt = now - daysAgo * DAY - Math.floor(rnd() * 8 * 3600000);
+    const durationMs = 60000 * (5 + Math.floor(rnd() * 40));
+    const attempted = 1 + Math.floor(rnd() * 6);
+    s.driver.sessions.push({ id: 's_' + i, startedAt, endedAt: startedAt + durationMs, durationMs, levelsAttempted: attempted, levelsCompleted: Math.floor(attempted * rnd()), distanceFt: Math.floor(rnd() * 400), ratingAtEnd: 40 + Math.floor(rnd() * 50) });
+  }
+  s.driver.sessions.sort((a, b) => a.startedAt - b.startedAt);
+  for (let d = 0; d < 4; d++) {   // a current 4-day streak
+    const startedAt = now - d * DAY - 3600000;
+    s.driver.sessions.push({ id: 's_streak' + d, startedAt, endedAt: startedAt + 600000, durationMs: 600000, levelsAttempted: 3, levelsCompleted: 2, distanceFt: 120, ratingAtEnd: 72 });
+  }
+  for (let lv = 1; lv <= 9; lv++) {
+    const stars = lv <= 4 ? 3 : lv <= 7 ? 2 : 1;
+    s.driver.levels[String(lv)] = { bestStars: stars, rating: stars === 3 ? 'gold' : stars === 2 ? 'silver' : 'bronze', bestTime: 5 + lv * 1.7, bestAccuracy: 70 + (12 - lv) * 2, attempts: 3 + lv, completions: 2, firstCompletedAt: now - (300 - lv * 20) * DAY, lastPlayed: now - lv * DAY };
+  }
+  Object.assign(s.driver.stats, { overallRating: 74, grade: 'B', smoothness: 78, stability: 66, strafe: 82, turn: 61, levelScore: 77, recovery: 70, totalPracticeMs: 120 * 20 * 60000, levelsCompleted: 9, totalDistanceFt: 24000, lastUpdated: now - 3600000 });
+  for (let r = 0; r < 10; r++) {
+    const score = 55 + r * 2;
+    s.driver.coachReports.push({ generatedAt: now - (10 - r) * 30 * DAY, overallScore: score, letterGrade: score >= 70 ? 'B' : 'C', percentile: 'Top 25% of drivers', driverProfile: 'The Technician — steady and precise', overallSummary: 'Session ' + r, detailedAnalysis: 'Analysis ' + r, strengths: ['Strafe'], weaknesses: ['Turn control'], trainingPlan: ['Practice Level 5 turns'], scores: { smoothness: 70 + r, stability: 60 + r, strafe: 80, turn: 55 + r, levelScore: 75, recovery: 68 }, metricsSnapshot: {} });
+  }
+  // Curriculum: phases 0–2 verified, 3 in progress with theory graded, MC attempts logged everywhere
+  const verified = (id, extra) => Object.assign(S.createEmptyPhase(id), { status: 'verified', verifiedAt: now - 100 * DAY, verifiedBy: 'auto', passed: true, bestScore: 82 }, extra || {});
+  s.curriculum.phases.phase0 = verified('phase0', { score: 90, attempts: 1, quizAnswers: {} });
+  s.curriculum.phases.phase1 = verified('phase1');
+  s.curriculum.phases.phase2 = verified('phase2');
+  s.curriculum.phases.phase3 = Object.assign(S.createEmptyPhase('phase3'), { status: 'in_progress', startedAt: now - 20 * DAY });
+  let ts = now - 200 * DAY;
+  for (let q = 0; q < 10; q++) s.curriculum.attempts.push({ ts: ts += 60000, phaseId: 'phase0', sectionId: 'q' + q, kind: 'mc', graded: true, correct: q !== 3, score: q !== 3 ? 100 : 0, attempt: 1 });
+  const p1 = ['ftc-ecosystem', 'hardware-map', 'opmode-types', 'motor-power', 'first-opmode', 'gamepad-y-axis', 'gamepad-buttons', 'telemetry-debugging'];
+  const p2 = ['why-structure', 'subsystems-intro', 'hardware-isolation', 'encapsulation', 'enums', 'state-machines', 'robot-class', 'clean-teleop'];
+  [['phase1', p1], ['phase2', p2]].forEach(([pid, ids]) => {
+    ids.forEach((sid, i) => {
+      if (i % 3 === 1) s.curriculum.attempts.push({ ts: ts += 60000, phaseId: pid, sectionId: sid, kind: 'mc', graded: true, correct: false, score: 0, attempt: 1 });
+      s.curriculum.attempts.push({ ts: ts += 60000, phaseId: pid, sectionId: sid, kind: 'mc', graded: true, correct: true, score: 100, attempt: i % 3 === 1 ? 2 : 1 });
+    });
+    s.curriculum.attempts.push({ ts: ts += 60000, phaseId: pid, sectionId: 'deliverable', kind: 'code', graded: true, correct: true, score: 82, attempt: 1 });
+  });
+  ['theory-sensor-physics', 'theory-hsv-physics'].forEach((sid, i) => {
+    s.curriculum.attempts.push({ ts: ts += 60000, phaseId: 'phase3', sectionId: sid, kind: 'theory', graded: true, correct: i === 0, score: i === 0 ? 85 : 40, attempt: 1 });
+    s.curriculum.phases.phase3.theoryAnswers[sid] = { answer: 'An answer.', status: 'graded', score: i === 0 ? 85 : 40, passed: i === 0, bestScore: i === 0 ? 85 : 40, feedback: '', attempts: 1, lastAttempt: ts, history: [] };
+  });
+  s.curriculum.phases.phase3.lessonProgress = ['theory-sensor-physics'];
+  s.paths.push({ id: 'p_1', name: 'Left auto', waypoints: [{ x: 24, y: 24 }], segments: [], pathSettings: {}, createdAt: now - 50 * DAY, updatedAt: now - 50 * DAY });
+  s.strategies.push({ id: 's_1', name: 'Blue A', annotations: [], notes: '', createdAt: now - 40 * DAY, updatedAt: now - 40 * DAY });
+  return s;
+}
+
 export async function seedState(page, state) {
   const r = await page.evaluate(s => window.RTStore.importJSON(JSON.stringify(s)), state);
   if (!r.ok) throw new Error('seedState failed: ' + r.error);

@@ -204,7 +204,7 @@ R-Tracker/
   `driver.coachReports`.
 
 ## Testing
-- `npm test` runs Playwright; `playwright.config.js` starts `tests/serve.js` on `http://127.0.0.1:5500`.
+- `npm test` runs Playwright; `playwright.config.js` starts `tests/serve.js` on `http://127.0.0.1:5501` (its own port, so VS Code Live Server on 5500 never interferes).
   `npm run serve` starts the same server for manual use. `node --test tests/` runs fixture tests.
 - Tests navigate with `page.goto`, never by clicking sidebar links (the page-transition script delays
   navigation). Wait on app globals with `waitForFunction`, never on `networkidle`.
