@@ -26,6 +26,9 @@
 > 8. **Theory fixture** (`tests/fixtures/theory-samples.json`, 52 samples) was drafted by Claude from the
 >    lesson content and needs a human spot-check before Gate 4 is trusted.
 >
+> **Status (2026-09-01):** Phases 0–5 complete on the `v2` branch, tags `v2-phase-1` … `v2-phase-5`.
+> Phases 6–7 not started. Gate results are recorded in `AUDIT.md`.
+>
 > ### Deferred additions
 > - Auto-download an export on milestones (browsers throttle repeated downloads; a toast nudge is used instead).
 > - Extract the ~1.3k-line inline script in `pages/curriculum.html` to `js/curriculum/app.js`.
