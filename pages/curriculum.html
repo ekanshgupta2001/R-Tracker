@@ -16,6 +16,7 @@
   <script src="../js/store.js"></script>
   <script defer src="../js/sidebar.js"></script>
   <script defer src="../js/grader.js"></script>
+  <script defer src="../js/curriculum/code-rules.js"></script>
   <script defer src="../js/code-check.js"></script>
   <script defer src="../js/curriculum/lessons.js"></script>
 </head>
@@ -1286,8 +1287,9 @@ telemetry.<span class="syn-fn">update</span>();</div>
         html += '</div>';
       }
 
-      // Summary
+      // Summary (the checker's own text already opens with the structural-check disclaimer)
       html += '<div class="ai-summary">' + esc(review.summary) + '</div>';
+      html += '<div class="ai-threshold-note">This check looks for required patterns in your code. It does not compile or run it, and it cannot tell whether the robot behaves correctly — test on the robot and ask your mentor.</div>';
 
       // Strengths
       if (review.strengths && review.strengths.length > 0) {

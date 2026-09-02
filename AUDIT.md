@@ -21,7 +21,7 @@ every request is same-origin, `GET`, has no query string and no body.
 | 2 — local persistence (sessionStorage backend, export/import) | done 2026-09-01 | `v2-phase-2` |
 | 3 — report without Gemini (BKT mastery, charts, rule-based text) | done 2026-09-01 | `v2-phase-3` |
 | 4 — theory grading without Gemini (rubric grader) | done 2026-09-01 | `v2-phase-4` |
-| 5 — code checkpoints without Gemini | pending | |
+| 5 — code checkpoints without Gemini (structural checker) | done 2026-09-01 | `v2-phase-5` |
 
 ## Where student data lives
 
@@ -106,9 +106,17 @@ team activity feeds, the coach dashboard and manage-team pages; Google Fonts and
   **reflection** (`graded: false`): stored for the mentor, never scored, excluded from mastery.
   `tests/grader.test.js` checks the grader against `tests/fixtures/theory-samples.json` (52 hand-labeled
   answers): agreement is 48/48 on the graded questions (≥ 90% is the gate).
-- **Code submissions** (`js/code-check.js`): still the Phase 1 stub returning `status: 'ungraded'` until
-  Phase 5. Nothing auto-passes. A student can mark a deliverable **submitted** (for a mentor to read from
-  their exported file), which unlocks the next phase but is never displayed as verified.
+- **Code submissions** (`js/code-check.js` + `js/curriculum/code-rules.js`, Phase 5): a **structural**
+  check — regex/string patterns per phase (required patterns with weights and hints, forbidden patterns
+  with penalties, balanced braces). Comments and string literals are blanked before matching unless a rule
+  is marked `raw`. Score = weighted share of required patterns met minus penalties; a phase auto-verifies
+  at ≥ 75 with no CRITICAL hit. The UI and the result text both say it does not compile, run, or verify
+  behaviour. Student code is **never executed or uploaded** — `tests/code-check.test.js` greps the checker
+  source for `eval`/`new Function`/workers/fetch, and grep gate 4 does the same across the repo. Every
+  submission and its result are kept in `curriculum.phases[*].reviews` and exported for the mentor. The
+  strategy module (`advanced_strategy`) is a written analysis and is kept as a mentor-review submission.
+  A student can also mark any deliverable **submitted** for a mentor, which unlocks the next phase but is
+  never displayed as verified.
 
 ## Third-party code shipped (vendored, read, no runtime network)
 
