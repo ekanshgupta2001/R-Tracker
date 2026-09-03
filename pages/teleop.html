@@ -155,13 +155,14 @@
       </div>
       <div class="panel">
         <div class="ptitle">Configuration</div>
+        <div class="hlp cfg-note">Defaults model a 435 RPM mecanum drivetrain on foam tiles. Levels are rated at these defaults.</div>
         <div class="srow">
-          <div class="slrow"><span>Max Speed</span><span class="sval" id="s-ms-v">8.0 ft/s</span></div>
-          <input type="range" id="s-ms" min="1" max="15" step="0.5" value="8" oninput="cfgUpdate()">
+          <div class="slrow"><span>Max Speed</span><span class="sval" id="s-ms-v">6.5 ft/s</span></div>
+          <input type="range" id="s-ms" min="3" max="10" step="0.5" value="6.5" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Turn Rate</span><span class="sval" id="s-tr-v">234 °/s</span></div>
-          <input type="range" id="s-tr" min="30" max="400" step="10" value="234" oninput="cfgUpdate()">
+          <div class="slrow"><span>Turn Rate</span><span class="sval" id="s-tr-v">270 °/s</span></div>
+          <input type="range" id="s-tr" min="90" max="400" step="10" value="270" oninput="cfgUpdate()">
         </div>
         <div class="srow">
           <div class="slrow"><span>Robot Size</span><span class="sval" id="s-rs-v">18 in</span></div>
@@ -172,16 +173,16 @@
           <input type="range" id="s-dz" min="0.00" max="0.40" step="0.01" value="0.10" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Acceleration</span><span class="sval" id="s-ac-v">15 ft/s²</span></div>
-          <input type="range" id="s-ac" min="5" max="30" step="1" value="15" oninput="cfgUpdate()">
+          <div class="slrow"><span>Traction (accel)</span><span class="sval" id="s-ac-v">20 ft/s²</span></div>
+          <input type="range" id="s-ac" min="5" max="30" step="1" value="20" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Friction</span><span class="sval" id="s-fr-v">13 ft/s²</span></div>
-          <input type="range" id="s-fr" min="2" max="20" step="1" value="13" oninput="cfgUpdate()">
+          <div class="slrow"><span>Braking</span><span class="sval" id="s-fr-v">20 ft/s²</span></div>
+          <input type="range" id="s-fr" min="2" max="30" step="1" value="20" oninput="cfgUpdate()">
         </div>
         <div class="srow">
-          <div class="slrow"><span>Response Delay</span><span class="sval" id="s-rd-v">50 ms</span></div>
-          <input type="range" id="s-rd" min="0" max="300" step="10" value="50" oninput="cfgUpdate()">
+          <div class="slrow"><span>Response Delay</span><span class="sval" id="s-rd-v">80 ms</span></div>
+          <input type="range" id="s-rd" min="0" max="300" step="10" value="80" oninput="cfgUpdate()">
         </div>
       </div>
       <div class="panel">

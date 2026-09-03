@@ -67,7 +67,14 @@
     return clamp(s, 0, 100);
   }
 
-  function isRated(run) { return !!run && run.rated !== false; }
+  // A run counts when it was flagged rated at record time AND its physics still match
+  // the par table's defaults — so runs recorded under an earlier physics model drop
+  // out of the rating (they stay stored) when the model or the pars change.
+  function isRated(run, table) {
+    if (!run || run.rated === false) return false;
+    if (run.physics && table && typeof table.isDefaultPhysics === 'function') return table.isDefaultPhysics(run.physics);
+    return true;
+  }
 
   // The runs that belong to the N most recent distinct sessions (by latest timestamp).
   function windowRuns(runs, sessionsWindow) {
@@ -99,7 +106,7 @@
     win.runs.forEach(function (r) {
       var def = table && table.get ? table.get(r.levelId) : null;
       if (!def) return;
-      if (!isRated(r)) { unrated++; return; }
+      if (!isRated(r, table)) { unrated++; return; }
       var lv = perLevel[def.id];
       if (!lv) {
         lv = perLevel[def.id] = {

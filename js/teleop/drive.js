@@ -1,7 +1,49 @@
 // ── R-Tracker TeleOp — Drive Physics & Config ─────────────────────────────
+//
+// Reference drivetrain (the slider defaults): a typical competitive FTC mecanum robot —
+// 4 × goBILDA 5203 Yellow Jacket 435 RPM (13.7:1), 96 mm mecanum wheels, 18 in × 18 in,
+// about 35 lb (16 kg), 12 V battery, drive motors in BRAKE zero-power mode.
+//
+//   maxSpd     6.5 ft/s   free speed = 435/60 × π × 0.096 m = 2.19 m/s = 7.2 ft/s. Under load,
+//                         with roller losses and a sagging battery, a real bot cruises at ~90%.
+//   STRAFE_EFF 0.80       mecanum rollers slip sideways: the same wheel speed moves the robot
+//                         ~20% slower when strafing than when driving forward.
+//   turnRate   270 °/s    spin = v / ((L + W) / 2). A 13 in × 13 in wheelbase gives
+//                         6.5 ft/s ÷ 1.08 ft = 6.0 rad/s = 345 °/s ideal; roller scrub takes
+//                         ~20% → ~275 °/s.
+//   accel      20 ft/s²   traction-limited: μ ≈ 0.65 for mecanum rollers on foam tiles →
+//                         0.65 g = 21 ft/s². The motors could do twice that (4 × 2.4 N·m stall
+//                         ÷ 0.048 m = 200 N on 16 kg = 41 ft/s²), so the tiles set the cap.
+//   braking    20 ft/s²   BRAKE mode shorts the windings; back-EMF braking is the same order
+//                         as the drive torque and is also traction-limited. FLOAT ≈ 3 ft/s².
+//   MOTOR_TAU  0.20 s     a DC motor under load is a first-order system:
+//                         v(t) = v_max · (1 − e^(−t/τ)). τ = 0.2 s puts 0 → 95% at 0.6 s.
+//   inputDelay 80 ms      gamepad poll (20–50 ms) + Driver Station → Robot Controller Wi-Fi
+//                         (10–30 ms) + loop period (~20 ms) + motor controller (~10 ms).
+//
+// Per frame:
+//   1. stick → (fwd, str, rot) command in the robot frame (field-centric rotates by heading)
+//   2. mecanum inverse kinematics → four wheel powers, normalised so none exceeds 1 — the same
+//      code every FTC TeleOp runs. This is what makes the robot slow down when it turns while
+//      driving, and a full-stick diagonal ~30% slower than a straight (only two wheels pull).
+//   3. forward kinematics → the body velocity those wheel powers can actually produce
+//   4. the body velocity, tracked in the robot frame, follows that target with a first-order
+//      lag (MOTOR_TAU), capped by traction (accel) while driving and by braking once the stick
+//      is released. The wheels roll without slipping, so the velocity vector turns with the
+//      body (the sideways force that needs, v·ω, stays well under the traction cap); a robot
+//      that spins while driving therefore curves the way a real one does. Tank drive has no
+//      sideways component at all.
+//   5. rotate to the field frame and integrate; the field walls and (in free drive) the field
+//      elements clamp the position and kill the velocity into them.
 
-let cfg = { maxSpd: 8, turnRate: 234, robotSz: 18, deadzone: 0.10, accel: 15, friction: 13, inputDelay: 50 };
-let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0, actualVx: 0, actualVy: 0, actualOmega: 0 };
+const STRAFE_EFF = 0.80;   // strafe speed as a share of forward speed at the same wheel speed
+const MOTOR_TAU  = 0.20;   // s — first-order motor/drivetrain time constant
+const ZERO_CMD   = 0.02;   // below this the stick is "released" → braking instead of driving
+
+let cfg = { maxSpd: 6.5, turnRate: 270, robotSz: 18, deadzone: 0.10, accel: 20, braking: 20, inputDelay: 80 };
+// vFwd/vStr: body velocity in the robot frame (ft/s) — the state the physics integrates;
+// actualVx/actualVy (= vx/vy): the same rotated into the field frame; actualOmega °/s.
+let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0, actualVx: 0, actualVy: 0, actualOmega: 0, vFwd: 0, vStr: 0 };
 let mtr = { fl: 0, fr: 0, bl: 0, br: 0 };
 let drivetrain = 'mecanum';
 let driveMode  = 'field';
@@ -9,6 +51,12 @@ let driveMode  = 'field';
 function dz(v) {
   const d = cfg.deadzone;
   return Math.abs(v) < d ? 0 : Math.sign(v) * (Math.abs(v) - d) / (1 - d);
+}
+
+// Move `current` toward `target` by `delta` without crossing it.
+function stepTo(current, target, delta) {
+  const next = current + delta;
+  return (target - current) * (target - next) < 0 ? target : next;
 }
 
 function updateBot(dt) {
@@ -47,52 +95,65 @@ function updateBot(dt) {
   inp.lx = dlx; inp.ly = dly; inp.rx = drx;
 
   const h = bot.hdg * Math.PI / 180;
-  const fwd = -dly, str = dlx;
+  const sinH = Math.sin(h), cosH = Math.cos(h);
+  const fwd = -dly, str = dlx, rot = drx;
 
-  let targetVx, targetVy;
+  // 1. Command in the robot frame
+  let cFwd = fwd, cStr = str;
   if (drivetrain === 'tank') {
-    targetVx = fwd * Math.sin(h);
-    targetVy = fwd * Math.cos(h);
+    cStr = 0;
   } else if (driveMode === 'field') {
-    targetVx = str;
-    targetVy = fwd;
+    cFwd =  fwd * cosH + str * sinH;
+    cStr = -fwd * sinH + str * cosH;
+  }
+
+  // 2./3. Wheel powers (normalised) and the body command they can deliver
+  let aFwd, aStr, aRot;
+  if (drivetrain === 'mecanum') {
+    let fl = cFwd + cStr + rot, fr = cFwd - cStr - rot;
+    let bl = cFwd - cStr + rot, br = cFwd + cStr - rot;
+    const mx = Math.max(1, Math.abs(fl), Math.abs(fr), Math.abs(bl), Math.abs(br));
+    fl /= mx; fr /= mx; bl /= mx; br /= mx;
+    mtr.fl = fl; mtr.fr = fr; mtr.bl = bl; mtr.br = br;
+    aFwd = (fl + fr + bl + br) / 4;
+    aStr = (fl - fr - bl + br) / 4;
+    aRot = (fl - fr + bl - br) / 4;
   } else {
-    targetVx = fwd * Math.sin(h) + str * Math.cos(h);
-    targetVy = fwd * Math.cos(h) - str * Math.sin(h);
+    let L = cFwd + rot, R = cFwd - rot;
+    const mx = Math.max(1, Math.abs(L), Math.abs(R));
+    L /= mx; R /= mx;
+    mtr.fl = mtr.bl = L;
+    mtr.fr = mtr.br = R;
+    aFwd = (L + R) / 2; aStr = 0; aRot = (L - R) / 2;
   }
-  targetVx *= cfg.maxSpd;
-  targetVy *= cfg.maxSpd;
-  const targetOmega = drx * cfg.turnRate;
+  const tFwd = aFwd * cfg.maxSpd;
+  const tStr = aStr * cfg.maxSpd * STRAFE_EFF;
+  const tRot = aRot * cfg.turnRate;
 
-  const accelRate   = cfg.accel   * dt;
-  const frictionRate = cfg.friction * dt;
+  // 4. First-order response in the robot frame, capped by traction or braking.
+  // The robot-frame velocity co-rotates with the body (rolling wheels do not slip sideways).
+  let vFwd = bot.vFwd, vStr = bot.vStr;
+  const released = Math.abs(aFwd) < ZERO_CMD && Math.abs(aStr) < ZERO_CMD;
+  const linCap = released ? cfg.braking : cfg.accel;
+  let dF = (tFwd - vFwd) / MOTOR_TAU, dS = (tStr - vStr) / MOTOR_TAU;
+  const mag = Math.hypot(dF, dS);
+  if (mag > linCap) { dF *= linCap / mag; dS *= linCap / mag; }
+  vFwd = stepTo(vFwd, tFwd, dF * dt);
+  vStr = stepTo(vStr, tStr, dS * dt);
+  if (drivetrain === 'tank') vStr = 0;
 
-  function approach(current, target, accelAmt, frictionAmt) {
-    const diff = target - current;
-    if (Math.abs(diff) < 0.01) return target;
-    if (Math.abs(target) > 0.01) {
-      if (Math.abs(diff) <= accelAmt) return target;
-      return current + Math.sign(diff) * accelAmt;
-    } else {
-      if (Math.abs(current) <= frictionAmt) return 0;
-      return current - Math.sign(current) * frictionAmt;
-    }
-  }
+  const rotCap = (Math.abs(aRot) < ZERO_CMD ? cfg.braking : cfg.accel) * (cfg.turnRate / Math.max(0.1, cfg.maxSpd));
+  const dR = Math.max(-rotCap, Math.min(rotCap, (tRot - bot.actualOmega) / MOTOR_TAU));
+  bot.actualOmega = stepTo(bot.actualOmega, tRot, dR * dt);
 
-  bot.actualVx = approach(bot.actualVx, targetVx, accelRate, frictionRate);
-  bot.actualVy = approach(bot.actualVy, targetVy, accelRate, frictionRate);
-
-  const rotAccel   = cfg.accel   * (cfg.turnRate / cfg.maxSpd) * dt;
-  const rotFriction = cfg.friction * (cfg.turnRate / cfg.maxSpd) * dt;
-  bot.actualOmega = approach(bot.actualOmega, targetOmega, rotAccel, rotFriction);
+  // 5. Rotate to the field frame; integrate
+  bot.actualVx = vFwd * sinH + vStr * cosH;
+  bot.actualVy = vFwd * cosH - vStr * sinH;
 
   bot.x   += bot.actualVx    * dt;
   bot.y   += bot.actualVy    * dt;
   bot.hdg += bot.actualOmega * dt;
   bot.hdg = ((bot.hdg + 180) % 360 + 360) % 360 - 180;
-
-  bot.vx = bot.actualVx;
-  bot.vy = bot.actualVy;
 
   const halfRobot = cfg.robotSz / 24;
   const hf = FIELD_FT / 2 - halfRobot;
@@ -121,23 +182,13 @@ function updateBot(dt) {
     }
   }
 
-  let mFwd = fwd, mStr = str;
-  if (driveMode === 'field' && drivetrain === 'mecanum') {
-    mFwd = fwd * Math.cos(h) + str * Math.sin(h);
-    mStr = -fwd * Math.sin(h) + str * Math.cos(h);
-  }
-  const rot = drx;
-  if (drivetrain === 'mecanum') {
-    let fl = mFwd + mStr + rot, fr = mFwd - mStr - rot;
-    let bl = mFwd - mStr + rot, br = mFwd + mStr - rot;
-    const mx = Math.max(1, Math.abs(fl), Math.abs(fr), Math.abs(bl), Math.abs(br));
-    mtr.fl = fl / mx; mtr.fr = fr / mx; mtr.bl = bl / mx; mtr.br = br / mx;
-  } else {
-    let L = fwd + rot, R = fwd - rot;
-    const mx = Math.max(1, Math.abs(L), Math.abs(R));
-    mtr.fl = mtr.bl = L / mx;
-    mtr.fr = mtr.br = R / mx;
-  }
+  // A wall or field element may have killed a field-frame component: bring the
+  // robot-frame state back in line with what is left.
+  bot.vFwd = bot.actualVx * sinH + bot.actualVy * cosH;
+  bot.vStr = bot.actualVx * cosH - bot.actualVy * sinH;
+  if (drivetrain === 'tank') bot.vStr = 0;
+  bot.vx = bot.actualVx;
+  bot.vy = bot.actualVy;
 }
 
 function cfgUpdate() {
@@ -146,13 +197,13 @@ function cfgUpdate() {
   cfg.robotSz   = parseFloat(document.getElementById('s-rs').value);
   cfg.deadzone  = parseFloat(document.getElementById('s-dz').value);
   cfg.accel     = parseFloat(document.getElementById('s-ac').value);
-  cfg.friction  = parseFloat(document.getElementById('s-fr').value);
+  cfg.braking   = parseFloat(document.getElementById('s-fr').value);
   cfg.inputDelay = parseFloat(document.getElementById('s-rd').value);
   document.getElementById('s-ms-v').textContent = cfg.maxSpd.toFixed(1) + ' ft/s';
   document.getElementById('s-tr-v').textContent = cfg.turnRate + ' °/s';
   document.getElementById('s-rs-v').textContent = cfg.robotSz + ' in';
   document.getElementById('s-dz-v').textContent = cfg.deadzone.toFixed(2);
   document.getElementById('s-ac-v').textContent = cfg.accel + ' ft/s²';
-  document.getElementById('s-fr-v').textContent = cfg.friction + ' ft/s²';
+  document.getElementById('s-fr-v').textContent = cfg.braking + ' ft/s²';
   document.getElementById('s-rd-v').textContent = cfg.inputDelay + ' ms';
 }

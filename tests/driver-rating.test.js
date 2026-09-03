@@ -38,7 +38,7 @@ test('level table: every level has an estimated par below its time limit and a w
   assert.equal(TABLE.LEVELS.length, 12);
   for (const l of TABLE.LEVELS) {
     assert.ok(l.parTimeMs > 0 && l.parTimeMs < l.timeLimit * 1000, `level ${l.id} par ${l.parTimeMs} vs limit ${l.timeLimit}s`);
-    assert.equal(l.parSource, 'estimated');
+    assert.ok(['estimated', 'simulated', 'measured'].includes(l.parSource), `level ${l.id} parSource`);
     assert.ok([1.0, 1.5, 2.0].includes(l.difficultyWeight), `level ${l.id} weight`);
     assert.ok(TABLE.FOCUS_LABELS[l.focus], `level ${l.id} focus label`);
   }
@@ -112,16 +112,47 @@ test('window: only the last N sessions count; failed runs count as zero among th
 });
 
 test('runs at custom physics are stored but not rated', () => {
-  const list = runs('expert').map(r => Object.assign({}, r, { rated: false, physics: { maxSpd: 15, turnRate: 230, accel: 15, friction: 13 } }));
-  const r = R.rate(list, TABLE);
+  const DEF = { ...TABLE.DEFAULT_PHYSICS };   // spread: the table lives in the vm sandbox (other Object prototype)
+  assert.deepEqual(DEF, { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 });
+  const flagged = runs('expert').map(r => Object.assign({}, r, { rated: false, physics: { ...DEF, maxSpd: 10 } }));
+  const r = R.rate(flagged, TABLE);
   assert.equal(r.rating, 0);
   assert.equal(r.ratedLevels, 0);
-  assert.equal(r.unratedRuns, list.length);
-  // spread: the table object was created inside the vm sandbox (different Object prototype)
-  assert.deepEqual({ ...TABLE.DEFAULT_PHYSICS }, { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 });
-  assert.equal(TABLE.isDefaultPhysics({ maxSpd: 8, turnRate: 230, accel: 15, friction: 13 }), true);
-  assert.equal(TABLE.isDefaultPhysics({ maxSpd: 15, turnRate: 230, accel: 15, friction: 13 }), false);
-  assert.equal(TABLE.isDefaultPhysics({ maxSpd: 8, turnRate: 400, accel: 15, friction: 13 }), false);
+  assert.equal(r.unratedRuns, flagged.length);
+  // Flagged rated at record time, but the physics no longer match the pars: still excluded.
+  const stale = runs('expert').map(r => Object.assign({}, r, { rated: true, physics: { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 } }));
+  assert.equal(R.rate(stale, TABLE).ratedLevels, 0);
+  const current = runs('expert').map(r => Object.assign({}, r, { rated: true, physics: { ...DEF } }));
+  assert.equal(R.rate(current, TABLE).ratedLevels, 12);
+  assert.equal(TABLE.isDefaultPhysics({ ...DEF }), true);
+  assert.equal(TABLE.isDefaultPhysics({ ...DEF, maxSpd: 10 }), false);
+  assert.equal(TABLE.isDefaultPhysics({ ...DEF, turnRate: 400 }), false);
+  assert.equal(TABLE.isDefaultPhysics({ ...DEF, inputDelay: 0 }), false);
+  assert.equal(TABLE.isDefaultPhysics(null), true);        // fixtures without physics are rated
+});
+
+// The level table and the simulator's level list must agree: same limits, and the
+// table's path lengths (the par estimate input) match the real geometry.
+test('level table matches js/teleop/levels.js (time limits, path lengths, names)', () => {
+  const sb = { window: {}, console };
+  sb.window.window = sb.window;
+  vm.createContext(sb);
+  vm.runInContext('const FIELD_FT = 12; let inp = {}, keys = {}, gpIdx = null, inputBuffer = [], inputTime = 0;', sb);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/teleop/levels.js'), 'utf8'), sb, { filename: 'js/teleop/levels.js' });
+  const LEVELS = vm.runInContext('LEVELS', sb);
+  const segLen = vm.runInContext('pathSegLengths', sb);
+  assert.equal(LEVELS.length, TABLE.LEVELS.length);
+  for (const def of LEVELS) {
+    const t = TABLE.get(def.id);
+    assert.ok(t, 'table entry for level ' + def.id);
+    assert.equal(t.name, def.name, 'level ' + def.id + ' name');
+    assert.equal(t.tier, def.tier, 'level ' + def.id + ' tier');
+    assert.equal(t.timeLimit, def.timeLimit, 'level ' + def.id + ' timeLimit');
+    assert.equal(t.checkpoints, def.path.length - 1, 'level ' + def.id + ' checkpoints');
+    assert.equal(t.corners, def.path.length - 2, 'level ' + def.id + ' corners');
+    assert.ok(Math.abs(segLen(def.path).total - t.pathLengthFt) < 0.1, 'level ' + def.id + ' path length');
+    assert.ok(t.timeLimit * 1000 >= 2 * t.parTimeMs - 1, 'level ' + def.id + ' limit is at least 2× par');
+  }
 });
 
 test('grades: S 95, A 85, B 75, C 65, D 50, else F', () => {

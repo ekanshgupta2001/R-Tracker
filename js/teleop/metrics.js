@@ -152,7 +152,8 @@ function updateMetrics(dt, prevBx, prevBy) {
   const hdgChange = normAngle(bot.hdg - _trk.prevHdg);
 
   if (atSpeed) {
-    const fwd = Math.abs(bot.actualVy || 0), str = Math.abs(bot.actualVx || 0);
+    // Strafe is lateral motion in the ROBOT frame (drive.js exposes vFwd/vStr).
+    const fwd = Math.abs(bot.vFwd || 0), str = Math.abs(bot.vStr || 0);
     const lateral = fwd + str > 0.01 && str / (fwd + str) > 0.65;
     targets.forEach(a => {
       // Smoothness: stick jerk while at speed
@@ -345,7 +346,7 @@ function renderLevelPerformance(rr) {
   if (win) win.textContent = 'last ' + rr.sessionsWindow + ' sessions';
   const ids = Object.keys(rr.levels).map(Number).sort((a, b) => a - b);
   const unratedNote = rr.unratedRuns
-    ? '<div class="an-lvl-empty">' + rr.unratedRuns + ' run' + (rr.unratedRuns === 1 ? '' : 's') + ' at custom physics settings stored but not rated. Reset the Free Drive sliders to the defaults to be rated.</div>'
+    ? '<div class="an-lvl-empty">' + rr.unratedRuns + ' run' + (rr.unratedRuns === 1 ? '' : 's') + ' recorded at other physics settings: stored, not rated. Levels are rated at the default Free Drive sliders.</div>'
     : '';
   if (!ids.length) {
     el.innerHTML = '<div class="an-lvl-empty">No rated level runs in the last ' + rr.sessionsWindow + ' sessions. Complete a level to get rated.</div>' + unratedNote;

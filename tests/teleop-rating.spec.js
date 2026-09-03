@@ -52,15 +52,15 @@ test('a completed level run is stored, shown on the result card, and rated by th
   expect(run.levelId).toBe(1);
   expect(run.completed).toBe(true);
   expect(run.timeMs).toBeGreaterThan(0);
-  expect(run.timeMs).toBeLessThan(5000);
+  expect(run.timeMs).toBeLessThan(TABLE.get(1).timeLimit * 1000);
   expect(run.pathAccuracy).toBeGreaterThanOrEqual(90);
   expect(run.collisions).toBe(0);
   expect(run.rated).toBe(true);
   expect(run.sessionId).toMatch(/^s_/);
   expect(typeof run.timestamp).toBe('number');
   expect(run.styleMetrics).toBeTruthy();
-  // 230, not drive.js's 234: the slider (min 30, step 10) snaps it before the first frame
-  expect(run.physics).toEqual({ maxSpd: 8, turnRate: 230, accel: 15, friction: 13 });
+  // the slider defaults, which are what the par table assumes
+  expect(run.physics).toEqual({ ...TABLE.DEFAULT_PHYSICS });
   // the v1 aggregate is still kept alongside
   expect(s.driver.levels['1'].completions).toBe(1);
 
@@ -71,7 +71,8 @@ test('a completed level run is stored, shown on the result card, and rated by th
   expect(expected.rating).toBe(Math.round(R.runScore(run, TABLE.get(1).parTimeMs)));
 
   // Result card: time vs par and the run score
-  await expect(page.locator('#rc-stats')).toContainText('par 1.6s');
+  const par1 = (TABLE.get(1).parTimeMs / 1000).toFixed(1) + 's';
+  await expect(page.locator('#rc-stats')).toContainText('par ' + par1);
   await expect(page.locator('#rc-stats')).toContainText('Run score');
   await expect(page.locator('#rc-stats b').nth(2)).toHaveText(String(expectedRun));
   await expect(page.locator('#rc-delta')).toContainText(expected.grade + ' (' + expected.rating + ')');
@@ -84,7 +85,7 @@ test('a completed level run is stored, shown on the result card, and rated by th
   await expect(page.locator('#an-levels .an-lvl-row')).toHaveCount(1);
   await expect(page.locator('#an-levels')).toContainText('1 · Straight Shot');
   await expect(page.locator('#an-levels .an-lvl-score')).toHaveText(String(expectedRun));
-  await expect(page.locator('#an-levels .an-lvl-time')).toContainText('/ 1.6s');
+  await expect(page.locator('#an-levels .an-lvl-time')).toContainText('/ ' + par1);
   await expect(page.locator('#an-levels .an-lvl-runs')).toHaveText('1');
   await expect(page.locator('#an-style-note')).not.toHaveText('');
   await expect(page.locator('#an-recommend')).toContainText(/par/);
@@ -134,20 +135,20 @@ test('a run at custom physics is stored but not rated', async ({ page }) => {
   test.setTimeout(60000);
   const errors = [];
   await openTeleop(page, errors);
-  await page.evaluate(() => { document.getElementById('s-ms').value = '15'; cfgUpdate(); });
+  await page.evaluate(() => { document.getElementById('s-ms').value = '10'; cfgUpdate(); });
   expect(await driveLevel(page, 'KeyW')).toBe('result');
   const s = await readState(page);
   expect(s.driver.runs.length).toBe(1);
   expect(s.driver.runs[0].completed).toBe(true);
   expect(s.driver.runs[0].rated).toBe(false);
-  expect(s.driver.runs[0].physics.maxSpd).toBe(15);
+  expect(s.driver.runs[0].physics.maxSpd).toBe(10);
   await expect(page.locator('#rc-stats')).toContainText('not rated');
   const rr = R.rate(s.driver.runs, TABLE);
   expect(rr.ratedLevels).toBe(0);
   expect(rr.unratedRuns).toBe(1);
   await page.evaluate(() => openDriverReport());
   await expect(page.locator('#an-overall')).toHaveText('Overall: 0 / 100');
-  await expect(page.locator('#an-levels')).toContainText('custom physics');
+  await expect(page.locator('#an-levels')).toContainText('other physics settings');
   expect(errors).toEqual([]);
 });
 

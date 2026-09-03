@@ -230,6 +230,19 @@ R-Tracker/
 - 2D canvas: 144x144 inch FTC field with game elements. 3D view: Three.js, replaces the 2D canvas
   in-place (same parent container). Input: Gamepad API + keyboard (WASD + arrows), listeners on
   `document`. 12 levels across 4 tiers with star ratings.
+- **Physics (`js/teleop/drive.js`) models a real 435 RPM mecanum drivetrain.** Defaults: 6.5 ft/s,
+  strafe at 80% of forward, 270 °/s spin, 20 ft/s² traction cap, 20 ft/s² BRAKE-mode braking, 0.2 s
+  first-order motor lag, 80 ms latency; every number is derived in the file header. Wheel powers are
+  normalised exactly as an FTC TeleOp does and the body velocity comes from those powers, so turning
+  while driving slows the robot and a full-stick diagonal is ~35% slower. Velocity is integrated in
+  the robot frame (`bot.vFwd/vStr`, co-rotating with the heading because rolling wheels do not slip
+  sideways) and rotated to the field frame (`bot.actualVx/Vy`) for position and metrics. The slider defaults in
+  `pages/teleop.html` are the source of truth (`cfgUpdate()` runs before the first frame) and must stay
+  on their step grids; `RT_LEVEL_TABLE.DEFAULT_PHYSICS` must equal them. Par times come from
+  `tools/estimate-pars.mjs` (an ideal full-stick driver through the real `updateBot`, × 1.2) and each
+  level's `timeLimit` is 2 × par, so gold (≤ 50% of the limit) means par pace. Re-run the tool and
+  update both `js/level-table.js` and the `LEVELS` limits in `js/teleop/levels.js` whenever the
+  physics change; a unit test checks the two files agree.
 - The driver coach is rule-based (`js/teleop/coach.js`), not an LLM. Reports persist to
   `driver.coachReports`.
 - **Driver rating measures outcomes, not style.** Every level attempt appends a run record to
@@ -238,9 +251,10 @@ R-Tracker/
   (`js/level-table.js`; par = 70, 1.5× par = 100, 0.5× par = 20), times `(pathAccuracy/100)^0.5`, minus
   5 per wall hit; a failed run is 0. The Overall Rating is the difficulty-weighted mean of each level's
   best 3 run scores over the last 5 sessions (`window.RT_RATING_SESSIONS` overrides), over levels with
-  at least one completed run. Grades: S 95, A 85, B 75, C 65, D 50. Runs driven at non-default physics
-  (the Free Drive sliders) are stored with `rated: false` and excluded. Par times are `estimated`
-  placeholders (1.2 × an expert estimate from path length); replace them with measured times.
+  at least one completed run. Grades: S 95, A 85, B 75, C 65, D 50. Every run stores the physics it
+  was driven at; a run is rated only if that matches `RT_LEVEL_TABLE.DEFAULT_PHYSICS` at rating time,
+  so runs at moved sliders, or from an older physics model, stay stored but drop out of the rating.
+  Par times are `simulated` (see the physics bullet below); replace with measured times when possible.
 - **Style metrics are diagnostics.** Smoothness, stability, strafe, turn precision and recovery are
   sampled only at ≥ 60% of max speed and weighted by speed/max (`js/teleop/metrics.js`). Under 20% of
   moving time at speed they read "insufficient data" (`null` in `driver.stats`). Turn precision is

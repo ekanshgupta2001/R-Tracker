@@ -244,8 +244,22 @@ section and the recommendation starts from the weakest level group. Physics, con
 level geometry are untouched. Tests: `tests/driver-rating.test.js` (fixtures a–d),
 `tests/teleop-rating.spec.js` (scripted run → stored record → on-screen rating equals the formula).
 
-**Open:** the 12 par times are estimates (`parSource: "estimated"`, 1.2 × an expert estimate from
-path length at 8 ft/s). Replace them with measured expert times and flip `parSource` to `"measured"`.
+**Open:** the 12 par times are simulated (`parSource: "simulated"`, see below). Replace them with
+measured expert times and flip `parSource` to `"measured"` when the team has driven the levels.
+
+## Realistic drive physics (2026-09-03)
+
+`js/teleop/drive.js` now models a real competitive FTC drivetrain (4 × 435 RPM Yellow Jackets, 96 mm
+mecanum, 18 in, ~35 lb, BRAKE mode): 6.5 ft/s loaded top speed, strafe at 80% of forward, 270 °/s
+spin, traction-limited 20 ft/s² accel and braking, a 0.2 s first-order motor lag instead of a linear
+ramp, and 80 ms control latency. Wheel powers are normalised the way every FTC TeleOp does and the body
+velocity is derived from them, so turning while driving slows the robot and a full-stick diagonal is
+~35% slower than a straight; velocity is integrated in the robot frame and turns with the body, so a
+robot that spins while driving curves like a real one. Every
+default is derived in the file header. Because the old 8 ft/s / instant-response robot was faster than
+anything real, par times were re-derived by simulating an ideal full-stick driver through the real
+`updateBot` (`tools/estimate-pars.mjs`, × 1.2) and each level's time limit is now 2 × par so gold means
+par pace. Runs recorded under the old physics stay stored but are no longer rated.
 
 ## Deferred (ideas logged during migration — do not build during a phase)
 

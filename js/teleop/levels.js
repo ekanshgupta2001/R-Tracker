@@ -5,21 +5,21 @@ const LVL_ACC_TOL   = 1 / 3;
 
 const LEVELS = [
   // Tier 1: Beginner
-  { id:1,  tier:'Beginner',     name:'Straight Shot',          timeLimit:5,  path:[{x:0,y:-4,h:0},{x:0,y:4,h:0}] },
-  { id:2,  tier:'Beginner',     name:'Side Step',              timeLimit:5,  path:[{x:-3,y:0,h:90},{x:3,y:0,h:90}] },
-  { id:3,  tier:'Beginner',     name:'L-Shape',                timeLimit:7,  path:[{x:-4,y:-4,h:0},{x:-4,y:3,h:90},{x:4,y:3,h:90}] },
+  { id:1,  tier:'Beginner',     name:'Straight Shot',          timeLimit:4,  path:[{x:0,y:-4,h:0},{x:0,y:4,h:0}] },
+  { id:2,  tier:'Beginner',     name:'Side Step',              timeLimit:4,  path:[{x:-3,y:0,h:90},{x:3,y:0,h:90}] },
+  { id:3,  tier:'Beginner',     name:'L-Shape',                timeLimit:8,  path:[{x:-4,y:-4,h:0},{x:-4,y:3,h:90},{x:4,y:3,h:90}] },
   // Tier 2: Intermediate
-  { id:4,  tier:'Intermediate', name:'The Square',             timeLimit:10, path:[{x:-4,y:-4,h:0},{x:-4,y:4,h:90},{x:4,y:4,h:180},{x:4,y:-4,h:-90},{x:-4,y:-4,h:-90}] },
-  { id:5,  tier:'Intermediate', name:'Zigzag',                 timeLimit:10, path:[{x:-5,y:-4,h:45},{x:-1,y:0,h:-63},{x:-5,y:2,h:63},{x:-1,y:4,h:-67},{x:-5,y:5.67,h:-67}] },
-  { id:6,  tier:'Intermediate', name:'Diamond',                timeLimit:12, path:[{x:0,y:-5,h:39},{x:4,y:0,h:-39},{x:0,y:5,h:-141},{x:-4,y:0,h:141},{x:0,y:-5,h:141}] },
+  { id:4,  tier:'Intermediate', name:'The Square',             timeLimit:17, path:[{x:-4,y:-4,h:0},{x:-4,y:4,h:90},{x:4,y:4,h:180},{x:4,y:-4,h:-90},{x:-4,y:-4,h:-90}] },
+  { id:5,  tier:'Intermediate', name:'Zigzag',                 timeLimit:14, path:[{x:-5,y:-4,h:45},{x:-1,y:0,h:-63},{x:-5,y:2,h:63},{x:-1,y:4,h:-67},{x:-5,y:5.67,h:-67}] },
+  { id:6,  tier:'Intermediate', name:'Diamond',                timeLimit:17, path:[{x:0,y:-5,h:39},{x:4,y:0,h:-39},{x:0,y:5,h:-141},{x:-4,y:0,h:141},{x:0,y:-5,h:141}] },
   // Tier 3: Advanced
-  { id:7,  tier:'Advanced',     name:'Specimen Run',           timeLimit:10, path:[{x:-4,y:-5,h:0},{x:-4,y:4,h:90},{x:0,y:4,h:180},{x:0,y:-5,h:90},{x:4,y:-5,h:90}] },
-  { id:8,  tier:'Advanced',     name:'Sample Collect',         timeLimit:10, path:[{x:-5,y:-5,h:18},{x:-3,y:1,h:135},{x:0,y:-2,h:45},{x:3,y:1,h:162},{x:5,y:-5,h:162}] },
-  { id:9,  tier:'Advanced',     name:'Spiral In',              timeLimit:14, path:[{x:-5,y:-5,h:0},{x:-5,y:5,h:90},{x:5,y:5,h:180},{x:5,y:-3,h:-90},{x:-2,y:-3,h:0},{x:-2,y:2,h:90},{x:2,y:2,h:90}] },
+  { id:7,  tier:'Advanced',     name:'Specimen Run',           timeLimit:14, path:[{x:-4,y:-5,h:0},{x:-4,y:4,h:90},{x:0,y:4,h:180},{x:0,y:-5,h:90},{x:4,y:-5,h:90}] },
+  { id:8,  tier:'Advanced',     name:'Sample Collect',         timeLimit:14, path:[{x:-5,y:-5,h:18},{x:-3,y:1,h:135},{x:0,y:-2,h:45},{x:3,y:1,h:162},{x:5,y:-5,h:162}] },
+  { id:9,  tier:'Advanced',     name:'Spiral In',              timeLimit:23, path:[{x:-5,y:-5,h:0},{x:-5,y:5,h:90},{x:5,y:5,h:180},{x:5,y:-3,h:-90},{x:-2,y:-3,h:0},{x:-2,y:2,h:90},{x:2,y:2,h:90}] },
   // Tier 4: Expert
-  { id:10, tier:'Expert',       name:'Speed Demon',            timeLimit:10, path:[{x:-5,y:-5,h:45},{x:5,y:5,h:-90},{x:-5,y:5,h:135},{x:5,y:-5,h:-45},{x:0,y:0,h:-45}] },
-  { id:11, tier:'Expert',       name:'Threading the Needle',   timeLimit:14, path:[{x:-5,y:0,h:27},{x:-3,y:4,h:143},{x:0,y:0,h:37},{x:3,y:4,h:153},{x:5,y:0,h:-153},{x:3,y:-4,h:-37},{x:0,y:0,h:-143},{x:-3,y:-4,h:-27},{x:-5,y:0,h:-27}] },
-  { id:12, tier:'Expert',       name:'The Gauntlet',           timeLimit:16, path:[{x:-5,y:-5,h:0},{x:-5,y:5,h:135},{x:-2,y:2,h:34},{x:0,y:5,h:146},{x:2,y:2,h:45},{x:5,y:5,h:180},{x:5,y:-5,h:-45},{x:2,y:-2,h:-146},{x:0,y:-5,h:-34},{x:-2,y:-2,h:-135},{x:-5,y:-5,h:-135}] },
+  { id:10, tier:'Expert',       name:'Speed Demon',            timeLimit:29, path:[{x:-5,y:-5,h:45},{x:5,y:5,h:-90},{x:-5,y:5,h:135},{x:5,y:-5,h:-45},{x:0,y:0,h:-45}] },
+  { id:11, tier:'Expert',       name:'Threading the Needle',   timeLimit:25, path:[{x:-5,y:0,h:27},{x:-3,y:4,h:143},{x:0,y:0,h:37},{x:3,y:4,h:153},{x:5,y:0,h:-153},{x:3,y:-4,h:-37},{x:0,y:0,h:-143},{x:-3,y:-4,h:-27},{x:-5,y:0,h:-27}] },
+  { id:12, tier:'Expert',       name:'The Gauntlet',           timeLimit:32, path:[{x:-5,y:-5,h:0},{x:-5,y:5,h:135},{x:-2,y:2,h:34},{x:0,y:5,h:146},{x:2,y:2,h:45},{x:5,y:5,h:180},{x:5,y:-5,h:-45},{x:2,y:-2,h:-146},{x:0,y:-5,h:-34},{x:-2,y:-2,h:-135},{x:-5,y:-5,h:-135}] },
 ];
 
 let appMode = 'freedrive';
@@ -266,7 +266,7 @@ function startCountdown(id) {
   // was driven at: par times assume the defaults, so a run at other settings is
   // stored but not rated (js/level-table.js).
   lvl.style = newStyleAcc();
-  lvl.physics = { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, friction: cfg.friction };
+  lvl.physics = { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, braking: cfg.braking, inputDelay: cfg.inputDelay };
 
   hideCards();
   document.getElementById('level-hud').style.display = 'block';
@@ -338,7 +338,7 @@ function buildRunRecord(success, avgAcc) {
   flushTurnTracker();
   const st = styleScores(lvl.style || newStyleAcc());
   const r0 = v => (v === null || v === undefined) ? null : Math.round(v);
-  const physics = lvl.physics || { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, friction: cfg.friction };
+  const physics = lvl.physics || { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, braking: cfg.braking, inputDelay: cfg.inputDelay };
   return {
     levelId: lvl.id,
     completed: !!success,

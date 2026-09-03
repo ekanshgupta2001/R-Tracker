@@ -280,6 +280,7 @@ input[type=range] {
 
 /* ── Help ────────────────────────────────────────────────────────────────── */
 .hlp   { font-size: 11px; color: var(--text-muted); line-height: 1.9; }
+.hlp.cfg-note { line-height: 1.5; margin: -2px 0 8px; }
 .hlp b { color: var(--text); font-weight: 650; }
 
 /* ── Gamepad Status ──────────────────────────────────────────────────────── */
