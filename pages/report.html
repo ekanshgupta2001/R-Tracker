@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <meta name="description" content="Progress Report — R-Tracker driver stats, practice consistency, curriculum mastery.">
   <title>Progress Report — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
@@ -25,6 +26,7 @@
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
+<div id="rt-atmosphere" aria-hidden="true"></div>
   <header class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">Progress Report</div>

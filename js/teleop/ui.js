@@ -12,7 +12,7 @@ function setBar(bid, vid, v) {
   const pct = Math.abs(v) * 50;
   b.style.width = pct + '%';
   b.style.left  = v >= 0 ? '50%' : `${50 - pct}%`;
-  b.style.background = v > 0.05 ? (v > 0.6 ? '#4aff88' : '#4a9eff') : v < -0.05 ? '#ff5544' : '#334';
+  b.style.background = v > 0.05 ? (v > 0.6 ? 'var(--good)' : 'var(--info)') : v < -0.05 ? 'var(--bad)' : 'var(--glass-border-strong)';
 }
 
 function renderUI() {

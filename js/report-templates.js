@@ -139,17 +139,17 @@
     return { title: verb + ' Phase ' + c.ph.num + ': ' + c.ph.name, text: moduleHint || 'Work through the lesson checks in order.', href: 'curriculum.html' };
   }
 
-  // ── Callouts (short chips) ────────────────────────────────────────────────
+  // ── Callouts (short chips). `icon` is a window.RT_ICONS key. ─────────────
   function callouts(state, cons, bkt) {
     var out = [];
-    if (cons.currentStreak >= 3) out.push({ icon: '🔥', text: cons.currentStreak + '-day practice streak' });
-    if (cons.longestStreak >= 5 && cons.longestStreak > cons.currentStreak) out.push({ icon: '🏁', text: 'Longest streak: ' + cons.longestStreak + ' days' });
-    if (cons.sinceDays >= 14) out.push({ icon: '⏳', text: cons.sinceDays + ' days since your last session' });
+    if (cons.currentStreak >= 3) out.push({ icon: 'flame', text: cons.currentStreak + '-day practice streak' });
+    if (cons.longestStreak >= 5 && cons.longestStreak > cons.currentStreak) out.push({ icon: 'flag', text: 'Longest streak: ' + cons.longestStreak + ' days' });
+    if (cons.sinceDays >= 14) out.push({ icon: 'hourglass', text: cons.sinceDays + ' days since your last session' });
     var gold = Object.keys(state.driver.levels || {}).filter(function (id) { return state.driver.levels[id] && state.driver.levels[id].bestStars === 3; }).length;
-    if (gold) out.push({ icon: '🥇', text: gold + ' gold level' + (gold === 1 ? '' : 's') });
+    if (gold) out.push({ icon: 'medal', text: gold + ' gold level' + (gold === 1 ? '' : 's') });
     var mastered = 0;
     Object.keys(bkt.phases || {}).forEach(function (pid) { bkt.phases[pid].order.forEach(function (mid) { var m = bkt.phases[pid].modules[mid]; if (m.observed && m.pL >= 0.9) mastered++; }); });
-    if (mastered) out.push({ icon: '🎓', text: mastered + ' module' + (mastered === 1 ? '' : 's') + ' mastered (≥ 90%)' });
+    if (mastered) out.push({ icon: 'graduation', text: mastered + ' module' + (mastered === 1 ? '' : 's') + ' mastered (≥ 90%)' });
     return out;
   }
 

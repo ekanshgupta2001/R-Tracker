@@ -4,21 +4,27 @@
 (function () {
   'use strict';
 
-  function isLight() { return document.documentElement.classList.contains('light'); }
-
+  // Colours come from the CSS tokens in css/global.css (--chart-* and the status
+  // tokens), read at draw time so a chart drawn after a theme flip picks up the
+  // new theme. Custom properties are returned with var() already substituted.
+  // Pages re-draw on the `rt-themechange` event that js/sidebar.js dispatches.
   function palette() {
-    var light = isLight();
+    var cs = getComputedStyle(document.documentElement);
+    function t(name, fallback) {
+      var v = (cs.getPropertyValue(name) || '').trim();
+      return v || fallback;
+    }
     return {
-      text: light ? '#444' : '#a0a0b0',
-      grid: light ? '#ddd' : '#333',
-      axis: light ? '#bbb' : '#444',
-      accent: '#c73e5a',
-      accentFill: light ? 'rgba(199, 62, 90, 0.22)' : 'rgba(199, 62, 90, 0.35)',
-      bar: light ? '#a0334a' : '#c73e5a',
-      barMuted: light ? '#e6cfd5' : '#3a2228',
-      good: '#22c55e',
-      ok: '#eab308',
-      poor: '#ef4444'
+      text: t('--chart-text', '#33425a'),
+      grid: t('--chart-grid', 'rgba(22, 35, 58, 0.12)'),
+      axis: t('--chart-axis', 'rgba(22, 35, 58, 0.28)'),
+      accent: t('--chart-series', '#a3163d'),
+      accentFill: t('--chart-series-soft', 'rgba(163, 22, 61, 0.22)'),
+      bar: t('--chart-bar', 'rgba(163, 22, 61, 0.72)'),
+      barMuted: t('--chart-bar-muted', 'rgba(22, 35, 58, 0.12)'),
+      good: t('--good', '#1f8a4c'),
+      ok: t('--warn', '#a8651a'),
+      poor: t('--bad', '#b8323c')
     };
   }
 

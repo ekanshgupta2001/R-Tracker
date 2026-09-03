@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <meta name="description" content="About R-Tracker — Rundle Robotics personally designed visualizer for FTC teams.">
   <title>About — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
@@ -20,6 +21,7 @@
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
+<div id="rt-atmosphere" aria-hidden="true"></div>
   <header class="topbar">
     <div class="topbar-left"><a href="../index.html">← Home</a></div>
     <div class="topbar-right">About</div>
@@ -62,7 +64,7 @@
       </div>
     </div>
 
-    <footer class="page-footer">Built for FTC teams &nbsp;<span class="accent">♦</span></footer>
+    <footer class="page-footer">Built for FTC teams <span class="accent" aria-hidden="true"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#800020"/><path d="M4 17.5 8.2 12.4 10.4 14.6 15.2 6.5 16.6 9.4 20 17.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span></footer>
   </main>
   <script defer src="../js/utils/validators.js"></script>
 <script>

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <title>TeleOp Practice — R-Tracker</title>
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/sidebar.css">
@@ -22,7 +23,8 @@
 <body>
 <a href="#app" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
-  <div class="mobile-warning" style="display:none;padding:16px;background:#332800;border:1px solid #eab308;color:#eab308;text-align:center;font-size:13px;border-radius:8px;margin:8px;">
+<div id="rt-atmosphere" aria-hidden="true"></div>
+  <div class="mobile-warning">
     TeleOp Practice works best on desktop or tablet with a gamepad. Some features may not work on mobile.
   </div>
   <main id="app">
@@ -44,7 +46,7 @@
           </div>
         </div>
         <div id="result-card">
-          <div class="rc-medal" id="rc-medal">&#127937;</div>
+          <div class="rc-medal" id="rc-medal"></div>
           <div class="rc-title" id="rc-title">Level Complete!</div>
           <div class="rc-level" id="rc-level">Level 1 &mdash; Forward March</div>
           <div class="rc-stars">
@@ -55,32 +57,32 @@
           <div class="rc-stats" id="rc-stats"></div>
           <div class="rc-delta" id="rc-delta"></div>
           <div class="rc-btns">
-            <button class="btn" onclick="retryLevel()">&#8635; Retry</button>
-            <button class="btn" onclick="exitToSelect()">&#8801; Levels</button>
-            <button class="btn active" id="rc-next-btn" onclick="nextLevel()">Next &#8250;</button>
+            <button class="btn" onclick="retryLevel()"><span class="rt-icon" data-rt-icon="rotate"></span>Retry</button>
+            <button class="btn" onclick="exitToSelect()"><span class="rt-icon" data-rt-icon="menu"></span>Levels</button>
+            <button class="btn active" id="rc-next-btn" onclick="nextLevel()">Next<span class="rt-icon" data-rt-icon="chevronRight"></span></button>
           </div>
         </div>
         <div id="fail-card">
-          <div class="fail-icon">&#9200;</div>
+          <div class="fail-icon"><span class="rt-icon" data-rt-icon="clock"></span></div>
           <div class="fail-title">Time's Up!</div>
           <div class="fail-level" id="fail-level">Keep practicing!</div>
           <div class="fail-btns">
-            <button class="btn" onclick="retryLevel()">&#8635; Retry</button>
-            <button class="btn" onclick="exitToSelect()">&#8801; Levels</button>
+            <button class="btn" onclick="retryLevel()"><span class="rt-icon" data-rt-icon="rotate"></span>Retry</button>
+            <button class="btn" onclick="exitToSelect()"><span class="rt-icon" data-rt-icon="menu"></span>Levels</button>
           </div>
         </div>
       </div>
       <div id="ctrl-bar">
         <button class="btn active" id="btn-mec" onclick="setDrive('mecanum')">Mecanum</button>
         <button class="btn" id="btn-tank" onclick="setDrive('tank')">Tank</button>
-        <span style="color:#334;font-size:16px">│</span>
+        <span class="ctrl-sep" aria-hidden="true"></span>
         <button class="btn active" id="btn-fc" onclick="setMode('field')">Field-Centric</button>
         <button class="btn" id="btn-rc" onclick="setMode('robot')">Robot-Centric</button>
-        <span style="color:#334;font-size:16px">│</span>
+        <span class="ctrl-sep" aria-hidden="true"></span>
         <button class="btn" onclick="resetRobot()">Reset [R]</button>
-        <span style="color:#334;font-size:16px">│</span>
-        <button class="btn" onclick="openDriverReport()">&#128202; Report</button>
-        <span style="color:#334;font-size:16px">│</span>
+        <span class="ctrl-sep" aria-hidden="true"></span>
+        <button class="btn" onclick="openDriverReport()"><span class="rt-icon" data-rt-icon="chart"></span>Report</button>
+        <span class="ctrl-sep" aria-hidden="true"></span>
         <div class="view-toggle">
           <button class="view-btn active" data-mode="2d" onclick="setViewMode('2d')">2D</button>
           <button class="view-btn" data-mode="3d" onclick="setViewMode('3d')">3D</button>
@@ -96,7 +98,7 @@
         <span class="ms-sep">·</span>
         <span class="ms-item"><span class="ms-lbl">RATING</span><span class="ms-val" id="ms-rating">-</span></span>
         <span class="ms-sep">·</span>
-        <span style="font-size:9px;color:#445;">[H] hide</span>
+        <span class="ms-hint">[H] hide</span>
       </div>
     </div>
     <div id="sidebar-teleop">
@@ -105,9 +107,9 @@
         <div id="timer-display">2:30</div>
         <div id="period-label" class="ready-period">READY — PRESS START</div>
         <div class="tctrls">
-          <button class="btn" onclick="timerStart()">▶ Start</button>
-          <button class="btn" onclick="timerPause()">⏸ Pause</button>
-          <button class="btn" onclick="timerReset()">↺ Reset</button>
+          <button class="btn" onclick="timerStart()"><span class="rt-icon" data-rt-icon="play"></span>Start</button>
+          <button class="btn" onclick="timerPause()"><span class="rt-icon" data-rt-icon="pause"></span>Pause</button>
+          <button class="btn" onclick="timerReset()"><span class="rt-icon" data-rt-icon="rotate"></span>Reset</button>
         </div>
       </div>
       <div class="panel">
@@ -201,9 +203,6 @@
           <div><b>Space</b> — Start / pause timer</div>
         </div>
       </div>
-      <div class="sidebar-footer" id="sidebar-auth-footer">
-        <!-- rt-user-section injected here by auth.js -->
-      </div>
     </div>
     <div id="levels-sidebar">
       <div id="attempt-panel">
@@ -212,9 +211,9 @@
         <div class="ap-row"><span class="ap-lbl">Limit</span><span class="ap-val" id="ap-limit">—</span></div>
         <div class="ap-row"><span class="ap-lbl">Checkpoints</span><span class="ap-val" id="ap-cp">0/0</span></div>
         <div class="ap-row"><span class="ap-lbl">Accuracy</span><span class="ap-val" id="ap-acc">100%</span></div>
-        <div style="margin-top:7px;display:flex;gap:6px;">
-          <button class="btn" onclick="retryLevel()" style="flex:1">&#8635; Retry</button>
-          <button class="btn" onclick="exitToSelect()" style="flex:1">&#8801; List</button>
+        <div class="ap-btns">
+          <button class="btn" onclick="retryLevel()"><span class="rt-icon" data-rt-icon="rotate"></span>Retry</button>
+          <button class="btn" onclick="exitToSelect()"><span class="rt-icon" data-rt-icon="menu"></span>List</button>
         </div>
       </div>
       <div id="lvl-list"></div>
@@ -225,19 +224,19 @@
   <div id="analytics-backdrop" onclick="if(event.target===this)closeDriverReport()">
     <div id="analytics-modal">
       <div class="an-header">
-        <div class="an-title">&#128202; Driver Report Card</div>
-        <button class="an-close" onclick="closeDriverReport()">&#10005;</button>
+        <div class="an-title"><span class="rt-icon" data-rt-icon="chart"></span>Driver Report Card</div>
+        <button class="an-close" onclick="closeDriverReport()" aria-label="Close">&#10005;</button>
       </div>
       <div class="an-tabs">
         <button class="an-tab active" id="tab-stats" onclick="switchReportTab('stats')">Stats</button>
-        <button class="an-tab" id="tab-coach" onclick="switchReportTab('coach')">&#129302; AI Coach</button>
+        <button class="an-tab" id="tab-coach" onclick="switchReportTab('coach')"><span class="rt-icon" data-rt-icon="target"></span>Coach</button>
       </div>
       <div id="an-stats-panel">
         <div class="an-grade-row">
           <div class="an-grade" id="an-grade">-</div>
-          <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="an-grade-info">
             <div class="an-overall" id="an-overall">Overall Rating: -</div>
-            <div id="an-percentile" style="font-size:10px;color:#556;letter-spacing:0.4px;font-style:italic">-</div>
+            <div id="an-percentile" class="an-percentile">-</div>
           </div>
         </div>
         <div class="an-section-title">Skill Breakdown</div>
@@ -262,7 +261,7 @@
       <div id="an-coach-panel">
         <div class="coach-section" id="cs-badge">
           <div class="coach-profile-badge">
-            <span class="cpb-icon" id="coach-profile-icon">&#127919;</span>
+            <span class="cpb-icon" id="coach-profile-icon"></span>
             <span id="coach-profile-name">Driver</span>
           </div>
         </div>
@@ -292,7 +291,7 @@
         </div>
       </div>
       <div class="an-footer">
-        <button class="btn" onclick="confirmResetMetrics()">&#8635; Reset</button>
+        <button class="btn" onclick="confirmResetMetrics()"><span class="rt-icon" data-rt-icon="rotate"></span>Reset</button>
         <button class="btn active" onclick="closeDriverReport()">Close</button>
       </div>
     </div>

@@ -38,7 +38,8 @@
   function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
   function skillClass(v) { return v >= 70 ? 'good' : v >= 40 ? 'ok' : 'poor'; }
   function scoreColorClass(v) { return v >= 70 ? 'clr-green' : v >= 40 ? 'clr-orange' : 'clr-red'; }
-  function gradeColor(g) { var map = { S: '#ffd700', A: '#4aff88', B: '#4a9eff', C: '#ffdd44', D: '#ff8844', F: '#ff4455' }; return map[g] || '#888'; }
+  // Grade colours are the status/medal tokens from css/global.css (both themes).
+  function gradeColor(g) { var map = { S: 'var(--medal-gold)', A: 'var(--good)', B: 'var(--info)', C: 'var(--warn)', D: 'var(--bad)', F: 'var(--bad)' }; return map[g] || 'var(--text-muted)'; }
   function pct(p) { return Math.round((Number(p) || 0) * 100); }
   function meta() { return window.PHASE_META || []; }
 
@@ -83,7 +84,7 @@
     var next = ctx.next;
     html += '<a class="rpt-next" href="' + esc(next.href) + '"><div class="rpt-next-label">Next step</div><div class="rpt-next-title">' + esc(next.title) + '</div><div class="rpt-next-text">' + esc(next.text) + '</div></a>';
     if (ctx.callouts.length) {
-      html += '<div class="rpt-callouts">' + ctx.callouts.map(function (c) { return '<span class="rpt-callout"><span class="rpt-callout-icon">' + c.icon + '</span>' + esc(c.text) + '</span>'; }).join('') + '</div>';
+      html += '<div class="rpt-callouts">' + ctx.callouts.map(function (c) { return '<span class="rpt-callout"><span class="rpt-callout-icon">' + (window.RT_ICONS && window.RT_ICONS[c.icon] || '') + '</span>' + esc(c.text) + '</span>'; }).join('') + '</div>';
     }
     el.innerHTML = html;
   }
@@ -255,7 +256,7 @@
       var isLocked = completed < (TIER_UNLOCK[def.tier] || 0);
       var num = i + 1;
       if (isLocked) {
-        html += '<div class="rlg-cell locked"><div class="rlg-lock">&#128274;</div><div class="rlg-name">' + esc(def.name) + '</div></div>';
+        html += '<div class="rlg-cell locked"><div class="rlg-lock">' + (window.RT_ICONS ? window.RT_ICONS.lock : '') + '</div><div class="rlg-name">' + esc(def.name) + '</div></div>';
         return;
       }
       var stars = lvl && lvl.bestStars ? lvl.bestStars : 0;
@@ -297,7 +298,7 @@
     if (!el) return;
     var items = (ctx.state.driver.sessions || []).slice(-15).reverse();
     if (!items.length) {
-      el.innerHTML = '<div class="rpt-empty" style="text-align:center;padding:24px;"><div style="font-size:24px;margin-bottom:8px;">&#128202;</div><p style="font-size:13px;color:#888;">Session history will appear here as you practice.</p><p style="font-size:12px;color:#666;">Complete TeleOp sessions (30 seconds or longer) to build your history.</p></div>';
+      el.innerHTML = '<div class="rpt-empty"><span class="rpt-empty-icon">' + (window.RT_ICONS ? window.RT_ICONS.chart : '') + '</span><p>Session history will appear here as you practice.</p><p class="rpt-empty-sub">Complete TeleOp sessions (30 seconds or longer) to build your history.</p></div>';
       return;
     }
     var html = '<div class="sh-list">';
@@ -358,4 +359,6 @@
     clearTimeout(rerenderTimer);
     rerenderTimer = setTimeout(function () { if (window.RTStore) render(); }, 200);
   });
+  // The canvases are painted with the theme's chart tokens; repaint them when it flips.
+  window.addEventListener('rt-themechange', function () { if (window.RTStore) render(); });
 })();

@@ -1696,31 +1696,31 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
     var keywords = ['public', 'private', 'protected', 'class', 'void', 'int', 'double', 'boolean', 'float', 'String', 'if', 'else', 'while', 'for', 'return', 'new', 'import', 'extends', 'implements', 'static', 'final', 'this', 'true', 'false', 'null', 'enum', 'switch', 'case', 'break', 'try', 'catch', 'throws', 'throw', 'override', 'Override'];
     keywords.forEach(function(kw) {
       var regex = new RegExp('\\b(' + kw + ')\\b', 'g');
-      tokenized = tokenized.replace(regex, '<span style="color:#c678dd">$1</span>');
+      tokenized = tokenized.replace(regex, '<span class="syn-kw">$1</span>');
     });
 
     // 5. FTC-specific types
     var types = ['DcMotor', 'Servo', 'HardwareMap', 'LinearOpMode', 'OpMode', 'Gamepad', 'Telemetry', 'ElapsedTime', 'Range', 'Pose', 'BezierLine', 'BezierCurve', 'PathChain', 'Follower', 'ColorSensor', 'ColorRangeSensor', 'DistanceSensor', 'TouchSensor', 'TeleOp', 'Autonomous', 'DistanceUnit', 'Direction', 'Math'];
     types.forEach(function(t) {
       var regex = new RegExp('\\b(' + t + ')\\b', 'g');
-      tokenized = tokenized.replace(regex, '<span style="color:#e5c07b">$1</span>');
+      tokenized = tokenized.replace(regex, '<span class="syn-type">$1</span>');
     });
 
     // 6. Numbers
-    tokenized = tokenized.replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#d19a66">$1</span>');
+    tokenized = tokenized.replace(/\b(\d+\.?\d*)\b/g, '<span class="syn-num">$1</span>');
 
-    // 7. Restore tokens with their colors
+    // 7. Restore tokens with their colours (.syn-* classes in css/curriculum.css)
     var html = tokenized.replace(/\x00TOK(\d+)\x00/g, function(m, idx) {
       var tok = tokens[parseInt(idx)];
       if (tok.charAt(0) === '/') {
         // Comment
-        return '<span style="color:#6a737d">' + tok + '</span>';
+        return '<span class="syn-cm">' + tok + '</span>';
       } else if (tok.charAt(0) === '@') {
         // Annotation
-        return '<span style="color:#98c379">' + tok + '</span>';
+        return '<span class="syn-ann">' + tok + '</span>';
       } else {
         // String
-        return '<span style="color:#98c379">' + tok + '</span>';
+        return '<span class="syn-str">' + tok + '</span>';
       }
     });
 
@@ -1798,7 +1798,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       if (isDone) {
         html += '<div class="les-sec-check">&#10003;</div>';
       } else if (isLocked) {
-        html += '<div class="les-sec-lock">&#128274;</div>';
+        html += '<div class="les-sec-lock">' + (window.RT_ICONS ? window.RT_ICONS.lock : '') + '</div>';
       } else {
         html += '<div class="les-sec-num' + (sec.isTheory ? ' les-sec-num-theory' : '') + '">' + (i + 1) + '</div>';
       }
@@ -1833,7 +1833,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
           html += '<div class="les-check-done" id="les-wdone-badge-' + sec.id + '">&#10003; Submitted</div>';
           html += '<div class="les-written-done-detail" id="les-wdone-' + sec.id + '" style="display:none">';
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
-          html += '<textarea class="les-written-area" id="les-written-' + sec.id + '" placeholder="Type your answer here..." readonly style="border-color:#22c55e;opacity:0.85"></textarea>';
+          html += '<textarea class="les-written-area les-written-locked" id="les-written-' + sec.id + '" placeholder="Type your answer here..." readonly></textarea>';
           html += '<div class="les-written-footer">';
           html += '<span class="les-written-count" id="les-wcount-' + sec.id + '"></span>';
           html += '<button class="les-written-submit les-written-submitted" id="les-wsubmit-' + sec.id + '" style="display:none" onclick="window._submitWrittenAnswer(\'' + sec.id + '\')" disabled>Submit Answer</button>';
@@ -1844,9 +1844,9 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
           html += '</div>';
         } else if (isWritten) {
           // Written answer check
-          html += '<div class="les-check-icon">&#9999;&#65039;</div>';
+          html += '<div class="les-check-icon">' + (window.RT_ICONS ? window.RT_ICONS.pencil : '') + '</div>';
           if (sec.check.graded === false) {
-            html += '<div class="les-reflection-label">&#128221; Reflection &mdash; share with your mentor. There is no single right answer; your answer is kept in your progress file and is not scored.</div>';
+            html += '<div class="les-reflection-label">' + (window.rtIcon ? window.rtIcon('pencil') : '') + '<span>Reflection &mdash; share with your mentor. There is no single right answer; your answer is kept in your progress file and is not scored.</span></div>';
           }
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
           html += '<textarea class="les-written-area" id="les-written-' + sec.id + '" placeholder="Type your answer here..." minlength="' + (sec.check.minLength || 50) + '"></textarea>';
@@ -1859,7 +1859,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
           html += '<div class="theory-feedback-wrap" id="les-wfeedback-' + sec.id + '"></div>';
         } else {
           // Multiple choice check
-          html += '<div class="les-check-icon">&#10067;</div>';
+          html += '<div class="les-check-icon">' + (window.RT_ICONS ? window.RT_ICONS.help : '') + '</div>';
           html += '<div class="les-check-q">' + esc(sec.check.question) + '</div>';
           html += '<div class="les-check-opts" id="les-opts-' + sec.id + '">';
           for (var o = 0; o < sec.check.options.length; o++) {
@@ -1886,7 +1886,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       if (sec.mentorTip) {
         html += '<div class="les-tip">';
         html += '<div class="les-tip-toggle" onclick="window._toggleTip(this)">';
-        html += '<span class="les-tip-icon">&#128161;</span> Mentor Tip <span class="les-tip-arrow">&#9654;</span>';
+        html += '<span class="les-tip-icon">' + (window.RT_ICONS ? window.RT_ICONS.bulb : '') + '</span> Mentor Tip <span class="les-tip-arrow">&#9656;</span>';
         html += '</div>';
         html += '<div class="les-tip-body" style="display:none">' + esc(sec.mentorTip) + '</div>';
         html += '</div>';
@@ -1945,7 +1945,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
               if (fbWrap) fbWrap.innerHTML = _ungradedTheoryCard(saved.status, saved.feedback);
             } else if (saved.passed) {
               ta.readOnly = true;
-              ta.style.borderColor = '#22c55e';
+              ta.style.borderColor = 'var(--good)';
               ta.style.opacity = '0.85';
               if (countEl) countEl.textContent = '\u2713 Passed \u2014 ' + (saved.bestScore || saved.score || '') + '/100';
               if (submitBtn) {
@@ -1962,7 +1962,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
               }
             } else {
               ta.readOnly = true;
-              ta.style.borderColor = '#eab308';
+              ta.style.borderColor = 'var(--warn)';
               ta.style.opacity = '0.85';
               if (countEl) countEl.textContent = 'Score: ' + saved.score + '/100 \u2014 Revision needed';
               if (submitBtn) submitBtn.style.display = 'none';
@@ -2107,7 +2107,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
   function _ungradedTheoryCard(status, feedback) {
     var isReflection = status === 'reflection';
     var html = '<div class="theory-feedback ungraded">';
-    html += '<div class="score-badge">' + (isReflection ? '📝 Saved for mentor review' : '💾 Saved — not graded') + '</div>';
+    html += '<div class="score-badge">' + (window.rtIcon ? window.rtIcon(isReflection ? 'pencil' : 'save') : '') + (isReflection ? 'Saved for mentor review' : 'Saved — not graded') + '</div>';
     html += '<div class="feedback-text">' + esc(feedback || (isReflection
       ? 'This is a reflection question. Your answer is kept in your progress file for your mentor to read.'
       : 'Automatic grading is not available in this version. Your answer is kept in your progress file so a mentor can read it.')) + '</div>';
@@ -2265,7 +2265,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
 
     if (passed) {
       lessonState.answeredChecks[secId] = true;
-      textarea.style.borderColor = '#22c55e';
+      textarea.style.borderColor = 'var(--good)';
       textarea.style.opacity = '0.85';
       if (submitBtn) {
         submitBtn.textContent = '\u2713 Passed';
@@ -2279,7 +2279,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       }
     } else {
       textarea.readOnly = true;
-      textarea.style.borderColor = '#eab308';
+      textarea.style.borderColor = 'var(--warn)';
       textarea.style.opacity = '0.85';
       if (submitBtn) {
         submitBtn.style.display = 'none';
@@ -2344,7 +2344,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
 
     if (textarea) {
       textarea.readOnly = false;
-      textarea.style.borderColor = '#333';
+      textarea.style.borderColor = '';
       textarea.style.opacity = '1';
       textarea.focus();
 
@@ -2573,7 +2573,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
         html += '<h3 class="adv-h3">' + esc(req.category) + '</h3>';
         html += '<ul class="adv-checklist">';
         for (var ri = 0; ri < req.items.length; ri++) {
-          html += '<li class="adv-check-item"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;"><input type="checkbox" class="adv-checkbox-input" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"><span>' + esc(req.items[ri]) + '</span></label></li>';
+          html += '<li class="adv-check-item"><label><input type="checkbox" class="adv-checkbox-input"><span>' + esc(req.items[ri]) + '</span></label></li>';
         }
         html += '</ul>';
       }
@@ -2610,7 +2610,7 @@ if (autoTimer.getElapsedTimeSeconds() > 27.0) {
       html += '<p class="adv-text">' + esc(del.description) + '</p>';
       html += '<ul class="adv-checklist">';
       for (var di = 0; di < del.requirements.length; di++) {
-        html += '<li class="adv-check-item"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;"><input type="checkbox" class="adv-checkbox-input" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"><span>' + esc(del.requirements[di]) + '</span></label></li>';
+        html += '<li class="adv-check-item"><label><input type="checkbox" class="adv-checkbox-input"><span>' + esc(del.requirements[di]) + '</span></label></li>';
       }
       html += '</ul>';
       html += '</div>';

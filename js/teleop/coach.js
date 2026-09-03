@@ -1,14 +1,19 @@
-// ── R-Tracker TeleOp — AI Driver Coach ───────────────────────────────────
+// ── R-Tracker TeleOp — rule-based driver coach ────────────────────────────
 
+// window.RT_ICONS keys (js/sidebar.js), one per driver profile.
 const PROFILE_ICONS = {
-  'The Surgeon': '🎯',
-  'The Speedster': '⚡',
-  'The Technician': '⚙️',
-  'The Adapter': '🔄',
-  'The All-Rounder': '⭐',
-  'The Natural': '🌟',
-  'The Rookie': '🔰',
+  'The Surgeon': 'target',
+  'The Speedster': 'zap',
+  'The Technician': 'settings',
+  'The Adapter': 'shuffle',
+  'The All-Rounder': 'star',
+  'The Natural': 'sparkle',
+  'The Rookie': 'shield',
 };
+function profileIcon(name) {
+  const icons = window.RT_ICONS || {};
+  return icons[PROFILE_ICONS[name]] || icons.shield || '';
+}
 
 let _coachGenerated = false;
 
@@ -196,11 +201,11 @@ function renderCoachPanel() {
   if (driverMetrics.totalInputs < 10) {
     var panel = document.getElementById('an-coach-panel');
     if (panel) {
-      panel.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#999;">' +
-        '<div style="font-size:32px;margin-bottom:12px;">&#129302;</div>' +
-        '<h3 style="color:#ccc;margin-bottom:8px;">AI Coach Analysis</h3>' +
-        '<p style="font-size:13px;line-height:1.6;">Start a practice session and drive for at least 30 seconds. The AI Coach will analyze your driving style, identify strengths and weaknesses, and provide personalized training recommendations.</p>' +
-        '<p style="font-size:12px;color:#666;margin-top:12px;">Press Start, then drive around the field using your gamepad or keyboard.</p>' +
+      panel.innerHTML = '<div class="coach-empty">' +
+        '<span class="coach-empty-icon">' + ((window.RT_ICONS && window.RT_ICONS.target) || '') + '</span>' +
+        '<h3>Coach Analysis</h3>' +
+        '<p>Start a practice session and drive for at least 30 seconds. The coach will analyze your driving style, identify strengths and weaknesses, and provide training recommendations.</p>' +
+        '<p class="coach-empty-sub">Press Start, then drive around the field using your gamepad or keyboard.</p>' +
         '</div>';
     }
     _coachGenerated = false; // Allow re-render after driving
@@ -210,23 +215,23 @@ function renderCoachPanel() {
   const report = generateCoachReport();
 
   const profileKey = report.driverProfile.split(' — ')[0];
-  document.getElementById('coach-profile-icon').textContent = PROFILE_ICONS[profileKey] || '🔰';
+  document.getElementById('coach-profile-icon').innerHTML = profileIcon(profileKey);
   document.getElementById('coach-profile-name').textContent = report.driverProfile;
   document.getElementById('coach-analysis-text').textContent = report.detailedAnalysis;
 
   const strEl = document.getElementById('coach-strengths-list');
   strEl.innerHTML = report.strengths.length
     ? report.strengths.map(s =>
-      `<div class="coach-check-item"><span class="coach-check-icon" style="color:#4aff88">&#10003;</span>${s}</div>`
+      `<div class="coach-check-item"><span class="coach-check-icon is-good">&#10003;</span>${s}</div>`
     ).join('')
-    : '<div class="coach-check-item" style="color:#445">Keep practicing to unlock strengths data.</div>';
+    : '<div class="coach-check-item coach-check-muted">Keep practicing to unlock strengths data.</div>';
 
   const wkEl = document.getElementById('coach-weaknesses-list');
   wkEl.innerHTML = report.weaknesses.length
     ? report.weaknesses.map(s =>
-      `<div class="coach-check-item"><span class="coach-check-icon" style="color:#ff8844">&#9888;</span>${s}</div>`
+      `<div class="coach-check-item"><span class="coach-check-icon is-warn">&#9888;</span>${s}</div>`
     ).join('')
-    : '<div class="coach-check-item" style="color:#445">No significant weak points identified.</div>';
+    : '<div class="coach-check-item coach-check-muted">No significant weak points identified.</div>';
 
   const planEl = document.getElementById('coach-plan-list');
   planEl.innerHTML = report.trainingPlan.map((item, i) =>
@@ -274,7 +279,7 @@ function renderCoachComparison(currentReport) {
     const arr = d > 0 ? '&#9650;' : '&#9660;';
     const sign = d > 0 ? '+' : '';
     const note = d < 0 ? ' — needs attention' : '';
-    rows.push(`<div class="coach-comparison-row">${skillNames[key]}: ${pv} &rarr; ${cv}<span class="${cls}">${arr} ${sign}${d}</span>${note ? `<span style="color:#556;font-size:10px">${note}</span>` : ''}</div>`);
+    rows.push(`<div class="coach-comparison-row">${skillNames[key]}: ${pv} &rarr; ${cv}<span class="${cls}">${arr} ${sign}${d}</span>${note ? `<span class="coach-cmp-note">${note}</span>` : ''}</div>`);
   }
 
   compEl.innerHTML = rows.length ? rows.join('') : '<div class="coach-comparison-row">No change from your previous session.</div>';

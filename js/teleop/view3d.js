@@ -47,10 +47,9 @@
 
     resize3D();
 
-    // Scene
-    var isLight = document.documentElement.classList.contains('light');
+    // Scene — the background is the theme's --bg token (Summit navy/blue), re-read on rt-themechange.
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(isLight ? 0xf5f5f5 : 0x1a1a1a);
+    scene.background = new THREE.Color(sceneBackground());
     scene.fog = new THREE.Fog(scene.background.getHex(), 400, 800);
 
     // Camera — default 90-degree side view
@@ -510,16 +509,14 @@
   };
 
   // ── Theme Sync ───────────────────────────────────────────────────────────
-  // Patch toggleTheme to update 3D scene background when theme changes
-  var _origToggle = window.toggleTheme;
-  if (_origToggle) {
-    window.toggleTheme = function () {
-      _origToggle();
-      if (scene) {
-        var light = document.documentElement.classList.contains('light');
-        scene.background.set(light ? 0xf5f5f5 : 0x1a1a1a);
-        if (scene.fog) scene.fog.color.set(light ? 0xf5f5f5 : 0x1a1a1a);
-      }
-    };
+  // --bg is a plain hex in css/global.css for both themes; THREE.Color parses it.
+  function sceneBackground() {
+    var v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    return v || '#0f2247';
   }
+  window.addEventListener('rt-themechange', function () {
+    if (!scene) return;
+    scene.background.set(sceneBackground());
+    if (scene.fog) scene.fog.color.set(sceneBackground());
+  });
 })();

@@ -1,0 +1,77 @@
+<!-- R-Tracker "Summit Atmosphere" sky — the vector SOURCE for
+     assets/summit-sky.webp, which is what the app actually loads.
+     This file is never fetched at runtime. Edit it, then run
+     `node tools/bake-sky.mjs` to regenerate the raster. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="at-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#071a42"/><stop offset=".22" stop-color="#153f80"/><stop offset=".42" stop-color="#3f7bb8"/><stop offset=".55" stop-color="#8db4d8"/><stop offset=".62" stop-color="#cfd9e2"/><stop offset=".67" stop-color="#eedccb"/><stop offset=".74" stop-color="#f6e6d4"/><stop offset="1" stop-color="#e9e3dc"/></linearGradient>
+        <radialGradient id="at-bloom" cx="1130" cy="140" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3dc" stop-opacity=".55"/><stop offset=".25" stop-color="#ffe6bf" stop-opacity=".22"/><stop offset="1" stop-color="#ffe6bf" stop-opacity="0"/></radialGradient>
+        <!-- horizon haze with Rundle alpenglow: warm light cooling into burgundy at the cloud tops -->
+        <linearGradient id="at-glow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9b0" stop-opacity="0"/><stop offset=".45" stop-color="#ffcf9e" stop-opacity=".45"/><stop offset=".68" stop-color="#c46a7c" stop-opacity=".26"/><stop offset=".85" stop-color="#800020" stop-opacity=".12"/><stop offset="1" stop-color="#800020" stop-opacity="0"/></linearGradient>
+        <linearGradient id="at-under" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ea3bd" stop-opacity="0"/><stop offset="1" stop-color="#6f86a3" stop-opacity=".75"/></linearGradient>
+        <linearGradient id="at-rim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe2b8" stop-opacity="0"/><stop offset="1" stop-color="#ffe2b8" stop-opacity=".7"/></linearGradient>
+        <!-- burgundy caught on the shaded cloud edge facing away from the sun -->
+        <linearGradient id="at-rimshade" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#800020" stop-opacity="0"/><stop offset=".55" stop-color="#8e2a48" stop-opacity=".14"/><stop offset="1" stop-color="#800020" stop-opacity=".2"/></linearGradient>
+        <linearGradient id="at-fadeup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity="1"/></linearGradient>
+        <mask id="at-cloudmask"><rect x="0" y="470" width="1440" height="430" fill="url(#at-fadeup)"/></mask>
+        <radialGradient id="at-vig" cx="720" cy="450" r="900" gradientUnits="userSpaceOnUse"><stop offset=".55" stop-color="#0a1830" stop-opacity="0"/><stop offset="1" stop-color="#0a1830" stop-opacity=".38"/></radialGradient>
+        <filter id="at-bank-back" x="-20%" y="-60%" width="140%" height="220%"><feTurbulence type="fractalNoise" baseFrequency=".004 .009" numOctaves="4" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="70" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="9"/></filter>
+        <filter id="at-bank-mid" x="-20%" y="-60%" width="140%" height="220%"><feTurbulence type="fractalNoise" baseFrequency=".005 .011" numOctaves="4" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="95" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="4"/></filter>
+        <filter id="at-bank-front" x="-20%" y="-60%" width="140%" height="220%"><feTurbulence type="fractalNoise" baseFrequency=".006 .013" numOctaves="5" seed="21" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="115" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="2.5"/></filter>
+        <filter id="at-billow" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0035 .007" numOctaves="5" seed="8" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 7 -2.6" result="a"/><feGaussianBlur in="a" stdDeviation="3" result="b"/><feComposite in="b" in2="SourceGraphic" operator="in"/></filter>
+        <filter id="at-shade" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".003 .008" numOctaves="4" seed="17" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 .56  0 0 0 0 .64  0 0 0 0 .76  0 0 0 6 -2.4" result="a"/><feGaussianBlur in="a" stdDeviation="6" result="b"/><feComposite in="b" in2="SourceGraphic" operator="in"/></filter>
+        <filter id="at-mist" x="-30%" y="-200%" width="160%" height="500%"><feTurbulence type="fractalNoise" baseFrequency=".004 .02" numOctaves="3" seed="5" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="60" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="16"/></filter>
+        <filter id="at-sunblur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+        <filter id="at-cirrus" x="-30%" y="-300%" width="160%" height="700%"><feTurbulence type="fractalNoise" baseFrequency=".0025 .03" numOctaves="3" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="55" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="5"/></filter>
+        <filter id="at-highhaze" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0011 .0045" numOctaves="4" seed="13" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 5 -2.1" result="a"/><feGaussianBlur in="a" stdDeviation="8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="in"/></filter>
+        <filter id="at-rays" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+        <filter id="at-distant" x="-20%" y="-100%" width="140%" height="300%"><feTurbulence type="fractalNoise" baseFrequency=".006 .02" numOctaves="4" seed="27" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="60" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="3"/></filter>
+        <linearGradient id="at-hazefade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset=".6" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
+        <mask id="at-hazemask"><rect x="0" y="0" width="1440" height="560" fill="url(#at-hazefade)"/></mask>
+        <filter id="at-grain"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+      </defs>
+      <rect width="1440" height="900" fill="url(#at-sky)"/>
+      <rect width="1440" height="900" fill="url(#at-bloom)"/>
+      <circle cx="1130" cy="140" r="46" fill="#fff6e4" opacity=".62" filter="url(#at-sunblur)"/>
+      <circle cx="1130" cy="140" r="30" fill="#fffaf0" opacity=".5" filter="url(#at-sunblur)"/>
+      <!-- high-altitude haze texture over the upper sky -->
+      <g mask="url(#at-hazemask)"><rect x="0" y="0" width="1440" height="560" fill="#dfe9f5" opacity=".09" filter="url(#at-highhaze)"/></g>
+      <!-- soft high cloud, same family as the sea below -->
+      <g class="rt-drift-b" filter="url(#at-bank-back)" fill="#e9f0f8">
+        <ellipse cx="300" cy="200" rx="360" ry="22" opacity=".13"/>
+        <ellipse cx="820" cy="300" rx="420" ry="26" opacity=".16"/>
+        <ellipse cx="1240" cy="215" rx="300" ry="20" fill="#f6ebdc" opacity=".14"/>
+        <ellipse cx="560" cy="380" rx="480" ry="24" opacity=".12"/>
+      </g>
+      <rect x="0" y="470" width="1440" height="270" fill="url(#at-glow)"/>
+      <g class="rt-drift-mist" filter="url(#at-mist)" fill="#ffffff">
+        <ellipse cx="380" cy="470" rx="420" ry="16" opacity=".28"/>
+        <ellipse cx="980" cy="515" rx="520" ry="14" opacity=".22"/>
+        <ellipse cx="700" cy="440" rx="300" ry="9" opacity=".18"/>
+      </g>
+      <g class="rt-drift-b" filter="url(#at-distant)" fill="#dde6ef" opacity=".85">
+        <ellipse cx="90" cy="548" rx="260" ry="18"/><ellipse cx="420" cy="556" rx="300" ry="22"/><ellipse cx="760" cy="546" rx="340" ry="20"/><ellipse cx="1100" cy="552" rx="320" ry="24"/><ellipse cx="1400" cy="544" rx="240" ry="18"/>
+        <ellipse cx="260" cy="590" rx="320" ry="26" fill="#cbd7e4"/><ellipse cx="900" cy="596" rx="380" ry="28" fill="#cbd7e4"/><ellipse cx="1350" cy="592" rx="260" ry="24" fill="#cbd7e4"/>
+      </g>
+      <g mask="url(#at-cloudmask)">
+        <g class="rt-drift-a" filter="url(#at-bank-back)" fill="#b5c6da">
+          <ellipse cx="300" cy="612" rx="280" ry="40"/><ellipse cx="900" cy="605" rx="360" ry="44"/><ellipse cx="1350" cy="615" rx="260" ry="38"/>
+          <ellipse cx="140" cy="660" rx="360" ry="60"/><ellipse cx="620" cy="640" rx="420" ry="66"/><ellipse cx="1120" cy="650" rx="460" ry="62"/><ellipse cx="1480" cy="670" rx="300" ry="50"/>
+        </g>
+        <g class="rt-drift-b" filter="url(#at-bank-mid)" fill="#e2eaf2">
+          <ellipse cx="60" cy="700" rx="330" ry="58"/><ellipse cx="450" cy="690" rx="380" ry="70"/><ellipse cx="880" cy="705" rx="420" ry="64"/><ellipse cx="1300" cy="690" rx="380" ry="72"/>
+        </g>
+        <g class="rt-drift-a" filter="url(#at-bank-front)" fill="#f5f8fb">
+          <ellipse cx="200" cy="770" rx="420" ry="80"/><ellipse cx="700" cy="760" rx="460" ry="86"/><ellipse cx="1200" cy="775" rx="480" ry="82"/><rect x="-100" y="790" width="1640" height="200"/>
+        </g>
+        <rect x="0" y="500" width="1440" height="400" fill="#ffffff" opacity=".55" filter="url(#at-billow)"/>
+        <rect x="0" y="520" width="1440" height="380" fill="#ffffff" opacity=".35" filter="url(#at-highhaze)"/>
+        <rect x="0" y="600" width="1440" height="300" fill="#8fa3bd" opacity=".42" filter="url(#at-shade)"/>
+        <rect x="600" y="590" width="840" height="160" fill="url(#at-rim)" opacity=".6" filter="url(#at-billow)"/>
+        <rect x="0" y="600" width="760" height="300" fill="url(#at-rimshade)" filter="url(#at-billow)" opacity=".9"/>
+        <rect x="0" y="680" width="1440" height="220" fill="url(#at-under)" filter="url(#at-shade)"/>
+        <rect x="0" y="760" width="1440" height="140" fill="url(#at-under)" opacity=".6" filter="url(#at-billow)"/>
+      </g>
+      <rect width="1440" height="900" fill="url(#at-vig)"/>
+      <rect width="1440" height="900" filter="url(#at-grain)" opacity=".055" style="mix-blend-mode:overlay"/>
+    </svg>

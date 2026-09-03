@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <meta name="description" content="FTC Programming Curriculum — R-Tracker structured learning path.">
   <title>Curriculum — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
@@ -24,6 +25,7 @@
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
+<div id="rt-atmosphere" aria-hidden="true"></div>
   <header class="topbar">
     <div class="topbar-left"><a href="../index.html">&larr; Home</a></div>
     <div class="topbar-right">FTC Programming Curriculum</div>
@@ -42,7 +44,7 @@
     <!-- Right: Content Area -->
     <div class="curr-content" id="curr-content">
       <div class="curr-empty">
-        <div class="curr-empty-icon">📚</div>
+        <div class="curr-empty-icon"><span class="rt-icon" data-rt-icon="book"></span></div>
         <div>Select a phase from the timeline to begin.</div>
       </div>
     </div>
@@ -733,7 +735,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
     function renderBadge(status) {
       var labels = {
-        locked: '🔒 Locked',
+        locked: 'Locked',
         not_started: 'Not Started',
         in_progress: 'In Progress',
         submitted: 'Submitted (unchecked)',
@@ -752,7 +754,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
         return '<button class="curr-action-btn btn-submit" onclick="submitPhase(\'' + phaseId + '\')">Submit for Mentor Review</button>';
       }
       if (status === 'submitted') {
-        return '<span class="curr-waiting"><span class="curr-waiting-icon">&#128196;</span> Submitted &mdash; stored in your progress file for a mentor to review. The next phase is unlocked.</span>';
+        return '<span class="curr-waiting"><span class="curr-waiting-icon">' + (window.RT_ICONS ? window.RT_ICONS.file : '') + '</span> Submitted &mdash; stored in your progress file for a mentor to review. The next phase is unlocked.</span>';
       }
       if (status === 'verified') {
         return '<span class="curr-completed">&#10003; Completed</span>';
@@ -850,7 +852,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
 
       if (passed) {
         html += '<div class="quiz-result-msg pass">Congratulations! Phase 0 complete. Phase 1 is now unlocked.</div>';
-        html += '<button class="quiz-retry-btn" style="background:#800020;border-color:#800020;color:white;" onclick="selectPhase(\'phase1\')">Start Phase 1 &rarr;</button>';
+        html += '<button class="quiz-retry-btn" onclick="selectPhase(\'phase1\')">Start Phase 1 &rarr;</button>';
       } else {
         html += '<div class="quiz-result-msg fail">You need 80% to pass. Review the material and try again.</div>';
         html += '<button class="quiz-retry-btn" onclick="retryQuiz()">Retry Quiz</button>';
@@ -994,7 +996,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
       def.checklist.forEach(function(item, i) {
         var checked = checklist[i] ? ' checked' : '';
         html += '<label class="curr-check-item" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">';
-        html += '<input type="checkbox" style="margin-top:3px;accent-color:var(--burgundy-accent,#c73e5a);"' + checked + ' onchange="updateChecklist(\'' + phaseId + '\',' + i + ',this.checked)">';
+        html += '<input type="checkbox"' + checked + ' onchange="updateChecklist(\'' + phaseId + '\',' + i + ',this.checked)">';
         html += '<span>' + esc(item) + '</span>';
         html += '</label>';
       });
@@ -1015,7 +1017,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
       } else {
         html += '<button class="curr-action-btn btn-start code-review-btn" id="ai-review-btn-' + phaseId + '" onclick="submitCodeForReview(\'' + phaseId + '\')">Save &amp; Check Code</button>';
       }
-      html += '<div class="ai-rate-info" style="font-size:11px;color:#666;margin-top:6px;">Your code stays in this browser and in your exported progress file. Nothing is uploaded.</div>';
+      html += '<div class="ai-rate-info">Your code stays in this browser and in your exported progress file. Nothing is uploaded.</div>';
       html += '</div>';
 
       // Check loading state (hidden)
@@ -1276,7 +1278,7 @@ telemetry.<span class="syn-fn">update</span>();</div>
         var nextPhase = (phaseIdx >= 0 && phaseIdx < PHASES.length - 1) ? PHASES[phaseIdx + 1] : null;
 
         html += '<div class="ai-congrats">';
-        html += '<div class="ai-congrats-icon">&#127881;</div>';
+        html += '<div class="ai-congrats-icon">' + (window.RT_ICONS ? window.RT_ICONS.party : '') + '</div>';
         html += '<div class="ai-congrats-title">Phase ' + (phase ? phase.num : '') + ' Complete!</div>';
         if (nextPhase && !isLocked(nextPhase.id)) {
           html += '<div class="ai-congrats-msg">Phase ' + nextPhase.num + ' is now unlocked.</div>';

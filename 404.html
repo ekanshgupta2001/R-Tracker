@@ -3,22 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <title>Page Not Found — R-Tracker</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <!-- This file is served for ANY missing path, so every URL here is root-absolute. -->
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="/css/global.css">
   <style>
-    body { background:#1a1a1a;color:#ccc;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center; }
-    .container { max-width:400px; }
-    h1 { font-size:80px;color:#800020;margin:0 0 8px;text-shadow:0 0 20px rgba(128,0,32,0.4); }
-    p { font-size:16px;color:#888;margin:8px 0; }
-    .home-btn { display:inline-block;margin-top:20px;padding:10px 24px;background:#800020;color:white;border-radius:8px;text-decoration:none;transition:background 0.2s; }
-    .home-btn:hover { background:#9a0028; }
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .nf-card { max-width: 440px; width: 100%; padding: 40px 36px; text-align: center; animation: pageIn 0.35s ease-out both; }
+    .nf-mark { width: 44px; height: 44px; margin: 0 auto 18px; display: block; }
+    .nf-code { font-size: 64px; font-weight: 800; letter-spacing: -2px; line-height: 1; color: var(--text); }
+    .nf-text { font-size: 15px; color: var(--text-secondary); margin: 10px 0 24px; }
+    .nf-home { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nf-home svg { width: 15px; height: 15px; display: block; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>404</h1>
-    <p>This page doesn't exist.</p>
-    <a href="/" class="home-btn">← Back to R-Tracker</a>
-  </div>
+  <div id="rt-atmosphere" aria-hidden="true"></div>
+  <main class="nf-card rt-glass">
+    <svg class="nf-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#800020"/><path d="M4 17.5 8.2 12.4 10.4 14.6 15.2 6.5 16.6 9.4 20 17.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="nf-code">404</div>
+    <p class="nf-text">This page doesn't exist.</p>
+    <a href="/index.html" class="rt-button-primary nf-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back to R-Tracker</a>
+  </main>
 </body>
 </html>

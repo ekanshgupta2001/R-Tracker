@@ -30,6 +30,29 @@ for (const pg of PAGES) {
   });
 }
 
+// Every page is on the Summit design: the sky layer is present and nothing carries the
+// retired v1 `rt-legacy` marker. 404.html is a standalone page (no sidebar) that still
+// shares the sky, the theme boot script and the CSP meta.
+test('Every page carries the Summit atmosphere and no legacy marker', async ({ page }) => {
+  for (const pg of PAGES) {
+    await page.goto(pg.path, { waitUntil: 'load' });
+    expect(await page.locator('#rt-atmosphere').count(), pg.name + ' has the sky layer').toBe(1);
+    expect(await page.locator('body.rt-legacy').count(), pg.name + ' has no rt-legacy').toBe(0);
+    expect(await page.locator('html.light').count(), pg.name + ' boots light').toBe(1);
+  }
+  const problems = [];
+  page.on('pageerror', err => problems.push('pageerror: ' + err.message));
+  page.on('console', msg => { if (msg.type() === 'error') problems.push('console: ' + msg.text()); });
+  page.on('response', res => { if (res.status() >= 400) problems.push('HTTP ' + res.status() + ' ' + res.url()); });
+  await page.goto('/404.html', { waitUntil: 'load' });
+  expect(await page.locator('#rt-atmosphere').count()).toBe(1);
+  expect(await page.locator('html.light').count()).toBe(1);
+  const homeCsp = await (async () => { await page.goto('/', { waitUntil: 'load' }); return page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content'); })();
+  await page.goto('/404.html', { waitUntil: 'load' });
+  expect(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content')).toBe(homeCsp);
+  expect(problems).toEqual([]);
+});
+
 test('Sidebar navigation links exist and point at surviving pages', async ({ page }) => {
   await page.goto('/', { waitUntil: 'load' });
   await page.waitForSelector('#sidebar');
@@ -43,9 +66,25 @@ test('Sidebar navigation links exist and point at surviving pages', async ({ pag
 test('Theme preference is respected on load (the only localStorage key)', async ({ page }) => {
   await page.goto('/', { waitUntil: 'load' });
   await page.waitForSelector('#sidebar');
+
+  // No stored preference → light glass, the designed default.
+  expect(await page.locator('html.light').count()).toBe(1);
+
   await page.evaluate(() => localStorage.setItem('rt-theme', 'light'));
   await page.reload({ waitUntil: 'load' });
   expect(await page.locator('html.light').count()).toBe(1);
+
+  // 'dark' is the opt-in: the class comes off.
+  await page.evaluate(() => localStorage.setItem('rt-theme', 'dark'));
+  await page.reload({ waitUntil: 'load' });
+  expect(await page.locator('html.light').count()).toBe(0);
+
+  // The toggle puts it back and rewrites the preference.
+  await page.waitForSelector('#sidebar');
+  await page.evaluate(() => window.toggleTheme());
+  expect(await page.locator('html.light').count()).toBe(1);
+  expect(await page.evaluate(() => localStorage.getItem('rt-theme'))).toBe('light');
+
   const keys = await page.evaluate(() => Object.keys(localStorage));
   expect(keys).toEqual(['rt-theme']);
 });

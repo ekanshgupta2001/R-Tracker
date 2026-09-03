@@ -33,7 +33,7 @@ function toggleAnim() {
   if (waypoints.length < 2) return;
   animRunning = true; animT = 0;
   animPathLength = computePathLength();
-  document.getElementById('btnRobotAnim').textContent = '⏸ Pause';
+  document.getElementById('btnRobotAnim').innerHTML = window.rtIcon('pause') + 'Pause';
   document.getElementById('btnStopAnim').disabled = false;
   let last = null;
   function step(ts) {
@@ -51,7 +51,7 @@ function toggleAnim() {
 function stopAnim() {
   animRunning = false;
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  document.getElementById('btnRobotAnim').textContent = '▶ Play';
+  document.getElementById('btnRobotAnim').innerHTML = window.rtIcon('play') + 'Play';
   document.getElementById('btnStopAnim').disabled = true;
   animT = 0;
   drawAll();

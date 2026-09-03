@@ -29,7 +29,9 @@ function resetRobot() {
 window.addEventListener('gamepadconnected', e => {
   gpIdx = e.gamepad.index;
   const el = document.getElementById('gpstatus');
-  el.textContent = '🎮 ' + (e.gamepad.id.length > 22 ? e.gamepad.id.slice(0, 22) + '…' : e.gamepad.id);
+  // Icon is ours; the gamepad id is device text, so it goes in as a text node.
+  el.innerHTML = (window.RT_ICONS && window.rtIcon) ? window.rtIcon('gamepad') : '';
+  el.appendChild(document.createTextNode(e.gamepad.id.length > 22 ? e.gamepad.id.slice(0, 22) + '…' : e.gamepad.id));
   el.className = 'gpok';
 });
 

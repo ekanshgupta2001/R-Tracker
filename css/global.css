@@ -1,174 +1,426 @@
-/* ── R-Tracker Global Styles ─────────────────────────────────────────────── */
-/* Shared CSS reset, variables, body, fonts, and utilities used on every page */
+/* ── R-Tracker Global Styles — v2 "Summit Atmosphere" ─────────────────────────
+   Shared reset, tokens, body, page-transition overlay, scrollbars, a11y.
+   Tokens follow design.md structure (liquid glass, restrained accents) with the
+   colour world pivoted to a golden-hour summit sky: deep zenith blue, warm horizon,
+   gold accent for actions/active states, Rundle burgundy as logo + alpenglow. */
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── CSS Variables — Dark Mode (default) ────────────────────────────────── */
+/* ── Tokens — light glass ─────────────────────────────────────────────────
+   Theme convention: the boot script puts `light` on <html> and that is the
+   default look; removing it (student picks dark from the sidebar) gives dark
+   glass. Every stylesheet spells the dark variant `html:not(.light)`; the
+   page stylesheets themselves carry no theme blocks at all — they read the
+   tokens below, which flip here. */
 :root {
+  /* brand */
   --burgundy: #800020;
-  --burgundy-light: #a0334a;
-  --burgundy-accent: #c73e5a;
-  --burgundy-accent-hover: #d4456a;
-  --burgundy-accent-bright: #e8658a;
-  --burgundy-glow: rgba(199, 62, 90, 0.45);
-  --burgundy-glow-sm: 0 0 8px rgba(199, 62, 90, 0.3);
-  --burgundy-glow-md: 0 0 14px rgba(199, 62, 90, 0.4);
-  --burgundy-glow-lg: 0 0 22px rgba(199, 62, 90, 0.5);
-  --burgundy-glow-text: 0 0 10px rgba(199, 62, 90, 0.5);
-  --burgundy-glow-border-left: -2px 0 12px rgba(199, 62, 90, 0.3);
-  --bg: #111111;
-  --bg-sidebar: #1a1a1a;
-  --card: #1a1a1a;
-  --card-hover: #1e1e1e;
-  --card-border: #2a2a2a;
-  --text: #ffffff;
-  --text-dim: #e0e0e0;
-  --text-muted: #999999;
-  --divider: #2a2a2a;
-  --topbar-bg: #1a1a1a;
-  --toggle-bg: #2a2a2a;
-  --toggle-border: #444444;
-  --grid-line: rgba(128, 0, 32, 0.03);
+  --burgundy-bright: #a3163d;
+  --burgundy-soft: rgba(128, 0, 32, 0.14);
+  --gold: #e8b04b;
+  --gold-hover: #f0bd62;
+  --gold-ink: #2a1d05;
+  --gold-soft: rgba(232, 176, 75, 0.22);
+  /* gold / burgundy as TEXT on glass: darkened on light glass, the accent itself on dark */
+  --gold-text: #a8651a;
+  --burgundy-text: var(--burgundy-bright);
+
+  /* sky */
+  --sky-zenith: #071a42;
+  --sky-mid: #3f7bb8;
+  --sky-horizon: #f6e6d4;
+
+  /* text */
+  --text: #16233a;
+  --text-secondary: #33425a;
+  --text-muted: #4b5b73;
+  --text-faint: #6b788c;
+  --text-on-sky: #f7f9fc;
+  /* text placed directly on the sky (page titles, hero): always light + a soft halo,
+     because the zenith is deep blue in both themes */
+  --text-on-sky-2: #dfe7f3;
+  --on-sky-shadow: 0 1px 3px rgba(10, 30, 60, 0.55), 0 2px 14px rgba(10, 30, 60, 0.45);
+
+  /* glass — Level 1 nav / Level 2 content / Level 3 tool */
+  --glass-nav: rgba(222, 234, 247, 0.48);
+  --glass: rgba(222, 234, 247, 0.55);
+  --glass-tool: rgba(226, 236, 248, 0.78);
+  --glass-side: rgba(222, 234, 247, 0.46);
+  --glass-blur: 20px;
+  --glass-border: rgba(255, 255, 255, 0.62);
+  --glass-border-strong: rgba(255, 255, 255, 0.78);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 16px 48px rgba(10, 30, 60, 0.14);
+  --glass-shadow-sm: 0 4px 16px rgba(10, 30, 60, 0.10);
+
+  /* controls */
+  --input-bg: rgba(255, 255, 255, 0.55);
+  --input-border: rgba(255, 255, 255, 0.7);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.4);
+  --btn-secondary-border: rgba(255, 255, 255, 0.7);
+  /* flat fill for rows/list items nested inside a glass surface (no blur of its own) */
+  --glass-inset: rgba(255, 255, 255, 0.34);
+  --glass-inset-hover: rgba(255, 255, 255, 0.5);
+  --divider: rgba(255, 255, 255, 0.45);
+  --dot: rgba(255, 255, 255, 0.6);
+  --focus-ring: 0 0 0 3px rgba(128, 0, 32, 0.28);
+  --link: var(--burgundy);
+  --link-hover: var(--burgundy-bright);
+
   --sidebar-width: 260px;
-  --card-shadow: none;
-  --card-shadow-hover: none;
-  --input-bg: #111111;
-  --input-border: #333333;
-  --scrollbar-thumb: #444444;
-  --overlay-bg: rgba(10, 8, 12, 0.97);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --overlay-bg: #0a1830;
+  --scrollbar-thumb: rgba(22, 35, 58, 0.25);
+
+  /* status — text-safe on light glass (pure #22c55e fails AA there) + soft fills */
+  --good: #1f8a4c;
+  --good-soft: rgba(31, 138, 76, 0.16);
+  --warn: #a8651a;
+  --warn-soft: rgba(232, 176, 75, 0.26);
+  --bad: #b8323c;
+  --bad-soft: rgba(184, 50, 60, 0.14);
+  --info: #2f6fb5;
+  --info-soft: rgba(47, 111, 181, 0.14);
+
+  /* medals (report level grid, teleop result card) */
+  --medal-gold: #b8860b;
+  --medal-gold-soft: rgba(232, 176, 75, 0.28);
+  --medal-silver: #6f7a8b;
+  --medal-silver-soft: rgba(140, 152, 170, 0.28);
+  --medal-bronze: #9a5b2e;
+  --medal-bronze-soft: rgba(184, 120, 70, 0.26);
+
+  /* charts (js/charts.js reads these with getComputedStyle at draw time) */
+  --chart-text: var(--text-secondary);
+  --chart-grid: rgba(22, 35, 58, 0.12);
+  --chart-axis: rgba(22, 35, 58, 0.28);
+  --chart-series: var(--burgundy-bright);
+  --chart-series-soft: rgba(163, 22, 61, 0.22);
+  --chart-bar: rgba(163, 22, 61, 0.72);
+  --chart-bar-muted: rgba(22, 35, 58, 0.12);
+
+  /* code surfaces are navy in BOTH themes (see .rt-code) */
+  --code-bg: rgba(7, 26, 66, 0.86);
+  --code-border: rgba(255, 255, 255, 0.14);
+  --code-text: #eef3fb;
+
+  /* aliases kept from v1 names (a few page rules and scripts still read them) */
+  --burgundy-accent: var(--gold);
+  --burgundy-accent-hover: var(--gold-hover);
+  --burgundy-light: var(--burgundy-bright);
+  --bg: #cfd9e2;
+  --bg-sidebar: var(--glass-nav);
+  --card: var(--glass);
+  --card-hover: rgba(230, 240, 250, 0.62);
+  --card-border: var(--glass-border);
+  --text-dim: var(--text-secondary);
+  --topbar-bg: var(--glass-nav);
+  --toggle-bg: rgba(255, 255, 255, 0.35);
+  --toggle-border: var(--glass-border);
 }
 
-/* ── CSS Variables — Light Mode ─────────────────────────────────────────── */
-:root.light {
-  --burgundy-accent: #800020;
-  --burgundy-accent-hover: #a0334a;
-  --burgundy-accent-bright: #a0334a;
-  --burgundy-glow-sm: 0 0 8px rgba(128, 0, 32, 0.15);
-  --burgundy-glow-md: 0 0 14px rgba(128, 0, 32, 0.2);
-  --burgundy-glow-lg: 0 0 22px rgba(128, 0, 32, 0.25);
-  --burgundy-glow-text: 0 0 10px rgba(128, 0, 32, 0.25);
-  --burgundy-glow-border-left: -2px 0 12px rgba(128, 0, 32, 0.15);
-  --bg: #f0f0f0;
-  --bg-sidebar: #ffffff;
-  --card: #ffffff;
-  --card-hover: #fafafa;
-  --card-border: #e0e0e0;
-  --text: #1a1a1a;
-  --text-dim: #555555;
-  --text-muted: #888888;
-  --divider: #e0e0e0;
-  --topbar-bg: #ffffff;
-  --toggle-bg: #e8e8e8;
-  --toggle-border: #cccccc;
-  --grid-line: rgba(128, 0, 32, 0.04);
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
-  --input-bg: #ffffff;
-  --input-border: #e0e0e0;
-  --scrollbar-thumb: #cccccc;
-  --overlay-bg: rgba(0, 0, 0, 0.35);
+/* ── Tokens — dark glass (no `light` class on <html>) ───────────────────── */
+html:not(.light) {
+  --text: #f4f6fa;
+  --text-secondary: #c6d0de;
+  --text-muted: #a9b4c6;
+  --text-faint: #8e9bb0;
+  --gold-text: var(--gold);
+  --burgundy-text: #d1607d;
+
+  --glass-nav: rgba(12, 22, 42, 0.45);
+  --glass: rgba(12, 22, 42, 0.58);
+  --glass-tool: rgba(12, 22, 42, 0.8);
+  --glass-side: rgba(12, 22, 42, 0.46);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-border-strong: rgba(255, 255, 255, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 16px 48px rgba(5, 15, 35, 0.30);
+  --glass-shadow-sm: 0 4px 16px rgba(5, 15, 35, 0.25);
+
+  --input-bg: rgba(5, 12, 28, 0.45);
+  --input-border: rgba(255, 255, 255, 0.16);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.08);
+  --btn-secondary-border: rgba(255, 255, 255, 0.18);
+  --glass-inset: rgba(255, 255, 255, 0.06);
+  --glass-inset-hover: rgba(255, 255, 255, 0.11);
+  --divider: rgba(255, 255, 255, 0.14);
+  --dot: rgba(255, 255, 255, 0.35);
+  --focus-ring: 0 0 0 3px rgba(232, 176, 75, 0.35);
+  --link: var(--gold);
+  --link-hover: var(--gold-hover);
+
+  --bg: #0f2247;
+  --card-hover: rgba(18, 30, 54, 0.6);
+  --toggle-bg: rgba(255, 255, 255, 0.05);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+
+  --good: #5ad07f;
+  --good-soft: rgba(90, 208, 127, 0.18);
+  --warn: var(--gold);
+  --warn-soft: rgba(232, 176, 75, 0.2);
+  --bad: #f87171;
+  --bad-soft: rgba(248, 113, 113, 0.18);
+  --info: #7cb4f5;
+  --info-soft: rgba(124, 180, 245, 0.18);
+
+  --medal-gold: #f3c45c;
+  --medal-gold-soft: rgba(243, 196, 92, 0.2);
+  --medal-silver: #c3ccd8;
+  --medal-silver-soft: rgba(195, 204, 216, 0.18);
+  --medal-bronze: #d49a6a;
+  --medal-bronze-soft: rgba(212, 154, 106, 0.2);
+
+  --chart-grid: rgba(255, 255, 255, 0.12);
+  --chart-axis: rgba(255, 255, 255, 0.28);
+  --chart-series: var(--gold);
+  --chart-series-soft: rgba(232, 176, 75, 0.24);
+  --chart-bar: rgba(232, 176, 75, 0.72);
+  --chart-bar-muted: rgba(255, 255, 255, 0.12);
+
+  --code-bg: rgba(5, 14, 34, 0.7);
 }
 
-/* ── Body Base ───────────────────────────────────────────────────────────── */
+/* ── Body ────────────────────────────────────────────────────────────────── */
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background 0.35s ease, color 0.35s ease;
+  -webkit-font-smoothing: antialiased;
+  transition: color 0.35s ease;
 }
 
-/* ── Grid background pattern ─────────────────────────────────────────────── */
-body.grid-bg::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
-  z-index: 0;
+/* Link colour rides a token rather than a `html:not(.light) a` rule: that
+   selector outranks every page-level `.foo a { color: … }` and would repaint
+   links on the pages that have not been redesigned. */
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+
+/* Theme crossfade: sidebar.js adds html.rt-theming for ~0.5s while the theme flips.
+   `filter` is deliberately NOT in the list: the sky used to be a filtered SVG and
+   transitioning a filter re-rasterises it every frame. Every frame of this
+   crossfade also re-blurs every backdrop-filtered surface on the page, which is
+   why page stylesheets keep blur to a handful of top-level sheets/cards and give
+   repeated inner elements flat fills (see CLAUDE.md, "blur budget"). */
+html.rt-theming *, html.rt-theming *::before, html.rt-theming *::after {
+  transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease, box-shadow 0.45s ease, opacity 0.45s ease !important;
 }
 
-/* === Page Transition Overlay === */
+/* ── Atmosphere (the sky behind every page) ──────────────────────────────── */
+/* Each page has `<div id="rt-atmosphere" aria-hidden="true"></div>` right after
+   #rt-overlay. It is fixed and sits at z-index -1: above the body background
+   (the propagated `--bg`, which shows only until the raster arrives) and below
+   every in-flow element, so no page wrapper needs a stacking context of its own. */
+#rt-atmosphere {
+  position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: var(--sky-zenith);
+}
+/* The sky is a BAKED RASTER, not the inline SVG it was designed as, and it must
+   stay that way. The design drew the cloud sea through twelve feTurbulence /
+   feDisplacementMap filters, and an SVG filter chain is re-run on every repaint
+   that touches it — there is no cached layer for it, so `will-change`,
+   `contain: paint` and layer promotion all fail to avoid the work. Measured on
+   the homepage at 1440x900:
+
+     drifting filtered groups (as designed)   19.6 fps idle
+     static SVG, nothing moving over it        124  fps idle
+     static SVG, theme crossfade over it     60 fps, 14 dropped frames, 42 ms hitches
+     baked raster                            120 fps, 0 dropped frames
+
+   assets/summit-sky.webp is that same SVG (assets/summit-sky.svg) rendered at
+   2880x1800; regenerate it with `node tools/bake-sky.mjs` if the art changes.
+   `cover` + `center` reproduces the SVG's preserveAspectRatio="xMidYMid slice". */
+#rt-atmosphere::before {
+  content: ''; position: absolute; inset: 0;
+  background: url('../assets/summit-sky.webp') center / cover no-repeat;
+}
+/* Dark variant: the scrim's opacity is the only thing that animates, so the
+   crossfade is a compositor operation. */
+#rt-atmosphere::after {
+  content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.45s ease;
+  background: linear-gradient(180deg, rgba(4, 12, 30, 0.60) 0%, rgba(4, 12, 30, 0.40) 45%, rgba(4, 12, 30, 0.56) 100%);
+}
+html:not(.light) #rt-atmosphere::after { opacity: 1; }
+
+/* Content entry: every page's main wrapper fades up as it lands. */
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Glass primitives (rt-glass family from design.md §17) ───────────────── */
+.rt-glass,
+.rt-glass-nav,
+.rt-glass-tool {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+  border-radius: var(--radius);
+}
+.rt-glass-nav  { background: var(--glass-nav);  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow-sm); }
+.rt-glass-tool { background: var(--glass-tool); }
+
+/* Opaque fallback where backdrop-filter is unavailable (design.md §15) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass: rgba(226, 236, 248, 0.92); --glass-nav: rgba(226, 236, 248, 0.94); --glass-side: rgba(226, 236, 248, 0.7); }
+  html:not(.light) { --glass: rgba(12, 22, 42, 0.92); --glass-nav: rgba(12, 22, 42, 0.94); --glass-side: rgba(12, 22, 42, 0.7); }
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.rt-button-primary,
+.rt-button-secondary,
+.rt-button-ghost {
+  font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1;
+  padding: 9px 16px; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.rt-button-primary {
+  font-weight: 650;
+  background: var(--gold); color: var(--gold-ink);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 2px 8px rgba(232, 176, 75, 0.35);
+}
+.rt-button-primary:hover { background: var(--gold-hover); }
+.rt-button-primary:active { transform: translateY(1px); }
+.rt-button-secondary {
+  background: var(--btn-secondary-bg); color: var(--text);
+  border: 1px solid var(--btn-secondary-border);
+}
+.rt-button-secondary:hover { background: var(--card-hover); border-color: var(--glass-border-strong); }
+.rt-button-ghost { background: transparent; color: var(--text-secondary); border: 1px solid transparent; }
+.rt-button-ghost:hover { color: var(--text); border-color: var(--glass-border); }
+
+.rt-input {
+  font-family: inherit; font-size: 13px; padding: 9px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.rt-input::placeholder { color: var(--text-faint); }
+.rt-input:focus { border-color: var(--burgundy-bright); box-shadow: var(--focus-ring); }
+
+:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ── Shared surfaces for the tool pages ──────────────────────────────────────
+   Blur budget: a page blurs its sheets (side panels, topbar), a bounded number
+   of cards and one modal. Anything repeated inside them — rows, chips, list
+   cards, code lines — is a flat `--glass-tool` fill with no backdrop-filter. */
+
+/* Full-height side panel (curriculum timeline, teleop right column, planner controls). */
+.rt-sheet {
+  background: var(--glass-nav);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow-sm);
+}
+
+/* Uppercase section label (replaces the v1 burgundy panel titles). */
+.rt-label {
+  font-size: 11px; font-weight: 650; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Icon tile (the homepage card icon, decoupled from the carousel). */
+.rt-card-icon {
+  width: 52px; height: 52px; border-radius: 14px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.4); border: 1px solid var(--glass-border-strong);
+  color: var(--text-secondary);
+}
+.rt-card-icon svg { width: 26px; height: 26px; display: block; }
+html:not(.light) .rt-card-icon { background: rgba(255, 255, 255, 0.08); }
+
+/* Stat card (homepage rating bar, report stats). */
+.rt-stat {
+  width: 150px; padding: 14px 16px; border-radius: var(--radius);
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%); backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 10px 30px rgba(10, 30, 60, 0.10);
+  transition: border-color 0.2s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rt-stat-val { font-size: 24px; font-weight: 800; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.rt-stat-val small { font-size: 13px; font-weight: 600; color: var(--text-faint); }
+.rt-stat-lbl { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+
+/* Modal + backdrop. */
+.rt-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(5, 12, 28, 0.55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.rt-modal {
+  background: var(--glass-tool);
+  -webkit-backdrop-filter: blur(24px) saturate(140%); backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+  color: var(--text);
+}
+
+/* Status pill. */
+.rt-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.2px; line-height: 1.4; white-space: nowrap;
+  background: var(--glass-tool); color: var(--text-secondary); border: 1px solid var(--glass-border);
+}
+.rt-pill-good  { background: var(--good-soft);  color: var(--good);  border-color: transparent; }
+.rt-pill-warn  { background: var(--warn-soft);  color: var(--warn);  border-color: transparent; }
+.rt-pill-bad   { background: var(--bad-soft);   color: var(--bad);   border-color: transparent; }
+.rt-pill-info  { background: var(--info-soft);  color: var(--info);  border-color: transparent; }
+.rt-pill-gold  { background: var(--gold-soft);  color: var(--gold-ink); border-color: transparent; }
+html:not(.light) .rt-pill-gold { color: var(--gold); }
+.rt-pill-muted { color: var(--text-muted); }
+
+/* Code surface: navy in both themes so syntax colours never change. */
+.rt-code {
+  background: var(--code-bg); color: var(--code-text);
+  border: 1px solid var(--code-border); border-radius: var(--radius-sm);
+  font-family: 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 12.5px; line-height: 1.55;
+}
+
+/* Status colour utilities for text injected by scripts. */
+.is-good { color: var(--good); }
+.is-warn { color: var(--warn); }
+.is-bad  { color: var(--bad); }
+.is-info { color: var(--info); }
+
+/* Inline icon from window.rtIcon(name) — sized to the surrounding text. */
+.rt-icon { display: inline-flex; width: 1em; height: 1em; vertical-align: -0.15em; flex: none; }
+.rt-icon svg { width: 100%; height: 100%; display: block; }
+
+/* ── Page Transition Overlay ─────────────────────────────────────────────── */
 #rt-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #0a080c;
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.1s ease;
+  position: fixed; inset: 0; background: var(--overlay-bg); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.1s ease;
 }
-
-#rt-overlay.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
+#rt-overlay.visible { opacity: 1; pointer-events: auto; }
 #rt-overlay-logo {
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-  font-size: 48px;
-  font-weight: 900;
-  letter-spacing: -1px;
-  white-space: nowrap;
-  opacity: 0;
-  transform: scale(0.92);
+  font-size: 44px; font-weight: 800; letter-spacing: -1px; white-space: nowrap; color: #f7f9fc;
+  opacity: 0; transform: scale(0.94);
   transition: opacity 0.15s ease 0.05s, transform 0.15s ease 0.05s;
 }
-
-#rt-overlay.visible #rt-overlay-logo {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.ol-r {
-  background: linear-gradient(135deg, #ff4d7a, #c73e5a, #800020);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 12px rgba(199, 62, 90, 0.6)) drop-shadow(0 0 30px rgba(128, 0, 32, 0.35));
-}
-
-.ol-t {
-  color: #ffffff;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
-}
-
-body.rt-entering {
-  animation: rtFadeIn 0.15s ease-out;
-}
-
-@keyframes rtFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #rt-overlay { display: none !important; }
-  body.rt-entering { animation: none; }
-}
+#rt-overlay.visible #rt-overlay-logo { opacity: 1; transform: scale(1); }
+.ol-r { color: #c9526f; }
+.ol-t { color: #f7f9fc; }
+body.rt-entering { animation: rtFadeIn 0.15s ease-out; }
+@keyframes rtFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
 /* ── Reduced Motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  #rt-overlay { display: none !important; }
+  body.rt-entering { animation: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -177,19 +429,10 @@ body.rt-entering {
   }
 }
 
-/* ── Skip to Content (Accessibility) ─────────────────────────────────────── */
+/* ── Skip to Content ─────────────────────────────────────────────────────── */
 .skip-to-content {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: #800020;
-  color: white;
-  padding: 8px 16px;
-  z-index: 100000;
-  font-size: 14px;
-  transition: top 0.2s;
-  text-decoration: none;
+  position: absolute; top: -40px; left: 0; z-index: 100000;
+  background: var(--burgundy); color: #fff; padding: 8px 16px; font-size: 14px;
+  text-decoration: none; transition: top 0.2s;
 }
-.skip-to-content:focus {
-  top: 0;
-}
+.skip-to-content:focus { top: 0; }

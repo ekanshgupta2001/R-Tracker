@@ -364,12 +364,12 @@ function finishLevel(success) {
 function showResultCard(stars, acc, time, def) {
   const starCount = stars.filter(Boolean).length;
   const medals     = ['', 'bronze', 'silver', 'gold'];
-  const medalEmoji = ['', '&#129350;', '&#129353;', '&#129351;'];
   const medalLabel = ['', 'Bronze!', 'Silver!', 'Gold!'];
 
   const card = document.getElementById('result-card');
   card.className = medals[starCount];
-  document.getElementById('rc-medal').innerHTML = medalEmoji[starCount];
+  // One medal icon; the card's bronze/silver/gold class colours it (css/teleop.css).
+  document.getElementById('rc-medal').innerHTML = starCount && window.RT_ICONS ? window.RT_ICONS.medal : '';
   document.getElementById('rc-title').textContent = medalLabel[starCount];
   document.getElementById('rc-level').textContent = `Level ${def.id} — ${def.name}`;
   document.getElementById('rc-stats').innerHTML =
@@ -490,7 +490,7 @@ function renderLevelsSidebar() {
           <div class="lvl-meta">${ld.timeLimit}s limit &middot; ${ld.path.length-1} CP</div>
           ${comp ? `<div class="lvl-stars">${starsHtml}</div>` : ''}
         </div>
-        ${unlocked ? '' : '<span class="lvl-lock-icon">&#128274;</span>'}
+        ${unlocked ? '' : '<span class="lvl-lock-icon">' + ((window.RT_ICONS && window.RT_ICONS.lock) || '') + '</span>'}
       </div>`;
     }
   }

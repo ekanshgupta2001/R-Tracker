@@ -631,7 +631,8 @@
   function resize() {
     var panel = document.getElementById('fieldPanel');
     if (!panel || !cvs) return;
-    var sz = Math.min(panel.clientWidth - 8, panel.clientHeight - 8);
+    // clientWidth/Height include the panel's 16px glass frame on each side.
+    var sz = Math.min(panel.clientWidth - 32, panel.clientHeight - 32);
     W = Math.max(sz, 200);
     cvs.width = W;
     cvs.height = W;

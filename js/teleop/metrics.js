@@ -228,10 +228,10 @@ function openDriverReport() {
   const bot2  = breakdown.slice(-2).filter(s => s.val < 60);
 
   strEl.innerHTML = top2.length
-    ? '<div class="an-list">' + top2.map(s => `<div class="an-list-item"><span style="color:#4aff88">▲</span>${s.label} (${Math.round(s.val)}%)</div>`).join('') + '</div>'
+    ? '<div class="an-list">' + top2.map(s => `<div class="an-list-item"><span class="is-good">▲</span>${s.label} (${Math.round(s.val)}%)</div>`).join('') + '</div>'
     : '';
   wkEl.innerHTML = bot2.length
-    ? '<div class="an-list">' + bot2.map(s => `<div class="an-list-item"><span style="color:#ff5544">▼</span>${s.label} (${Math.round(s.val)}%)</div>`).join('') + '</div>'
+    ? '<div class="an-list">' + bot2.map(s => `<div class="an-list-item"><span class="is-bad">▼</span>${s.label} (${Math.round(s.val)}%)</div>`).join('') + '</div>'
     : '';
 
   const worst = breakdown[breakdown.length - 1];

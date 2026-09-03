@@ -19,8 +19,10 @@ const FIELD_IN = 144;
 
 function resizeCanvas() {
   const fp = document.getElementById('fieldPanel');
-  const W = fp.clientWidth - 8;
-  const H = fp.clientHeight - 44;
+  // clientWidth/Height include the panel's padding; leave a 16px glass frame on
+  // every side and a 44px band under the field for the overlay buttons.
+  const W = fp.clientWidth - 32;
+  const H = fp.clientHeight - 32 - 44;
   const sz = Math.max(200, Math.min(W, H));
   cvs.width = cvs.height = sz;
 }

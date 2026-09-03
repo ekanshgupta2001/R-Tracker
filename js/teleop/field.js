@@ -9,12 +9,25 @@ fieldImg.src = '../../assets/decode.webp';
 const cvs = document.getElementById('c');
 const ctx = cvs.getContext('2d');
 
+// The field fills #field-container minus the chrome stacked above and below it
+// (mode tabs, control bar, mini stats) — measured, so the CSS can change their
+// height without this constant drifting. #field-container's own size comes from
+// the flex layout, not from the canvas, so measuring it here is stable.
 function resize() {
-  const sbW = 270;
-  const avW = window.innerWidth - sbW - 28;
-  const avH = window.innerHeight - 20;
-  const sz = Math.min(avW, avH - 70);
-  cvs.width = cvs.height = Math.max(300, sz);
+  const fc = document.getElementById('field-container');
+  const wrap = document.getElementById('field-wrap');
+  let avW = window.innerWidth - 320, avH = window.innerHeight - 170;
+  if (fc && wrap) {
+    const gap = parseFloat(getComputedStyle(fc).rowGap) || 10;
+    let chrome = 0, n = 0;
+    for (const el of fc.children) {
+      if (el === wrap) continue;
+      if (el.offsetHeight) { chrome += el.offsetHeight; n++; }
+    }
+    avW = fc.clientWidth - 2;                 // #field-wrap border
+    avH = fc.clientHeight - chrome - gap * n - 2;
+  }
+  cvs.width = cvs.height = Math.max(300, Math.floor(Math.min(avW, avH)));
 }
 
 function drawField() {

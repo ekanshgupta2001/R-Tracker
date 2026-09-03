@@ -139,7 +139,8 @@ R-Tracker/
 │   └── utils/validators.js     # sanitizeHTML/sanitizeCode, isScore/isStars, validatePhasePatch
 ├── css/                        # global, fonts, sidebar, home, teleop, curriculum, pathplanner, strategy, report, about
 ├── vendor/three/               # three.min.js, STLLoader.js, OrbitControls.js (r128) + README with hashes
-├── assets/                     # decode.webp field image, fonts/, favicon.svg
+├── assets/                     # decode.webp field image, summit-sky.webp (+ .svg source), fonts/, favicon.svg
+├── tools/bake-sky.mjs          # regenerates assets/summit-sky.webp from the .svg (dev only, never at runtime)
 ├── tests/
 │   ├── serve.js                # zero-dependency static server used by playwright.config.js
 │   ├── helpers/state.js        # seed/read state, quiz helpers
@@ -167,12 +168,37 @@ R-Tracker/
 - DOM manipulation via `document.createElement()` and `innerHTML`.
 
 ### CSS
-- Color scheme: burgundy `#800020` + matte black `#1a1a1a` + white. Accent `#c73e5a` (borders, text,
-  thin lines). Hover accent `#d4456a`.
-- Light mode: the theme script adds the `light` class to `<html>`; rules use the `html.light` selector with overrides in each CSS file. **All CSS changes must
-  include light-mode variants.**
+- **"Summit Atmosphere" (every page).** A golden-hour summit sky — the baked raster
+  `assets/summit-sky.webp`, painted by `#rt-atmosphere` in `css/global.css` at `z-index: -1` (every page
+  has `<div id="rt-atmosphere" aria-hidden="true">` right after `#rt-overlay`) — sits behind liquid-glass
+  surfaces. Gold `#e8b04b` is the action accent (`--gold`: primary buttons, active nav/tabs/tools,
+  progress); burgundy `#800020` stays as the logo mark and as alpenglow in the horizon haze. Tokens live
+  in `css/global.css`: surfaces `--glass` / `--glass-nav` / `--glass-tool` (three blurred levels) and
+  `--glass-inset` (the flat fill for rows and cards nested inside a blurred surface); `--glass-border`,
+  `--glass-highlight`, `--glass-shadow`; text `--text` / `--text-secondary` / `--text-muted` /
+  `--text-faint`, and `--text-on-sky` + `--on-sky-shadow` for anything placed directly on the sky; accent
+  text `--gold-text` / `--burgundy-text` (darkened on light glass); status `--good` / `--warn` / `--bad` /
+  `--info` with `-soft` fills; `--medal-*`; `--chart-*`; `--code-bg` / `--code-text` (code surfaces are
+  navy in both themes). Primitives: `.rt-glass*`, `.rt-sheet`, `.rt-button-primary|secondary|ghost`,
+  `.rt-input`, `.rt-pill*`, `.rt-modal(-backdrop)`, `.rt-code`, `.rt-stat`, `.rt-card-icon`, `.rt-label`,
+  `.is-good|warn|bad|info`. No glows, no gradient text, no emoji — icons are inline SVG from
+  `window.RT_ICONS` (`js/sidebar.js`): static markup uses `<span class="rt-icon" data-rt-icon="save">`
+  (hydrated on load), scripts use `rtIcon('save')`.
+- **Blur budget.** `backdrop-filter` costs a re-blur on every frame of the theme crossfade, so a page
+  blurs only its top-level sheets (sidebar, topbar, side panels), a bounded number of cards and one modal.
+  Everything repeated inside them (list rows, level cards, quiz options, code lines) is a flat
+  `--glass-inset` / `--glass-tool` fill. Nothing between `<body>` and a canvas gets `backdrop-filter` or
+  `overflow: hidden` (the TeleOp 3D view walks those ancestors).
+- **Theme.** `light` on `<html>` is light glass and is the default a student lands on; removing the class
+  gives dark glass. The boot script in every page's `<head>` adds it unless `localStorage['rt-theme']`
+  is `'dark'`. Every stylesheet spells the dark variant `html:not(.light)`, and the page stylesheets
+  carry no theme blocks at all: they read tokens, and the tokens flip in `global.css`. **A new colour
+  goes in as a token with both values, never as a hex in a page stylesheet.** Canvas-drawn colour (charts,
+  the 3D scene) is read from the tokens with `getComputedStyle` and re-drawn on the `rt-themechange`
+  event that `toggleTheme()` dispatches on `window`.
 - Keep the `prefers-reduced-motion` media query support.
 - Font: Inter, self-hosted via `css/fonts.css` (variable woff2 in `assets/fonts/`), with a system fallback.
+  TeleOp readouts use `font-variant-numeric: tabular-nums`; only code surfaces use a monospace stack.
 
 ### Storage (`RTStore`)
 - One constant, `RT_STORAGE_BACKEND` in `js/store.js`, selects `'session'` or `'memory'`. Tests can

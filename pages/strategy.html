@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <title>Strategy Planner — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../css/fonts.css">
@@ -19,15 +20,18 @@
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
+<div id="rt-atmosphere" aria-hidden="true"></div>
   <header class="topbar" id="topbar">
-    <a href="../index.html" class="home-btn">&larr; Home</a>
-    <span class="topbar-sep">|</span>
-    <span class="topbar-title">Strategy Planner</span>
+    <div class="topbar-left">
+      <a href="../index.html" class="home-btn">&larr; Home</a>
+      <span class="topbar-sep" aria-hidden="true"></span>
+      <span class="topbar-title">Strategy Planner</span>
+    </div>
     <div class="topbar-actions">
-      <button class="topbar-btn" onclick="openStratModal('load')">&#128193; Load</button>
-      <button class="topbar-btn" onclick="openStratModal('save')">&#9729; Save</button>
-      <button class="topbar-btn" onclick="stratExportPNG()">&#128247; Export PNG</button>
-      <button class="topbar-btn" onclick="togglePresentation()">&#9654; Present</button>
+      <button class="topbar-btn" onclick="openStratModal('load')"><span class="rt-icon" data-rt-icon="folder"></span>Load</button>
+      <button class="topbar-btn" onclick="openStratModal('save')"><span class="rt-icon" data-rt-icon="save"></span>Save</button>
+      <button class="topbar-btn" onclick="stratExportPNG()"><span class="rt-icon" data-rt-icon="camera"></span>Export PNG</button>
+      <button class="topbar-btn" onclick="togglePresentation()"><span class="rt-icon" data-rt-icon="play"></span>Present</button>
     </div>
   </header>
 
@@ -39,14 +43,14 @@
       <!-- Floating Toolbar -->
       <div class="strat-toolbar" id="stratToolbar">
         <!-- Drawing Tools -->
-        <button class="tool-btn active" data-tool="draw" onclick="setTool('draw')" title="Draw">&#9998;</button>
-        <button class="tool-btn" data-tool="arrow" onclick="setTool('arrow')" title="Arrow">&#10132;</button>
-        <button class="tool-btn" data-tool="rect" onclick="setTool('rect')" title="Rectangle">&#9634;</button>
-        <button class="tool-btn" data-tool="circle" onclick="setTool('circle')" title="Circle">&#9675;</button>
-        <button class="tool-btn" data-tool="text" onclick="setTool('text')" title="Text">T</button>
-        <button class="tool-btn" data-tool="robot" onclick="setTool('robot')" title="Robot">&#9647;</button>
-        <button class="tool-btn" data-tool="waypoint" onclick="setTool('waypoint')" title="Waypoint">&#9679;</button>
-        <button class="tool-btn" data-tool="eraser" onclick="setTool('eraser')" title="Eraser">&#9003;</button>
+        <button class="tool-btn active" data-tool="draw" onclick="setTool('draw')" title="Draw" aria-label="Draw"><span class="rt-icon" data-rt-icon="pencil"></span></button>
+        <button class="tool-btn" data-tool="arrow" onclick="setTool('arrow')" title="Arrow" aria-label="Arrow"><span class="rt-icon" data-rt-icon="arrowRight"></span></button>
+        <button class="tool-btn" data-tool="rect" onclick="setTool('rect')" title="Rectangle" aria-label="Rectangle"><span class="rt-icon" data-rt-icon="square"></span></button>
+        <button class="tool-btn" data-tool="circle" onclick="setTool('circle')" title="Circle" aria-label="Circle"><span class="rt-icon" data-rt-icon="circle"></span></button>
+        <button class="tool-btn" data-tool="text" onclick="setTool('text')" title="Text" aria-label="Text">T</button>
+        <button class="tool-btn" data-tool="robot" onclick="setTool('robot')" title="Robot" aria-label="Robot"><span class="rt-icon" data-rt-icon="robot"></span></button>
+        <button class="tool-btn" data-tool="waypoint" onclick="setTool('waypoint')" title="Waypoint" aria-label="Waypoint"><span class="rt-icon" data-rt-icon="disc"></span></button>
+        <button class="tool-btn" data-tool="eraser" onclick="setTool('eraser')" title="Eraser" aria-label="Eraser"><span class="rt-icon" data-rt-icon="eraser"></span></button>
 
         <div class="sep"></div>
 
@@ -68,9 +72,9 @@
         <div class="sep"></div>
 
         <!-- Undo / Redo / Clear -->
-        <button class="act-btn" id="undoBtn" onclick="stratUndo()" disabled title="Undo (Ctrl+Z)">&#8630;</button>
-        <button class="act-btn" id="redoBtn" onclick="stratRedo()" disabled title="Redo (Ctrl+Y)">&#8631;</button>
-        <button class="act-btn" onclick="stratClearAll()" title="Clear All">&#128465;</button>
+        <button class="act-btn" id="undoBtn" onclick="stratUndo()" disabled title="Undo (Ctrl+Z)" aria-label="Undo"><span class="rt-icon" data-rt-icon="undo"></span></button>
+        <button class="act-btn" id="redoBtn" onclick="stratRedo()" disabled title="Redo (Ctrl+Y)" aria-label="Redo"><span class="rt-icon" data-rt-icon="redo"></span></button>
+        <button class="act-btn" onclick="stratClearAll()" title="Clear All" aria-label="Clear all"><span class="rt-icon" data-rt-icon="trash"></span></button>
       </div>
 
       <!-- Text Input Overlay -->
@@ -79,7 +83,7 @@
       </div>
 
       <!-- Notes expand button (when panel is collapsed) -->
-      <button class="notes-expand-btn" id="notesExpandBtn" onclick="toggleNotes()">&#9654;</button>
+      <button class="notes-expand-btn" id="notesExpandBtn" onclick="toggleNotes()" title="Show notes" aria-label="Show notes"><span class="rt-icon" data-rt-icon="chevronLeft"></span></button>
 
       <!-- Minimap -->
       <div class="minimap-wrap">

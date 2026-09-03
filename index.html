@@ -12,7 +12,8 @@
   <meta name="twitter:title" content="R-Tracker — FTC Driver Practice & Programming Curriculum">
   <meta name="twitter:description" content="Practice driving, plan autonomous paths, and learn FTC programming. Everything stays in your browser.">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <meta name="description"
     content="R-Tracker — Rundle Robotics personally designed visualizer. Practice TeleOp driving and plan autonomous paths.">
   <title>R-Tracker — Rundle Robotics Visualizer</title>
@@ -29,14 +30,22 @@
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
 
+  <!-- ── Atmosphere background (rt-background): summit sky, haze-veiled sun, cloud sea ── -->
+  <div id="rt-atmosphere" aria-hidden="true">
+    <!-- Baked from that SVG: assets/summit-sky.webp. See css/home.css. -->
+  </div>
+
   <!-- ── Main Content ────────────────────────────────────────────────────── -->
   <main class="main-wrap" id="main-content">
     <div class="home-content">
 
       <!-- Logo -->
       <header class="home-hero">
-        <h1 class="home-logo" style="margin:0;"><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></h1>
-        <div class="home-tagline">RUNDLE ROBOTICS PERSONALLY DESIGNED VISUALIZER</div>
+        <h1 class="home-logo" style="margin:0;">
+          <svg class="home-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#800020"/><path d="M4 17.5 8.2 12.4 10.4 14.6 15.2 6.5 16.6 9.4 20 17.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          <span><span class="hero-r">R-</span><span class="hero-tracker">Tracker</span></span>
+        </h1>
+        <div class="home-tagline">Rundle Robotics personally designed visualizer</div>
       </header>
 
       <!-- First-run panel: progress lives in this tab and in an exported file -->
@@ -53,66 +62,48 @@
       <!-- Player Carousel -->
       <div class="carousel-section" id="player-carousel">
         <div class="home-carousel-container">
-          <button class="carousel-arrow carousel-left">&#8249;</button>
+          <button class="carousel-arrow carousel-left" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <div class="home-carousel-track" id="player-track">
             <a href="pages/teleop.html" class="carousel-card">
-              <div class="card-icon">🎮</div>
+              <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/></svg></div>
               <div class="card-title">TeleOp Practice</div>
               <div class="card-desc">Practice driving with gamepad or keyboard. Field-centric and robot-centric modes with mecanum and tank drivetrains.</div>
             </a>
             <a href="pages/pathplanner.html" class="carousel-card">
-              <div class="card-icon">📐</div>
+              <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></div>
               <div class="card-title">Path Planner</div>
               <div class="card-desc">Design autonomous paths with Bezier curves and control points. Export Pedro Pathing Java code.</div>
             </a>
             <a href="pages/strategy.html" class="carousel-card">
-              <div class="card-icon">📋</div>
+              <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg></div>
               <div class="card-title">Strategy Planner</div>
               <div class="card-desc">Draw on the field to plan match strategy. Annotate with arrows, shapes, and waypoints.</div>
             </a>
             <a href="pages/curriculum.html" class="carousel-card">
-              <div class="card-icon">📚</div>
+              <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
               <div class="card-title">Curriculum</div>
               <div class="card-desc">FTC programming learning path — 6 phases from Java basics to competition-ready code.</div>
             </a>
             <a href="pages/report.html" class="carousel-card">
-              <div class="card-icon">📄</div>
+              <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
               <div class="card-title">Driver Report</div>
-              <div class="card-desc">AI coaching analysis, driver stats, performance history, and improvement recommendations.</div>
+              <div class="card-desc">Coach analysis, driver stats, performance history, and improvement recommendations.</div>
             </a>
           </div>
-          <button class="carousel-arrow carousel-right">&#8250;</button>
+          <button class="carousel-arrow carousel-right" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
         <div class="carousel-dots" id="player-dots"></div>
       </div>
 
-      <!-- Driver Report Bar -->
+      <!-- Driver Rating -->
       <div class="report-stats-bar" id="report-stats-bar">
-        <div class="report-bar-label">YOUR DRIVER RATING</div>
+        <div class="report-bar-label">Your driver rating</div>
         <a href="pages/report.html" class="report-bar-row">
-          <div class="report-bar-grade" id="rbar-main-grade">--</div>
-          <div class="report-bar-score"><span id="rbar-main-score">--</span>/100</div>
-          <div class="report-bar-divider"></div>
-          <div class="report-bar-stats">
-            <div class="report-bar-stat">
-              <span class="rbs-val rbs-red" id="rbar-score">--</span>
-              <span class="rbs-lbl">SCORE</span>
-            </div>
-            <div class="report-bar-stat">
-              <span class="rbs-val rbs-grade" id="rbar-grade">--</span>
-              <span class="rbs-lbl">GRADE</span>
-            </div>
-            <div class="report-bar-stat">
-              <span class="rbs-val rbs-green" id="rbar-level">--</span>
-              <span class="rbs-lbl">BEST LEVEL</span>
-            </div>
-            <div class="report-bar-stat">
-              <span class="rbs-val rbs-cyan" id="rbar-time">--</span>
-              <span class="rbs-lbl">PRACTICE</span>
-            </div>
-          </div>
-          <div class="report-bar-divider"></div>
-          <div class="report-bar-link">Open Report Card &#8594;</div>
+          <div class="rt-stat"><span class="rt-stat-val"><span id="rbar-main-score">--</span><small>/100</small></span><span class="rt-stat-lbl">Score</span></div>
+          <div class="rt-stat"><span class="rt-stat-val" id="rbar-main-grade">--</span><span class="rt-stat-lbl">Grade</span></div>
+          <div class="rt-stat"><span class="rt-stat-val" id="rbar-level">--</span><span class="rt-stat-lbl">Best level</span></div>
+          <div class="rt-stat"><span class="rt-stat-val" id="rbar-time">--</span><span class="rt-stat-lbl">Practice</span></div>
+          <div class="report-bar-link">Open Report Card <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
         </a>
       </div>
 
@@ -127,15 +118,6 @@
   <script defer src="js/utils/validators.js"></script>
   <script>
     /* ── Report Bar Stats (from local progress) ───────────────────────────── */
-    function gradeColor(g) {
-      if (g === 'S' || g === 'A') return '#22c55e';
-      if (g === 'B') return '#3b82f6';
-      if (g === 'C') return '#eab308';
-      if (g === 'D') return '#f97316';
-      if (g === 'F') return '#ef4444';
-      return '#888';
-    }
-
     function scoreToGrade(s) {
       if (s >= 90) return 'S';
       if (s >= 80) return 'A';
@@ -153,28 +135,27 @@
       var totalMs = d.totalPracticeMs || 0;
       var mins = Math.floor(totalMs / 60000);
 
-      // Count completed levels
       var levelsDone = 0;
       Object.keys(s.driver.levels || {}).forEach(function(id) {
         var ld = s.driver.levels[id];
         if (ld && ld.bestStars && ld.bestStars >= 1) levelsDone++;
       });
 
-      // Score and grade
       var g = scoreToGrade(score);
-      var gc = gradeColor(g);
       if (el('rbar-main-score')) el('rbar-main-score').textContent = score;
-      if (el('rbar-main-grade')) { el('rbar-main-grade').textContent = g; el('rbar-main-grade').style.color = gc; }
-
-      // Stat boxes
-      if (el('rbar-level')) el('rbar-level').textContent = levelsDone + '/12';
-      if (el('rbar-time')) el('rbar-time').textContent = mins >= 60 ? Math.floor(mins / 60) + 'h' : mins + 'm';
-      if (el('rbar-score')) el('rbar-score').textContent = score;
-      if (el('rbar-grade')) { el('rbar-grade').textContent = g; el('rbar-grade').style.color = gc; }
+      if (el('rbar-main-grade')) el('rbar-main-grade').textContent = g;
+      if (el('rbar-level')) el('rbar-level').innerHTML = levelsDone + '<small>/12</small>';
+      if (el('rbar-time')) el('rbar-time').innerHTML = mins >= 60 ? Math.floor(mins / 60) + '<small>h</small>' : mins + '<small>m</small>';
     }
     window.loadReportBarStats = loadReportBarStats;
 
-    /* ── Circular Carousel (3-card, rubber-band drag, smooth transitions) ── */
+    /* ── Circular Carousel ─────────────────────────────────────────────────
+       Every card stays in the layout — the ones off-stage sit at opacity 0
+       rather than display:none, because display:none cancels the incoming
+       card's transition and makes it pop into place. place() is the single
+       owner of each card's transform/opacity/z-index, computed from its
+       distance to the centre slot plus the live drag offset, so dragging is
+       continuous and releasing just animates that same offset back to 0. */
     function initCarousel(sectionId) {
       var section = document.getElementById(sectionId);
       if (!section) return;
@@ -184,250 +165,205 @@
       var container = section.querySelector('.home-carousel-container');
       var n = cards.length;
       if (n === 0) return;
-      var current = 0;
-      var transitioning = false;
-      var TRANSITION_MS = 400;
-      var MAX_DRAG = 350;
-      var AUTO_TRIGGER = 0.5;   // 50% auto-fires during drag
-      var RELEASE_TRIGGER = 0.3; // 30% completes on release
-      var SIDE_OFFSET = 380;
-      var RUBBER_BREAK = 0.6;   // rubber-band starts at 60%
 
-      // Prevent native drag
+      var GLIDE = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+      var GLIDE_MS = 500;
+      var SIDE_SCALE = 0.8;     // neighbours render at 80%
+      var SPREAD = 0.78;        // gap between slots, as a fraction of card width
+      var COMMIT = 0.3;         // release past 30% of a slot and it advances
+      var FLICK = 0.5;          // px/ms — a quick flick advances at any distance
+      var current = 0;
+      var step = 390;           // px between slots; measured in measure()
+      var solo = false;         // too narrow for neighbours (phones)
+      var drag = 0;             // live drag offset while a gesture is in flight
+      var glideToken = 0;
+
       cards.forEach(function(card) {
         card.setAttribute('draggable', 'false');
         var imgs = card.querySelectorAll('img');
         for (var k = 0; k < imgs.length; k++) imgs[k].setAttribute('draggable', 'false');
       });
 
-      // Create dots
       dotsWrap.innerHTML = '';
       for (var i = 0; i < n; i++) {
         var dot = document.createElement('button');
         dot.className = 'carousel-dot';
         dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
-        dot.setAttribute('role', 'button');
         dot.onclick = (function(idx) { return function() { goTo(idx); }; })(i);
         dotsWrap.appendChild(dot);
       }
 
       function mod(a, b) { return ((a % b) + b) % b; }
 
-      // Rubber-band easing: 1:1 up to 60%, then 0.3x
-      function rubberBand(delta) {
-        var breakPx = MAX_DRAG * RUBBER_BREAK;
-        var abs = Math.abs(delta);
-        if (abs <= breakPx) return delta;
-        var extra = abs - breakPx;
-        return (delta > 0 ? 1 : -1) * (breakPx + extra * 0.3);
+      // Signed distance from the current card, wrapped so the strip is circular.
+      function slotOf(i) {
+        var d = mod(i - current, n);
+        return d > n / 2 ? d - n : d;
       }
 
-      // Clear all inline styles
-      function clearInlineStyles() {
+      // The slot gap is the card's own width times SPREAD, clamped so a
+      // neighbour never runs past the container's clipped edge.
+      function measure() {
+        var w = cards[0].offsetWidth || 500;
+        var room = ((container.clientWidth || w) - 120) / 2 - (w * SIDE_SCALE) / 2;
+        step = Math.max(Math.round(Math.min(w * SPREAD, room)), Math.round(w * 0.4));
+        solo = room < w * 0.35;
+      }
+
+      function place(dx) {
         for (var i = 0; i < n; i++) {
-          cards[i].style.transform = '';
-          cards[i].style.opacity = '';
-          cards[i].style.transition = '';
-          cards[i].style.boxShadow = '';
+          var card = cards[i];
+          var x = slotOf(i) * step + dx;
+          var t = Math.min(Math.abs(x) / step, 2);   // 0 centre · 1 neighbour · 2 off-stage
+          var scale = 1 - (1 - SIDE_SCALE) * Math.min(t, 1);
+          var opacity;
+          if (solo) opacity = Math.max(0, 1 - t * 2);
+          else if (t <= 1) opacity = 1 - 0.08 * t;
+          else opacity = 0.92 * (2 - t);
+          card.style.transform = 'translate(-50%, -50%) translateX(' + x.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+          card.style.opacity = opacity.toFixed(3);
+          card.style.zIndex = String(100 - Math.round(t * 20));
+          card.style.pointerEvents = opacity > 0.4 ? 'auto' : 'none';
         }
       }
 
-      // Update card classes and dots
-      function updateCards() {
-        clearInlineStyles();
-        var leftIdx = mod(current - 1, n);
-        var rightIdx = mod(current + 1, n);
+      // cc-* carry appearance only (glass strength, icon and title size).
+      function syncChrome() {
         for (var i = 0; i < n; i++) {
-          cards[i].classList.remove('cc-center', 'cc-left', 'cc-right');
+          var d = slotOf(i);
+          cards[i].classList.toggle('cc-center', d === 0);
+          cards[i].classList.toggle('cc-left', d === -1);
+          cards[i].classList.toggle('cc-right', d === 1);
         }
-        cards[leftIdx].classList.add('cc-left');
-        cards[current].classList.add('cc-center');
-        cards[rightIdx].classList.add('cc-right');
         var dots = dotsWrap.children;
-        for (var j = 0; j < dots.length; j++) {
-          dots[j].classList.toggle('active', j === current);
-        }
+        for (var j = 0; j < dots.length; j++) dots[j].classList.toggle('active', j === current);
+      }
+
+      function setTransition(value) {
+        for (var i = 0; i < n; i++) cards[i].style.transition = value;
+      }
+
+      // Animate whatever offset we are at back to a settled layout. Changing
+      // `transition` and the transforms in the same task is fine: the browser
+      // starts transitions from the after-change style.
+      function glide() {
+        setTransition(GLIDE);
+        place(0);
+        syncChrome();
+        var mine = ++glideToken;
+        setTimeout(function() { if (glideToken === mine) setTransition(''); }, GLIDE_MS + 40);
       }
 
       function goTo(idx) {
         var next = mod(idx, n);
-        if (next === current || transitioning) return;
-        transitioning = true;
-        for (var i = 0; i < n; i++) {
-          cards[i].style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        }
+        if (next === current) return;
         current = next;
-        updateCards();
-        setTimeout(function() { transitioning = false; }, TRANSITION_MS + 20);
+        drag = 0;
+        glide();
       }
-
       function nextCard() { goTo(current + 1); }
       function prevCard() { goTo(current - 1); }
 
-      // Apply drag feedback to all 3 visible cards
-      function applyDragFeedback(rawDelta) {
-        var clamped = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, rawDelta));
-        var progress = Math.min(Math.abs(clamped) / MAX_DRAG, 1);
-        var shift = rubberBand(rawDelta);
+      /* ── Drag ─────────────────────────────────────────────────────────────
+         One pointer gesture, captured on the container so a fast drag that
+         leaves the element still tracks. No mid-gesture commit: the cards
+         follow the finger until release, then settle. */
+      var dragging = false, startX = 0, startY = 0, lastX = 0, lastT = 0, velocity = 0;
+      var axisLocked = false, moved = false, pending = 0, rafId = 0;
 
-        var centerCard = cards[current];
-        var leftCard = cards[mod(current - 1, n)];
-        var rightCard = cards[mod(current + 1, n)];
-
-        // Center card: moves, shrinks, fades
-        var cScale = 1 - (progress * 0.15);
-        var cOpacity = 1 - (progress * 0.6);
-        centerCard.style.transform = 'translate(-50%, -50%) scale(' + cScale + ') translateX(' + shift + 'px)';
-        centerCard.style.opacity = cOpacity;
-
-        if (rawDelta < 0) {
-          // Dragging left → right card is incoming
-          var rScale = 0.85 + (progress * 0.15);
-          var rOpacity = 0.35 + (progress * 0.65);
-          rightCard.style.transform = 'translate(-50%, -50%) scale(' + rScale + ') translateX(' + (SIDE_OFFSET + shift) + 'px)';
-          rightCard.style.opacity = rOpacity;
-          rightCard.style.boxShadow = '0 0 ' + (20 * progress) + 'px rgba(199, 62, 90,' + (0.15 * progress) + ')';
-          // Left card just shifts along
-          leftCard.style.transform = 'translate(-50%, -50%) scale(0.8) translateX(' + (-SIDE_OFFSET + shift) + 'px)';
-        } else {
-          // Dragging right → left card is incoming
-          var lScale = 0.85 + (progress * 0.15);
-          var lOpacity = 0.35 + (progress * 0.65);
-          leftCard.style.transform = 'translate(-50%, -50%) scale(' + lScale + ') translateX(' + (-SIDE_OFFSET + shift) + 'px)';
-          leftCard.style.opacity = lOpacity;
-          leftCard.style.boxShadow = '0 0 ' + (20 * progress) + 'px rgba(199, 62, 90,' + (0.15 * progress) + ')';
-          // Right card just shifts along
-          rightCard.style.transform = 'translate(-50%, -50%) scale(0.8) translateX(' + (SIDE_OFFSET + shift) + 'px)';
-        }
+      function queue(dx) {
+        pending = dx;
+        if (rafId) return;
+        rafId = requestAnimationFrame(function() { rafId = 0; place(pending); });
       }
 
-      // Snap back with elastic bounce
-      function snapBack() {
-        for (var i = 0; i < n; i++) {
-          cards[i].style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-        }
-        requestAnimationFrame(function() {
-          clearInlineStyles();
-          setTimeout(function() {
-            for (var i = 0; i < n; i++) cards[i].style.transition = '';
-          }, 420);
-        });
-      }
-
-      // Fire the transition (from drag or auto-trigger)
-      function fireTransition(delta) {
-        dragSuppressClick = true;
-        clearInlineStyles();
-        if (delta < 0) nextCard(); else prevCard();
-        setTimeout(function() { dragSuppressClick = false; }, TRANSITION_MS + 50);
-      }
-
-      // Click side card → center; click center → navigate
-      var dragSuppressClick = false;
-      cards.forEach(function(card, i) {
-        card.addEventListener('click', function(e) {
-          if (dragSuppressClick) { e.preventDefault(); e.stopPropagation(); return; }
-          if (i !== current) {
-            e.preventDefault();
-            e.stopPropagation();
-            goTo(i);
-          }
-        });
+      container.addEventListener('pointerdown', function(e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (e.target.closest('.carousel-arrow')) return;
+        dragging = true; moved = false; axisLocked = false;
+        startX = lastX = e.clientX; startY = e.clientY;
+        lastT = e.timeStamp; velocity = 0; drag = 0;
+        setTransition('none');
       });
 
-      // Arrow buttons
-      var leftBtn = section.querySelector('.carousel-left');
-      var rightBtn = section.querySelector('.carousel-right');
-      leftBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); prevCard(); });
-      rightBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); nextCard(); });
-
-      // ── Mouse drag ──
-      var isDragging = false, startX = 0, hasFired = false, lastDelta = 0;
-      container.addEventListener('mousedown', function(e) {
-        if (e.target.closest('.carousel-arrow')) return;
-        if (transitioning) return;
-        isDragging = true;
-        hasFired = false;
-        lastDelta = 0;
-        startX = e.clientX;
-        container.classList.add('dragging');
-        for (var i = 0; i < n; i++) cards[i].style.transition = 'none';
+      container.addEventListener('pointermove', function(e) {
+        if (!dragging) return;
+        var dx = e.clientX - startX;
+        var dy = e.clientY - startY;
+        // Let a vertical swipe scroll the page instead of turning the carousel.
+        if (!axisLocked) {
+          if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          if (Math.abs(dy) > Math.abs(dx)) { dragging = false; setTransition(''); return; }
+          axisLocked = true;
+          container.classList.add('dragging');
+          if (e.pointerId !== undefined && container.setPointerCapture) {
+            try { container.setPointerCapture(e.pointerId); } catch (err) {}
+          }
+        }
+        moved = true;
+        var dt = e.timeStamp - lastT;
+        if (dt > 0) velocity = (e.clientX - lastX) / dt;
+        lastX = e.clientX; lastT = e.timeStamp;
+        drag = dx;
+        queue(dx);
         e.preventDefault();
       });
-      document.addEventListener('mousemove', function(e) {
-        if (!isDragging || hasFired) return;
-        var delta = e.clientX - startX;
-        lastDelta = delta;
-        applyDragFeedback(delta);
 
-        // Auto-trigger at 50%
-        if (Math.abs(delta) > MAX_DRAG * AUTO_TRIGGER) {
-          hasFired = true;
-          isDragging = false;
-          container.classList.remove('dragging');
-          fireTransition(delta);
-        }
-      });
-      document.addEventListener('mouseup', function() {
-        if (!isDragging) return;
-        isDragging = false;
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
         container.classList.remove('dragging');
+        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+        var dir = 0;
+        if (Math.abs(velocity) > FLICK) dir = velocity < 0 ? 1 : -1;
+        else if (Math.abs(drag) > step * COMMIT) dir = drag < 0 ? 1 : -1;
+        current = mod(current + dir, n);
+        drag = 0;
+        glide();
+      }
+      container.addEventListener('pointerup', endDrag);
+      container.addEventListener('pointercancel', endDrag);
+      // Until the axis lock captures the pointer, a release outside the
+      // container would otherwise leave the gesture stuck open.
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
 
-        if (Math.abs(lastDelta) > MAX_DRAG * RELEASE_TRIGGER) {
-          // Past 30% — complete the transition
-          fireTransition(lastDelta);
-        } else {
-          // Under 30% — elastic snap back
-          snapBack();
-        }
+      // A drag that ends on a card must not follow its link.
+      cards.forEach(function(card, i) {
+        card.addEventListener('click', function(e) {
+          if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; return; }
+          if (slotOf(i) !== 0) { e.preventDefault(); e.stopPropagation(); goTo(i); }
+        });
       });
 
-      // ── Touch drag ──
-      var isTouching = false, touchStartX = 0, touchFired = false, lastTouchDelta = 0;
-      track.addEventListener('touchstart', function(e) {
-        if (transitioning) return;
-        isTouching = true;
-        touchFired = false;
-        lastTouchDelta = 0;
-        touchStartX = e.touches[0].clientX;
-        for (var i = 0; i < n; i++) cards[i].style.transition = 'none';
-      }, { passive: true });
-      document.addEventListener('touchmove', function(e) {
-        if (!isTouching || touchFired) return;
-        var delta = e.touches[0].clientX - touchStartX;
-        lastTouchDelta = delta;
-        applyDragFeedback(delta);
+      section.querySelector('.carousel-left').addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); prevCard(); });
+      section.querySelector('.carousel-right').addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); nextCard(); });
 
-        if (Math.abs(delta) > MAX_DRAG * AUTO_TRIGGER) {
-          touchFired = true;
-          isTouching = false;
-          fireTransition(delta);
-        }
-      }, { passive: true });
-      document.addEventListener('touchend', function() {
-        if (!isTouching) return;
-        isTouching = false;
-
-        if (Math.abs(lastTouchDelta) > MAX_DRAG * RELEASE_TRIGGER) {
-          fireTransition(lastTouchDelta);
-        } else {
-          snapBack();
-        }
-      });
-
-      // ── Keyboard arrows ──
-      var sectionHovered = false;
-      container.setAttribute('tabindex', '0');
-      container.style.outline = 'none';
-      container.addEventListener('mouseenter', function() { sectionHovered = true; });
-      container.addEventListener('mouseleave', function() { sectionHovered = false; });
+      var hovered = false;
+      container.addEventListener('mouseenter', function() { hovered = true; });
+      container.addEventListener('mouseleave', function() { hovered = false; });
       document.addEventListener('keydown', function(e) {
-        if (!sectionHovered) return;
+        if (!hovered) return;
         if (e.key === 'ArrowLeft') { e.preventDefault(); prevCard(); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); nextCard(); }
       });
 
-      updateCards();
+      var resizeTimer = 0;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          setTransition('none');
+          measure();
+          place(drag);
+          requestAnimationFrame(function() { setTransition(''); });
+        }, 120);
+      });
+
+      measure();
+      setTransition('none');
+      place(0);
+      syncChrome();
+      requestAnimationFrame(function() { setTransition(''); });
     }
 
     initCarousel('player-carousel');
@@ -450,7 +386,6 @@
       if (panel) panel.hidden = true;
     };
 
-    /* ── Init ───────────────────────────────────────────────────────────────── */
     loadReportBarStats();
     initFirstRun();
   </script>

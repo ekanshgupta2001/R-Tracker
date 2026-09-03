@@ -225,12 +225,33 @@ only; Phases 1–5 are unaffected.
 
 ---
 
+## Design pass — Summit Atmosphere (2026-09-02)
+
+Done in two steps: the homepage and shared chrome first, then every other page (teleop, curriculum,
+report, strategy, pathplanner, about, 404) re-skinned onto the same tokens — layouts kept, v1 surface
+colours, glows and emoji gone, `body.rt-legacy` and every `html.light` page block deleted. Charts and
+the 3D scene read their colours from tokens and re-draw on `rt-themechange`. See `AUDIT.md` for the
+data-flow check and `CLAUDE.md` › CSS for the conventions (tokens, primitives, blur budget).
+
 ## Deferred (ideas logged during migration — do not build during a phase)
 
 - Browser-side embeddings (Transformers.js) for paraphrase-tolerant grading, if rubrics
   plateau below 90% on some question types.
 - Auto-backup: download an export automatically on phase completion.
 - QR-code export for phone → laptop transfer without a file.
+- **Cloud drift on the homepage sky.** The design drifted six cloud groups inside the atmosphere SVG.
+  That cost ~100 fps (19.6 fps idle) because each group sat in an feTurbulence chain, and turbulence is
+  defined in user space, so moving a group changes the noise and re-rasterises the whole chain. The sky
+  is now a baked raster (`assets/summit-sky.webp`), so motion over it would be cheap again — drift could
+  come back as one or two CSS gradient veils inside `#rt-atmosphere` animated with `translate3d`. Left
+  out for now: static measured 120 fps with zero dropped frames, and the original drift was 36px over
+  90 seconds, which nobody can see.
+- **Carousel bleed-through on the homepage.** The neighbours sit ~150px under the 500px centre card, and
+  because that card is translucent glass their text reads through it. The container only has room for a
+  ±302px step at 1440px (`initCarousel` clamps `SPREAD` to the space available), and clearing the centre
+  card entirely would need ±450px, which would clip the neighbours. Levers, both one-liners in
+  `initCarousel`: raise `SPREAD` and accept clipped neighbours, or lower the neighbour opacity in
+  `place()` from 0.92 toward v1's 0.35 so what shows through is faint. Left as the design has it.
 
 ## Kill criteria
 

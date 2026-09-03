@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <script>try{var t=localStorage.getItem('rt-theme');if(t==='light'||(!t&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')}catch(e){}</script>
+  <!-- v2 theme: `light` = light glass and is the default; no class = dark glass. rt-theme is the only localStorage key in the app (UI preference). -->
+  <script>document.documentElement.classList.add('light');try{if(localStorage.getItem('rt-theme')==='dark')document.documentElement.classList.remove('light')}catch(e){}</script>
   <title>Path Planner — R-Tracker</title>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../css/fonts.css">
@@ -19,10 +20,13 @@
 <body>
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 <div id="rt-overlay" aria-hidden="true"><div id="rt-overlay-logo"><span class="ol-r">R-</span><span class="ol-t">Tracker</span></div></div>
+<div id="rt-atmosphere" aria-hidden="true"></div>
   <header class="topbar" id="topbar">
-    <a href="../index.html" class="home-btn">← Home</a>
-    <span class="topbar-sep">|</span>
-    <span class="topbar-title">Path Planner</span>
+    <div class="topbar-left">
+      <a href="../index.html" class="home-btn">← Home</a>
+      <span class="topbar-sep" aria-hidden="true"></span>
+      <span class="topbar-title">Path Planner</span>
+    </div>
   </header>
 
   <main class="main-wrap" id="main-content">
@@ -31,8 +35,8 @@
       <canvas id="fieldCanvas"></canvas>
       <div class="field-overlay-btns">
         <button class="fob-btn active" id="btnGrid" onclick="toggleGrid()">Grid</button>
-        <button class="fob-btn" id="btnRobotAnim" onclick="toggleAnim()" disabled>▶ Play</button>
-        <button class="fob-btn" id="btnStopAnim" onclick="stopAnim()" disabled>■ Stop</button>
+        <button class="fob-btn" id="btnRobotAnim" onclick="toggleAnim()" disabled><span class="rt-icon" data-rt-icon="play"></span>Play</button>
+        <button class="fob-btn" id="btnStopAnim" onclick="stopAnim()" disabled><span class="rt-icon" data-rt-icon="stop"></span>Stop</button>
       </div>
     </div>
 
@@ -47,8 +51,8 @@
           <button class="tbtn" id="btnDelSel" onclick="deleteSelected()" disabled>Delete Selected</button>
           <button class="tbtn" onclick="clearAll()">Clear All</button>
           <button class="tbtn" onclick="exportPath()">Export JSON</button>
-          <button class="tbtn" onclick="openPathModal('save')">&#128190; Save</button>
-          <button class="tbtn" onclick="openPathModal('load')">&#128193; Load</button>
+          <button class="tbtn" onclick="openPathModal('save')"><span class="rt-icon" data-rt-icon="save"></span>Save</button>
+          <button class="tbtn" onclick="openPathModal('load')"><span class="rt-icon" data-rt-icon="folder"></span>Load</button>
         </div>
       </div>
 

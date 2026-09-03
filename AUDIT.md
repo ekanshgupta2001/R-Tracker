@@ -43,10 +43,31 @@ tab-scoped storage. Tests exercise both backends.
 | `rt-state` | sessionStorage | `RTStore` state | tab | **yes** |
 | `rt-stl-model` | sessionStorage | base64 of an optional robot STL model uploaded for the 3D view (cached only if ≤ 2.5 M chars) | tab | no — a CAD file, not about the student; not exported |
 | `rt-nav` | sessionStorage | `"1"` for ~150 ms during an in-app page transition | milliseconds | no |
-| `rt-theme` | localStorage | `"dark"` or `"light"` | device | no — UI preference |
+| `rt-theme` | localStorage | `"dark"` or `"light"` | device | no — UI preference. Absent means light glass, the default look. |
 
 Nothing else is written to any storage API (IndexedDB, cookies, Cache API are unused). The audit test
 asserts `localStorage` contains only `rt-theme` and `sessionStorage` only `rt-*` keys.
+
+### Design pass — "Summit Atmosphere" (2026-09-02)
+
+Every page (the homepage, the six tool pages and `404.html`) was restyled from a design produced outside
+the app. It changes nothing in this document's claim, and the checks below were re-run against it:
+
+- **One new request, and it carries nothing.** Every page loads `assets/summit-sky.webp` (63 KB), a
+  static picture of the sky committed to the repo — a same-origin GET for a file, with no query string,
+  no body and nothing derived from the student. It is generated offline by `tools/bake-sky.mjs` from
+  `assets/summit-sky.svg`; neither the tool nor the SVG runs or is fetched at request time. Every icon
+  is inline SVG (`window.RT_ICONS` in `js/sidebar.js`, hydrated into `data-rt-icon` placeholders) — no
+  icon font, no sprite sheet, no emoji. `tests/network-audit.spec.js` covers this request like any other
+  and still reports every request across the 7 pages as a same-origin GET.
+- **No new storage.** The theme still rides the one `rt-theme` localStorage key; the design adds no key
+  of its own. `tests/smoke.spec.js` asserts the key list is exactly `['rt-theme']`.
+- **No new third-party code.** Nothing was vendored; `css/fonts.css`, `js/schema.js`, `js/store.js` and
+  `js/utils/validators.js` are byte-identical to before.
+- **Charts and the 3D scene read colours from CSS tokens** (`getComputedStyle` on `<html>`), and re-draw
+  on the `rt-themechange` event that the theme toggle dispatches. That event carries only `{ dark }`.
+- The CSP is unchanged and still forbids cross-origin loads. `404.html` now carries the same
+  `<meta http-equiv>` copy as the other pages (it had none before).
 
 ### Quota handling
 `sessionStorage` is ~5 MB per origin. If a save hits the quota, `RTStore.save()` drops the cached STL, then
@@ -122,3 +143,5 @@ team activity feeds, the coach dashboard and manage-team pages; Google Fonts and
 
 - three.js r128 (MIT): `vendor/three/three.min.js`, `STLLoader.js`, `OrbitControls.js` — SHA-256 in `vendor/three/SHA256SUMS`, sources in `vendor/README.md`.
 - Inter variable font (SIL OFL 1.1): `assets/fonts/InterVariable.woff2`, license in `assets/fonts/OFL.txt`.
+- `assets/summit-sky.webp` is not third-party: it is our own `assets/summit-sky.svg` rendered to a
+  raster by `tools/bake-sky.mjs`. No stock photo, no external asset.
