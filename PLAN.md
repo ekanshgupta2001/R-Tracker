@@ -250,8 +250,9 @@ measured expert times and flip `parSource` to `"measured"` when the team has dri
 ## Realistic drive physics (2026-09-03)
 
 `js/teleop/drive.js` now models a real competitive FTC drivetrain (4 × 435 RPM Yellow Jackets, 96 mm
-mecanum, 18 in, ~35 lb, BRAKE mode): 6.5 ft/s loaded top speed, strafe at 80% of forward, 270 °/s
-spin, traction-limited 20 ft/s² accel and braking, a 0.2 s first-order motor lag instead of a linear
+mecanum, 18 in, ~35 lb, BRAKE mode): 6.5 ft/s loaded top speed, strafe at 80% of forward, 380 °/s
+spin in place (190 °/s while driving flat out, since the motors are shared — raised from a first cut
+of 270 after driving it), traction-limited 20 ft/s² accel and braking, a 0.2 s first-order motor lag instead of a linear
 ramp, and 80 ms control latency. Wheel powers are normalised the way every FTC TeleOp does and the body
 velocity is derived from them, so turning while driving slows the robot and a full-stick diagonal is
 ~35% slower than a straight; velocity is integrated in the robot frame and turns with the body, so a

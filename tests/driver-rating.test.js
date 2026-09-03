@@ -113,7 +113,7 @@ test('window: only the last N sessions count; failed runs count as zero among th
 
 test('runs at custom physics are stored but not rated', () => {
   const DEF = { ...TABLE.DEFAULT_PHYSICS };   // spread: the table lives in the vm sandbox (other Object prototype)
-  assert.deepEqual(DEF, { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 });
+  assert.deepEqual(DEF, { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 });
   const flagged = runs('expert').map(r => Object.assign({}, r, { rated: false, physics: { ...DEF, maxSpd: 10 } }));
   const r = R.rate(flagged, TABLE);
   assert.equal(r.rating, 0);

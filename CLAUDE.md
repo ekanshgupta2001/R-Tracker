@@ -231,7 +231,8 @@ R-Tracker/
   in-place (same parent container). Input: Gamepad API + keyboard (WASD + arrows), listeners on
   `document`. 12 levels across 4 tiers with star ratings.
 - **Physics (`js/teleop/drive.js`) models a real 435 RPM mecanum drivetrain.** Defaults: 6.5 ft/s,
-  strafe at 80% of forward, 270 °/s spin, 20 ft/s² traction cap, 20 ft/s² BRAKE-mode braking, 0.2 s
+  strafe at 80% of forward, 380 °/s spin (190 °/s while driving flat out, because the wheel-power
+  normalisation shares the motors), 20 ft/s² traction cap, 20 ft/s² BRAKE-mode braking, 0.2 s
   first-order motor lag, 80 ms latency; every number is derived in the file header. Wheel powers are
   normalised exactly as an FTC TeleOp does and the body velocity comes from those powers, so turning
   while driving slows the robot and a full-stick diagonal is ~35% slower. Velocity is integrated in

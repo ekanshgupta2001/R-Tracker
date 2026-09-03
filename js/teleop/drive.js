@@ -8,9 +8,12 @@
 //                         with roller losses and a sagging battery, a real bot cruises at ~90%.
 //   STRAFE_EFF 0.80       mecanum rollers slip sideways: the same wheel speed moves the robot
 //                         ~20% slower when strafing than when driving forward.
-//   turnRate   270 °/s    spin = v / ((L + W) / 2). A 13 in × 13 in wheelbase gives
-//                         6.5 ft/s ÷ 1.08 ft = 6.0 rad/s = 345 °/s ideal; roller scrub takes
-//                         ~20% → ~275 °/s.
+//   turnRate   380 °/s    spin = v_wheel / ((L + W) / 2). Spinning in place the wheels carry
+//                         little load and run near free speed (7.2 ft/s); a compact
+//                         12 in × 12 in wheelbase gives 7.2 ft/s ÷ 1.0 ft = 7.2 rad/s =
+//                         412 °/s ideal, ~8% roller scrub → 380 °/s. Note that turning while
+//                         driving is slower: the wheel-power normalisation below shares the
+//                         motors, so full forward + full spin gives half of each (190 °/s).
 //   accel      20 ft/s²   traction-limited: μ ≈ 0.65 for mecanum rollers on foam tiles →
 //                         0.65 g = 21 ft/s². The motors could do twice that (4 × 2.4 N·m stall
 //                         ÷ 0.048 m = 200 N on 16 kg = 41 ft/s²), so the tiles set the cap.
@@ -40,7 +43,7 @@ const STRAFE_EFF = 0.80;   // strafe speed as a share of forward speed at the sa
 const MOTOR_TAU  = 0.20;   // s — first-order motor/drivetrain time constant
 const ZERO_CMD   = 0.02;   // below this the stick is "released" → braking instead of driving
 
-let cfg = { maxSpd: 6.5, turnRate: 270, robotSz: 18, deadzone: 0.10, accel: 20, braking: 20, inputDelay: 80 };
+let cfg = { maxSpd: 6.5, turnRate: 380, robotSz: 18, deadzone: 0.10, accel: 20, braking: 20, inputDelay: 80 };
 // vFwd/vStr: body velocity in the robot frame (ft/s) — the state the physics integrates;
 // actualVx/actualVy (= vx/vy): the same rotated into the field frame; actualOmega °/s.
 let bot = { x: 0, y: 0, hdg: 0, vx: 0, vy: 0, actualVx: 0, actualVy: 0, actualOmega: 0, vFwd: 0, vStr: 0 };

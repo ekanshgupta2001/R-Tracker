@@ -25,9 +25,9 @@ export function makeSampleState() {
   s.driver.coachReports.push({ generatedAt: now, overallScore: 71, letterGrade: 'C', percentile: 'Around par', driverProfile: 'The Technician — steady and precise', overallSummary: 'Solid session.', detailedAnalysis: '', strengths: ['Strafe'], weaknesses: ['Turn'], trainingPlan: ['Practice turns'], scores: { smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 88, recovery: 68, turnOvershootDeg: 12.5, atSpeedFraction: 0.55 }, metricsSnapshot: {} });
   s.driver.sessions.push({ id: 's_1', startedAt: now - 600000, endedAt: now, durationMs: 600000, levelsAttempted: 3, levelsCompleted: 2, distanceFt: 140, ratingAtEnd: 71 });
   s.driver.runs.push(
-    { levelId: 1, sessionId: 's_1', completed: true, timeMs: 1500, pathAccuracy: 96, collisions: 0, atSpeedFraction: 0.7, styleMetrics: { smoothness: 70, stability: 65, strafe: null, turn: 60, turnOvershootDeg: 12.5, recovery: 68, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 500000 },
-    { levelId: 2, sessionId: 's_1', completed: false, timeMs: 5000, pathAccuracy: 60, collisions: 1, atSpeedFraction: 0.4, styleMetrics: { smoothness: 60, stability: 60, strafe: 70, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 400000 },
-    { levelId: 2, sessionId: 's_1', completed: true, timeMs: 2100, pathAccuracy: 80, collisions: 0, atSpeedFraction: 0.5, styleMetrics: { smoothness: 62, stability: 61, strafe: 72, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 300000 }
+    { levelId: 1, sessionId: 's_1', completed: true, timeMs: 1500, pathAccuracy: 96, collisions: 0, atSpeedFraction: 0.7, styleMetrics: { smoothness: 70, stability: 65, strafe: null, turn: 60, turnOvershootDeg: 12.5, recovery: 68, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 500000 },
+    { levelId: 2, sessionId: 's_1', completed: false, timeMs: 5000, pathAccuracy: 60, collisions: 1, atSpeedFraction: 0.4, styleMetrics: { smoothness: 60, stability: 60, strafe: 70, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 400000 },
+    { levelId: 2, sessionId: 's_1', completed: true, timeMs: 2100, pathAccuracy: 80, collisions: 0, atSpeedFraction: 0.5, styleMetrics: { smoothness: 62, stability: 61, strafe: 72, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 }, rated: true, timestamp: now - 300000 }
   );
   s.curriculum.phases.phase0 = Object.assign(S.createEmptyPhase('phase0'), { status: 'verified', score: 90, passed: true, attempts: 1, lastAttempt: now, verifiedAt: now, verifiedBy: 'auto' });
   s.curriculum.phases.phase1 = Object.assign(S.createEmptyPhase('phase1'), { status: 'in_progress', startedAt: now, lessonProgress: ['ftc-ecosystem'] });
@@ -69,7 +69,7 @@ export function makeYearState() {
   }
   // Per-run level records over the last 6 sessions (levels 1–6, mixed results)
   const PAR = { 1: 1600, 2: 1300, 3: 3000, 4: 6300, 5: 4300, 6: 5300 };
-  const PHYS = { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 };
+  const PHYS = { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 };
   for (let sess = 0; sess < 6; sess++) {
     const base = now - (6 - sess) * DAY - 3600000;
     for (let lv = 1; lv <= 6; lv++) {

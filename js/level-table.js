@@ -29,7 +29,7 @@
   // cfgUpdate() loads before the first frame (keep every value on its slider's step
   // grid — the browser snaps a range input to the nearest step). The derivation of
   // each number from a real 435 RPM mecanum drivetrain is in js/teleop/drive.js.
-  var DEFAULT_PHYSICS = { maxSpd: 6.5, turnRate: 270, accel: 20, braking: 20, inputDelay: 80 };
+  var DEFAULT_PHYSICS = { maxSpd: 6.5, turnRate: 380, accel: 20, braking: 20, inputDelay: 80 };
 
   var FOCUS_LABELS = {
     straight:  'straight-line driving',
