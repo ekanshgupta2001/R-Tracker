@@ -1,4 +1,7 @@
 // ── R-Tracker TeleOp — rule-based driver coach ────────────────────────────
+// Every sentence here is a fixed template filled with numbers from
+// js/driver-rating.js (level outcomes) and metrics.js (style diagnostics).
+// Recommendations start from the weakest level group and fall back to style.
 
 // window.RT_ICONS keys (js/sidebar.js), one per driver profile.
 const PROFILE_ICONS = {
@@ -9,6 +12,7 @@ const PROFILE_ICONS = {
   'The All-Rounder': 'star',
   'The Natural': 'sparkle',
   'The Rookie': 'shield',
+  'The Cruiser': 'hourglass',
 };
 function profileIcon(name) {
   const icons = window.RT_ICONS || {};
@@ -19,139 +23,186 @@ let _coachGenerated = false;
 
 function generateCoachReport() {
   const scores = computeScores();
-  const rating = computeOverallRating();
-  const m = driverMetrics;
-  const name = (RTStore.get().profile.displayName || 'Driver');
+  const rr = currentRating();
+  const rating = rr.rating;
+  const groups = RTDriverRating.groupsByFocus(rr, RT_LEVEL_TABLE);
+  const weakGroup = groups.length ? groups[0] : null;
+  const strongGroup = groups.length > 1 ? groups[groups.length - 1] : null;
+  const has = v => v !== null && v !== undefined;
+  const at = k => scores.sufficient && has(scores[k]) ? scores[k] : null;
+  const above = (k, th) => at(k) !== null && at(k) > th;
+  const below = (k, th) => at(k) !== null && at(k) < th;
 
-  const breakdown = [
-    { label: 'Smoothness', val: scores.smoothness, key: 'smoothness' },
-    { label: 'Stability', val: scores.stability, key: 'stability' },
-    { label: 'Strafe Use', val: scores.strafe, key: 'strafe' },
-    { label: 'Turn Control', val: scores.turn, key: 'turn' },
-    { label: 'Path Accuracy', val: scores.levelScore, key: 'levelScore' },
-    { label: 'Recovery Speed', val: scores.recovery, key: 'recovery' },
-  ].sort((a, b) => b.val - a.val);
-
-  const topSkill = breakdown[0];
-  const weakSkill = breakdown[breakdown.length - 1];
+  const breakdown = scores.sufficient
+    ? STYLE_ROWS.map(r => ({ label: r.label, val: scores[r.key], key: r.key })).filter(r => r.val !== null).sort((a, b) => b.val - a.val)
+    : [];
+  const weakSkill = breakdown.length ? breakdown[breakdown.length - 1] : null;
   const bot2 = breakdown.slice(-2);
 
-  const percentileText = percentileFromRating(rating);
+  // Wall hits across the rated window
+  let windowHits = 0;
+  Object.keys(rr.levels).forEach(id => { windowHits += rr.levels[id].collisions || 0; });
+
+  const levelIds = ids => listLevels(ids);
+  const bandText = percentileFromRating(rating);
+  const weakArea = weakGroup ? weakGroup.label : (weakSkill ? weakSkill.label.toLowerCase() : 'the fundamentals');
+
   let overallSummary;
-  if (rating >= 90)
-    overallSummary = `An elite-level driver with exceptional control across all areas. Competition-ready and capable of performing under pressure. One of the top drivers this system has evaluated. ${percentileText}.`;
+  if (!rr.ratedLevels)
+    overallSummary = 'No rated level runs in the last ' + rr.sessionsWindow + ' sessions yet. Complete a level in Levels mode to get a rating; par times decide it, not driving style.';
+  else if (rating >= 90)
+    overallSummary = `Beats par by a wide margin with clean lines on ${rr.ratedLevels} rated level${rr.ratedLevels === 1 ? '' : 's'}. Competition-ready pace. ${bandText}.`;
   else if (rating >= 80)
-    overallSummary = `A strong driver with solid fundamentals across the board. Could be a reliable competition driver with continued practice on ${weakSkill.label.toLowerCase()}. ${percentileText}.`;
+    overallSummary = `Ahead of par on most rated levels. A reliable competition driver with continued work on ${weakArea}. ${bandText}.`;
   else if (rating >= 65)
-    overallSummary = `An average driver with noticeable gaps in some areas. Not yet competition-ready. Needs dedicated practice on ${bot2.map(s => s.label.toLowerCase()).join(' and ')} before being trusted in a match. ${percentileText}.`;
+    overallSummary = `Around par. Not yet competition pace: ${weakGroup ? 'the ' + weakGroup.label + ' levels (' + weakGroup.levelIds.join(', ') + ') are where the time goes' : 'time is being lost across the rated levels'}. ${bandText}.`;
   else if (rating >= 50)
-    overallSummary = `A developing driver with significant room for improvement. Multiple fundamental skills need work. Should spend at least 30 minutes of focused practice daily on the recommended training plan. ${percentileText}.`;
+    overallSummary = `Behind par on most levels: finishing runs, but slowly or off the line. Work one level group at a time, starting with ${weakArea}. ${bandText}.`;
   else
-    overallSummary = `Currently not ready for competition driving. Core skills like ${bot2.map(s => s.label.toLowerCase()).join(' and ')} are below acceptable levels. Start with Tier 1 levels and Free Drive basics. Focus on slow, controlled movements before attempting speed. ${percentileText}.`;
+    overallSummary = `Well behind par. Complete levels cleanly first, then build speed on ${weakArea}. ${bandText}.`;
 
   let driverProfile;
-  const maxDiff = breakdown[0].val - breakdown[breakdown.length - 1].val;
-  if (scores.smoothness > 80 && scores.stability > 80)
+  const maxDiff = breakdown.length ? breakdown[0].val - breakdown[breakdown.length - 1].val : 0;
+  if (!scores.sufficient)
+    driverProfile = 'The Cruiser — Most of this session was under 60% of max speed, so there is no style read yet. Push the pace to unlock a profile.';
+  else if (above('smoothness', 80) && above('stability', 80))
     driverProfile = 'The Surgeon — Precise, controlled, methodical. You prioritize accuracy over speed.';
-  else if (scores.recovery > 80 && scores.smoothness > 70)
+  else if (above('recovery', 80) && above('smoothness', 70))
     driverProfile = 'The Natural — Quick reflexes combined with smooth control. A gifted driver.';
-  else if (scores.strafe > 80 && scores.turn > 80)
+  else if (above('strafe', 80) && above('turn', 80))
     driverProfile = 'The Technician — Excellent mechanical skills. You handle complex maneuvers with ease.';
-  else if (scores.recovery > 80)
+  else if (above('recovery', 80))
     driverProfile = 'The Adapter — Quick to recover from mistakes. You stay calm under pressure and adjust on the fly.';
-  else if (maxDiff < 12)
+  else if (breakdown.length >= 3 && maxDiff < 12)
     driverProfile = 'The All-Rounder — Consistent across all skills. No major weaknesses but no standout strengths either.';
-  else if (scores.smoothness < 60 && rating > 55)
+  else if (below('smoothness', 60) && rating > 55)
     driverProfile = 'The Speedster — Fast and aggressive, but frequently sacrifices control for speed.';
   else
     driverProfile = 'The Rookie — Still developing a driving style. Keep practicing to discover your strengths.';
 
   const parts = [];
-  if (scores.smoothness >= 80) parts.push('Joystick inputs are exceptionally smooth and controlled, indicating a calm and deliberate driving style. Very few sudden stick snaps detected.');
-  else if (scores.smoothness >= 65) parts.push('Input smoothness is acceptable but shows noticeable jerky moments — particularly on direction changes. Better drivers ease in and out of full deflection rather than snapping.');
-  else if (scores.smoothness >= 50) parts.push('Joystick inputs are frequently jerky. Sudden large stick movements are causing the robot to lurch unpredictably. Practice making slow, deliberate movements and avoid snapping to full power.');
-  else parts.push('Joystick control is a critical weakness. Heavy, sudden input changes throughout the session are severely harming robot predictability. Start with 50% max speed and focus entirely on gradual stick movement before anything else.');
+  if (rr.ratedLevels) {
+    let lead = `Rated on ${rr.ratedLevels} level${rr.ratedLevels === 1 ? '' : 's'} over the last ${rr.sessionsInWindow} session${rr.sessionsInWindow === 1 ? '' : 's'}.`;
+    if (weakGroup) lead += ` Slowest relative to par: ${weakGroup.label} (${levelIds(weakGroup.levelIds)}) at ${Math.round(weakGroup.meanParRatio * 100)}% of par pace.`;
+    if (strongGroup && strongGroup !== weakGroup) lead += ` Fastest: ${strongGroup.label} (${levelIds(strongGroup.levelIds)}) at ${Math.round(strongGroup.meanParRatio * 100)}% of par pace.`;
+    if (windowHits > 0) lead += ` ${windowHits} wall hit${windowHits === 1 ? '' : 's'} cost ${windowHits * 5} run-score points across those sessions.`;
+    else lead += ' No wall hits in the rated runs.';
+    parts.push(lead);
+  }
 
-  if (scores.stability >= 80) parts.push('Heading control is excellent — the robot maintains straight-line tracking with minimal drift. Very little unintended rotation while translating.');
-  else if (scores.stability >= 65) parts.push('Heading shows some drift during straight-line movement. The rotation stick is being used while translating more than necessary. Try to completely separate movement and turning inputs.');
-  else if (scores.stability >= 50) parts.push('Significant heading instability detected. The robot drifts noticeably off-course during straight drives. This will hurt precision severely in competition. Drill straight-line driving with zero rotation input.');
-  else parts.push('Heading stability is a critical weakness. The robot is spinning substantially while trying to drive straight. This is typically caused by accidental rotation inputs or over-correction. Focus exclusively on clean straight-line driving in Free Drive.');
-
-  if (scores.strafe >= 80) parts.push('Strafing is clean with minimal unintended forward/backward drift. Near-perfect mecanum control during lateral movement.');
-  else if (scores.strafe >= 65) parts.push('Strafing shows some forward/backward contamination — the robot drifts slightly while trying to move purely sideways. Aim to isolate the left stick completely to the horizontal axis during strafes.');
-  else if (scores.strafe >= 50) parts.push('Strafing accuracy needs work. There is significant unintended forward/backward drift when moving laterally. Practice pure horizontal stick inputs in Free Drive until the robot moves in clean straight lateral lines.');
-  else parts.push('Strafing is severely contaminated with forward/backward drift. This suggests mixed stick inputs during lateral movement. Practice holding the stick at exactly 90° (pure left/right) with no vertical component.');
-
-  if (scores.turn >= 80) parts.push('Turns are smooth and precise — the driver demonstrates excellent deceleration out of rotations with minimal overshoot.');
-  else if (scores.turn >= 65) parts.push('Turning is functional but shows some overshooting of target headings and imprecise rotation control. Use shorter, lighter rotation inputs and anticipate the robot stopping.');
-  else if (scores.turn >= 50) parts.push('Turn control is poor. The robot frequently over-rotates and requires correction. This eats up time and path accuracy in levels. Practice stopping the rotation stick earlier than you think you need to.');
-  else parts.push('Turns are a critical weak point. Continuous large rotation inputs are causing the robot to spin past target headings repeatedly. Practice rotating in 90° increments — nothing more, nothing less — until precision improves.');
-
-  if (scores.recovery >= 80) parts.push('Excellent reaction speed — when deviating from the ideal path, corrections are near-instant and decisive.');
-  else if (scores.recovery >= 65) parts.push('Reaction time to path deviations is adequate but slower than elite drivers. Work on anticipating the next waypoint before you arrive at the current one.');
-  else if (scores.recovery >= 50) parts.push('Reaction time is slow. There is a noticeable delay between missing a waypoint and beginning to correct. In competition this translates directly to slower cycle times. Aim to start moving toward the next target within 300ms of hitting the current one.');
-  else parts.push("Reaction speed is a critical weakness. Very long delays between hitting a checkpoint and moving to the next one are being recorded. Focus on reading the path ahead — always know where you're going before you arrive.");
-
+  if (!scores.sufficient) {
+    parts.push(`Only ${Math.round(scores.atSpeedFraction * 100)}% of this session was driven at 60% of max speed or more, so the style diagnostics are not scored. They unlock at 20%.`);
+  } else {
+    const sm = at('smoothness');
+    if (sm !== null) {
+      if (sm >= 80) parts.push('Joystick inputs at speed are smooth and controlled, with very few sudden stick snaps.');
+      else if (sm >= 65) parts.push('Input smoothness at speed is acceptable but shows jerky moments on direction changes. Ease in and out of full deflection rather than snapping.');
+      else if (sm >= 50) parts.push('Joystick inputs at speed are frequently jerky and the robot lurches on direction changes. Blend the stick through changes instead of snapping.');
+      else parts.push('Joystick control at speed is a critical weakness: heavy, sudden input changes make the robot unpredictable exactly when it matters.');
+    }
+    const stb = at('stability');
+    if (stb !== null) {
+      if (stb >= 80) parts.push('Heading control at speed is excellent: straight-line tracking with minimal drift.');
+      else if (stb >= 65) parts.push('Heading drifts a little during fast straights. The rotation stick is being touched while translating; keep the two inputs separate.');
+      else if (stb >= 50) parts.push('Significant heading instability at speed: the robot drifts off-course on straights. Drill straight-line driving at full speed with zero rotation input.');
+      else parts.push('Heading stability at speed is a critical weakness: the robot rotates substantially while trying to drive straight.');
+    }
+    const st = at('strafe');
+    if (st !== null) {
+      if (st >= 80) parts.push('Strafing at speed is clean with minimal forward or backward drift.');
+      else if (st >= 65) parts.push('Strafes carry some forward or backward drift. Keep the left stick on the horizontal axis during lateral moves.');
+      else parts.push('Strafes at speed drift forward or backward noticeably. Practise pure left/right stick inputs until the robot moves in clean lateral lines.');
+    }
+    const ov = at('turn') !== null ? scores.turnOvershootDeg : null;
+    if (ov !== null) {
+      const d = Math.round(ov);
+      if (d <= 5) parts.push(`Turns land where you release them: the average correction after a fast turn is ${d}°.`);
+      else if (d <= 12) parts.push(`Fast turns overshoot by about ${d}° and need a correction. Release the rotation stick a little earlier.`);
+      else if (d <= 20) parts.push(`Turns overshoot by about ${d}°: you release late and spin back. Aim to release about two-thirds of the way through the turn and let the robot coast onto the heading.`);
+      else parts.push(`Turns overshoot by ${d}° on average: nearly every fast turn needs a large correction. Practise 90° turns at speed, releasing early and coasting onto the heading.`);
+    }
+    const rc = at('recovery');
+    if (rc !== null) {
+      if (rc >= 80) parts.push('Reaction speed at pace is excellent: the next target is picked up almost instantly.');
+      else if (rc >= 65) parts.push('Reaction to the next target is adequate but slower than a competition driver. Anticipate the next waypoint before you arrive at the current one.');
+      else parts.push('Reaction time is slow: there is a noticeable delay between reaching a target and moving to the next one. Read the path ahead.');
+    }
+  }
   const detailedAnalysis = parts.join(' ');
 
   const strengthDescMap = {
-    'Smoothness': 'Excellent joystick control with gradual, deliberate inputs',
+    'Smoothness': 'Smooth, deliberate stick inputs at speed',
     'Stability': 'Strong straight-line tracking with minimal heading drift',
-    'Strafe Use': 'Clean lateral movement with precise mecanum control',
-    'Turn Control': 'Smooth, accurate rotation with minimal overshoot',
-    'Path Accuracy': 'Stays tight on planned routes through waypoints',
-    'Recovery Speed': 'Quick, decisive error correction when off-path',
+    'Strafe Use': 'Clean lateral movement at speed',
+    'Turn Precision': 'Fast turns land on the heading with little correction',
+    'Recovery': 'Quick pick-up of the next target',
   };
-  const strengths = breakdown.slice(0, 2).filter(s => s.val >= 65).map(s => strengthDescMap[s.label] || s.label);
-
   const weaknessDescMap = {
-    'Smoothness': 'Jerky stick inputs causing unpredictable robot movement',
-    'Stability': 'Heading drift during straight-line movement',
-    'Strafe Use': 'Unintended forward/backward drift during lateral movement',
-    'Turn Control': 'Rotation overshooting target headings',
-    'Path Accuracy': 'Drifting outside the ideal path corridor',
-    'Recovery Speed': 'Slow to recognize and correct path deviations',
+    'Smoothness': 'Jerky stick inputs at speed causing unpredictable movement',
+    'Stability': 'Heading drift during fast straights',
+    'Strafe Use': 'Forward or backward drift during strafes',
+    'Turn Precision': 'Fast turns overshoot and need a correction',
+    'Recovery': 'Slow to move on to the next target',
   };
-  const weaknesses = breakdown.slice(-2).filter(s => s.val < 70).map(s => weaknessDescMap[s.label] || s.label);
+  const strengths = [], weaknesses = [];
+  const ahead = [], behind = [];
+  Object.keys(rr.levels).map(Number).sort((a, b) => a - b).forEach(id => {
+    const lv = rr.levels[id];
+    if (!lv.counted) return;
+    if (lv.parRatio >= 1.15) ahead.push(id);
+    else if (lv.parRatio < 0.85 || lv.levelScore < 50) behind.push(id);
+  });
+  if (ahead.length) strengths.push('Ahead of par on ' + levelIds(ahead));
+  if (behind.length) weaknesses.push('Behind par on ' + levelIds(behind));
+  breakdown.slice(0, 2).filter(s => s.val >= 65).forEach(s => strengths.push(strengthDescMap[s.label] || s.label));
+  bot2.filter(s => s.val < 70).forEach(s => weaknesses.push(weaknessDescMap[s.label] || s.label));
+  if (windowHits > 0) weaknesses.push(`${windowHits} wall hit${windowHits === 1 ? '' : 's'} in the rated runs`);
 
   const trainingPlan = [];
-  switch (weakSkill.key) {
-    case 'smoothness':
-      trainingPlan.push('Warm-up drill: Drive Levels 1 and 2 using only 50% stick deflection for 5 minutes');
-      trainingPlan.push('Practice making gradual figure-8 patterns in Free Drive — focus on never slamming the stick');
-      break;
-    case 'stability':
-      trainingPlan.push('Drive straight lines from one end of the field to the other. Try to keep heading within 2 degrees');
-      trainingPlan.push('Complete Level 1 "Straight Shot" 10 times consecutively, aiming for gold on each');
-      break;
-    case 'strafe':
-      trainingPlan.push('Practice pure strafing in Free Drive — move only left/right with zero forward/backward input');
-      trainingPlan.push('Complete Level 2 "Side Step" 10 times aiming for 90%+ accuracy');
-      break;
-    case 'turn':
-      trainingPlan.push('Practice rotating exactly 90°, then 180°, then 360° in Free Drive');
-      trainingPlan.push('Complete Level 6 "Diamond" which requires precise turns at each corner');
-      break;
-    case 'recovery':
-      trainingPlan.push('Practice Level 4 "The Square" — anticipate the next waypoint before reaching the current one');
-      trainingPlan.push("Look ahead on the path — don't wait until you hit a waypoint to think about the next direction");
-      break;
-    default:
-      trainingPlan.push('Work through all Tier 1 levels aiming for gold to build consistency on the fundamentals');
+  if (weakGroup) {
+    trainingPlan.push(`Drill ${levelIds(weakGroup.levelIds)} (${weakGroup.label}): ${FOCUS_HINTS[weakGroup.focus] || ''}`.trim());
+    const slowest = weakGroup.levelIds.map(id => rr.levels[id]).sort((a, b) => a.levelScore - b.levelScore)[0];
+    if (slowest && slowest.bestTimeMs) trainingPlan.push(`Target on Level ${slowest.levelId} "${slowest.name}": par is ${(slowest.parTimeMs / 1000).toFixed(1)}s; your best is ${(slowest.bestTimeMs / 1000).toFixed(1)}s.`);
+  } else if (!rr.ratedLevels) {
+    trainingPlan.push('Complete Levels 1 to 3 to get rated. A clean finish at par scores 70 on a run; beating par is where the points are.');
   }
-  if (scores.levelScore < 75) {
-    trainingPlan.push('Focus on Path Accuracy — aim to stay within the green corridor for 90%+ of each level attempt');
+  if (weakSkill) {
+    switch (weakSkill.key) {
+      case 'smoothness':
+        trainingPlan.push('Drive Levels 1 and 2 at full speed, blending the stick through every direction change instead of snapping it.');
+        break;
+      case 'stability':
+        trainingPlan.push('Drive full-speed straights end to end in Free Drive and keep the heading within 2 degrees without touching the rotation stick.');
+        break;
+      case 'strafe':
+        trainingPlan.push('Practise pure strafing at speed in Free Drive: left and right only, zero forward input, then repeat Level 2 "Side Step".');
+        break;
+      case 'turn':
+        trainingPlan.push('Practise 90°, 180° and 360° turns at full rotation rate in Free Drive, releasing early so the robot coasts onto the heading.');
+        break;
+      case 'recovery':
+        trainingPlan.push('On Level 4 "The Square", be moving toward the next corner before the current checkpoint registers.');
+        break;
+    }
   }
+  if (rr.ratedLevels && rr.accuracyMean < 85) {
+    trainingPlan.push('Path accuracy is costing run score: aim to stay inside the corridor for 90% or more of each run before adding speed.');
+  }
+  if (windowHits > 0) trainingPlan.push('Brake before the walls: every wall hit costs 5 run-score points.');
   trainingPlan.push('Aim for 15+ minutes of focused practice per session. Quality repetitions matter more than time spent.');
 
+  const r0 = v => (v === null || v === undefined) ? null : Math.round(v);
   return {
-    overallSummary, letterGrade: gradeFromRating(rating), overallScore: rating,
-    percentile: percentileFromRating(rating), strengths, weaknesses,
+    overallSummary, letterGrade: rr.grade, overallScore: rating,
+    percentile: bandText, strengths, weaknesses,
     detailedAnalysis, trainingPlan, driverProfile,
+    ratedLevels: rr.ratedLevels,
     scores: {
-      smoothness: Math.round(scores.smoothness), stability: Math.round(scores.stability),
-      strafe: Math.round(scores.strafe), turn: Math.round(scores.turn),
-      levelScore: Math.round(scores.levelScore), recovery: Math.round(scores.recovery),
+      smoothness: r0(at('smoothness')), stability: r0(at('stability')),
+      strafe: r0(at('strafe')), turn: r0(at('turn')),
+      levelScore: rr.accuracyMean, recovery: r0(at('recovery')),
+      turnOvershootDeg: at('turn') !== null ? Math.round(scores.turnOvershootDeg * 10) / 10 : null,
+      atSpeedFraction: Math.round(scores.atSpeedFraction * 100) / 100,
     },
     comparisonToLast: null,
   };
@@ -197,14 +248,14 @@ function switchReportTab(tab) {
 }
 
 function renderCoachPanel() {
-  // Show helpful empty state if no driving data yet
-  if (driverMetrics.totalInputs < 10) {
+  // Show helpful empty state if there is neither driving this session nor a rated run on record
+  if (driverMetrics.totalInputs < 10 && !currentRating().ratedLevels) {
     var panel = document.getElementById('an-coach-panel');
     if (panel) {
       panel.innerHTML = '<div class="coach-empty">' +
         '<span class="coach-empty-icon">' + ((window.RT_ICONS && window.RT_ICONS.target) || '') + '</span>' +
         '<h3>Coach Analysis</h3>' +
-        '<p>Start a practice session and drive for at least 30 seconds. The coach will analyze your driving style, identify strengths and weaknesses, and provide training recommendations.</p>' +
+        '<p>Complete a level, or drive for at least 30 seconds. The coach reads your level times against par, then your driving style at speed, and builds a training plan from the weakest area.</p>' +
         '<p class="coach-empty-sub">Press Start, then drive around the field using your gamepad or keyboard.</p>' +
         '</div>';
     }
@@ -266,13 +317,14 @@ function renderCoachComparison(currentReport) {
   const rSign = ratingDelta > 0 ? '+' : '';
   const rCls = ratingDelta > 0 ? 'coach-cmp-up' : ratingDelta < 0 ? 'coach-cmp-down' : 'coach-cmp-neu';
   const rArr = ratingDelta > 0 ? '&#9650;' : ratingDelta < 0 ? '&#9660;' : '&#9679;';
-  rows.push(`<div class="coach-comparison-row">Overall Rating: ${prev.overallScore || '—'} &rarr; ${cur.overallScore}<span class="${rCls}">${rArr} ${rSign}${ratingDelta}</span></div>`);
+  rows.push(`<div class="coach-comparison-row">Overall Rating: ${typeof prev.overallScore === 'number' ? prev.overallScore : '—'} &rarr; ${cur.overallScore}<span class="${rCls}">${rArr} ${rSign}${ratingDelta}</span></div>`);
 
   const skillKeys = ['smoothness', 'stability', 'strafe', 'turn', 'levelScore', 'recovery'];
-  const skillNames = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn Ctrl', levelScore: 'Path Acc.', recovery: 'Recovery' };
+  const skillNames = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn Prec.', levelScore: 'Path Acc.', recovery: 'Recovery' };
   for (const key of skillKeys) {
-    const pv = prev.scores ? (prev.scores[key] || 0) : 0;
-    const cv = cur.scores ? (cur.scores[key] || 0) : 0;
+    const pv = prev.scores ? prev.scores[key] : null;
+    const cv = cur.scores ? cur.scores[key] : null;
+    if (typeof pv !== 'number' || typeof cv !== 'number') continue;   // no reading on one side
     const d = cv - pv;
     if (d === 0) continue;
     const cls = d > 0 ? 'coach-cmp-up' : 'coach-cmp-down';

@@ -67,6 +67,7 @@
       if (Array.isArray(arr) && arr.length > n) { arr.splice(0, arr.length - n); changed = true; }
     }
     cap(s.driver.coachReports, 3);
+    cap(s.driver.runs, 200);
     cap(s.curriculum.attempts, 1000);
     Object.keys(s.curriculum.phases).forEach(function (pid) {
       var ph = s.curriculum.phases[pid];

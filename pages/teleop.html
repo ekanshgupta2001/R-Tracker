@@ -239,13 +239,15 @@
             <div id="an-percentile" class="an-percentile">-</div>
           </div>
         </div>
-        <div class="an-section-title">Skill Breakdown</div>
-        <div class="an-bar-row"><span class="an-bar-lbl">Smoothness</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-smooth"></div></div><span class="an-bar-pct" id="anp-smooth">-</span></div>
-        <div class="an-bar-row"><span class="an-bar-lbl">Stability</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-stab"></div></div><span class="an-bar-pct" id="anp-stab">-</span></div>
+        <div class="an-section-title">Level Performance <span class="an-section-sub" id="an-lvl-window">last 5 sessions</span></div>
+        <div id="an-levels"></div>
+        <div class="an-section-title" style="margin-top:14px">Why · Skill Breakdown <span class="an-section-sub" id="an-atspeed"></span></div>
+        <div class="an-section-note" id="an-style-note"></div>
+        <div class="an-bar-row"><span class="an-bar-lbl">Smoothness</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-smoothness"></div></div><span class="an-bar-pct" id="anp-smoothness">-</span></div>
+        <div class="an-bar-row"><span class="an-bar-lbl">Stability</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-stability"></div></div><span class="an-bar-pct" id="anp-stability">-</span></div>
         <div class="an-bar-row"><span class="an-bar-lbl">Strafe Use</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-strafe"></div></div><span class="an-bar-pct" id="anp-strafe">-</span></div>
-        <div class="an-bar-row"><span class="an-bar-lbl">Turn Ctrl</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-turn"></div></div><span class="an-bar-pct" id="anp-turn">-</span></div>
-        <div class="an-bar-row"><span class="an-bar-lbl">Path Acc.</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-level"></div></div><span class="an-bar-pct" id="anp-level">-</span></div>
-        <div class="an-bar-row"><span class="an-bar-lbl">Recovery</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-recov"></div></div><span class="an-bar-pct" id="anp-recov">-</span></div>
+        <div class="an-bar-row"><span class="an-bar-lbl">Turn Prec.</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-turn"></div></div><span class="an-bar-pct" id="anp-turn">-</span></div>
+        <div class="an-bar-row"><span class="an-bar-lbl">Recovery</span><div class="an-bar-bg"><div class="an-bar-fill" id="anb-recovery"></div></div><span class="an-bar-pct" id="anp-recovery">-</span></div>
         <div class="an-section-title" style="margin-top:14px">Insights</div>
         <div id="an-strengths"></div>
         <div id="an-weaknesses"></div>
@@ -298,6 +300,9 @@
   </div>
 
   <script defer src="../js/utils/validators.js"></script>
+  <!-- Driver rating: level table + outcome-based rating (pure functions, shared with the unit tests) -->
+  <script defer src="../js/level-table.js"></script>
+  <script defer src="../js/driver-rating.js"></script>
   <!-- Teleop JS modules (load order matters — globals shared via plain scripts) -->
   <script defer src="../js/teleop/field.js"></script>
   <script defer src="../js/teleop/robot.js"></script>

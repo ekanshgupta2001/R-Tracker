@@ -233,6 +233,20 @@ colours, glows and emoji gone, `body.rt-legacy` and every `html.light` page bloc
 the 3D scene read their colours from tokens and re-draw on `rt-themechange`. See `AUDIT.md` for the
 data-flow check and `CLAUDE.md` › CSS for the conventions (tokens, primitives, blur budget).
 
+## Driver rating rework (2026-09-03)
+
+The TeleOp Overall Driver Rating now measures outcomes, not style: `js/driver-rating.js` scores each
+stored level run (`driver.runs`, schema 2) on time against par (`js/level-table.js`), path accuracy
+and wall hits, then takes a difficulty-weighted mean of each level's best 3 runs over the last 5
+sessions. The old style metrics are diagnostics under "Why" on the Report Card, sampled only at ≥ 60%
+of max speed; turn precision is now overshoot after release. The Report Card gained a Level Performance
+section and the recommendation starts from the weakest level group. Physics, controls, rendering and
+level geometry are untouched. Tests: `tests/driver-rating.test.js` (fixtures a–d),
+`tests/teleop-rating.spec.js` (scripted run → stored record → on-screen rating equals the formula).
+
+**Open:** the 12 par times are estimates (`parSource: "estimated"`, 1.2 × an expert estimate from
+path length at 8 ft/s). Replace them with measured expert times and flip `parSource` to `"measured"`.
+
 ## Deferred (ideas logged during migration — do not build during a phase)
 
 - Browser-side embeddings (Transformers.js) for paraphrase-tolerant grading, if rubrics

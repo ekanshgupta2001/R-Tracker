@@ -54,7 +54,7 @@ test('export → clear → import restores identical state; banner tracks unsave
   const text = fs.readFileSync(await dl.path(), 'utf8');
   const exported = JSON.parse(text);
   expect(exported.meta.app).toBe('r-tracker');
-  expect(exported.schemaVersion).toBe(1);
+  expect(exported.schemaVersion).toBe(2);
   await expect(page.locator('#rt-dirty-banner')).toBeHidden();
   await expect(page.locator('#sb-progress-status')).toHaveText(/Exported/);
 
@@ -100,4 +100,42 @@ test('imported strings render escaped and unsupported files are rejected', async
   expect(foreign.ok).toBe(false);
   const bad = await page.evaluate(() => RTStore.importJSON('not json'));
   expect(bad.ok).toBe(false);
+});
+
+// Schema 1 → 2: a v1 export (no per-run records, style numbers sampled at any speed)
+// imports cleanly, keeps every level aggregate, session and coach report, gains an
+// empty driver.runs, and drops the old style numbers to "no reading" (null).
+test('a schema-1 progress file migrates to schema 2 without losing anything', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  const v1 = makeSampleState();
+  v1.schemaVersion = 1;
+  delete v1.driver.runs;
+  v1.driver.stats = { overallRating: 71, grade: 'B', smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 75, recovery: 68, totalPracticeMs: 1800000, levelsCompleted: 2, totalDistanceFt: 140, lastUpdated: Date.now() };
+  const r = await page.evaluate(s => RTStore.importJSON(JSON.stringify(s)), v1);
+  expect(r.ok, r.error).toBe(true);
+  const s = await readState(page);
+  expect(s.schemaVersion).toBe(2);
+  expect(s.driver.runs).toEqual([]);
+  expect(s.driver.levels['1'].bestStars).toBe(3);
+  expect(s.driver.levels['2'].attempts).toBe(2);
+  expect(s.driver.sessions.length).toBe(1);
+  expect(s.driver.coachReports.length).toBe(1);
+  expect(s.driver.stats.totalPracticeMs).toBe(1800000);
+  expect(s.driver.stats.smoothness).toBeNull();
+  expect(s.driver.stats.ratedLevels).toBe(0);
+  expect(s.driver.stats.overallRating).toBe(0);
+  expect(s.paths.length).toBe(1);
+  expect(s.curriculum.phases.phase0.status).toBe('verified');
+
+  // The v2 file round-trips as-is (runs validated, kept).
+  const v2 = makeSampleState();
+  const r2 = await page.evaluate(s => RTStore.importJSON(JSON.stringify(s)), v2);
+  expect(r2.ok, r2.error).toBe(true);
+  expect((await readState(page)).driver.runs.length).toBe(3);
+  const badRun = makeSampleState();
+  badRun.driver.runs[0].levelId = 99;
+  const r3 = await page.evaluate(s => RTStore.importJSON(JSON.stringify(s)), badRun);
+  expect(r3.ok).toBe(false);
+  expect(r3.error).toMatch(/runs/);
 });

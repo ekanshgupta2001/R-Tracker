@@ -26,12 +26,24 @@ function hydrateCompletedLevels() {
   renderLevelsSidebar();
 }
 
-// Record one finished level run. r = { success, stars, time, accuracy }.
+// Record one finished level run. r = { success, stars, time, accuracy, run }.
+// `run` is the per-run record from levels.js (buildRunRecord); it is appended to
+// driver.runs, which is what the rating reads. The per-level aggregate is kept too.
 function recordLevelAttempt(levelId, r) {
   _rtSessionLevelsAttempted++;
   if (r && r.success) _rtSessionLevelsCompleted++;
+  var runRecord = null;
+  if (r && r.run) {
+    runRecord = Object.assign({}, r.run, { sessionId: _rtSessionId, timestamp: Date.now() });
+  }
   RTStore.update(function (s) {
     var key = String(levelId);
+    if (runRecord) {
+      if (!Array.isArray(s.driver.runs)) s.driver.runs = [];
+      s.driver.runs.push(runRecord);
+      var runCap = RTSchema.LIMITS.runs;
+      if (s.driver.runs.length > runCap) s.driver.runs.splice(0, s.driver.runs.length - runCap);
+    }
     var lv = s.driver.levels[key] || {
       bestStars: 0, rating: null, bestTime: 0, bestAccuracy: 0,
       attempts: 0, completions: 0, firstCompletedAt: null, lastPlayed: null
@@ -57,12 +69,16 @@ function recordLevelAttempt(levelId, r) {
   });
 }
 
-// Write the current driver scores + cumulative practice time + this session's summary.
+// Write the current rating + style diagnostics + cumulative practice time + this
+// session's summary. The rating comes from the stored runs (js/driver-rating.js);
+// the style numbers are only written when this session had enough time at speed,
+// so a short or slow session never wipes a real reading with "insufficient data".
 function flushDriverStats(opts) {
   // On pagehide, only record something if the student actually drove.
   if (opts && opts.onlyIfActive && (driverMetrics.totalInputs || 0) < 10) return;
   var scores = computeScores();
-  var rating = computeOverallRating();
+  var rr = currentRating();
+  var rating = rr.rating;
   var now = Date.now();
   var elapsed = Math.max(0, now - _rtLastFlushTs);
   _rtLastFlushTs = now;
@@ -70,18 +86,24 @@ function flushDriverStats(opts) {
   var distanceFt = Math.round(driverMetrics.totalDistance || 0);
   var sessionMs = now - _rtSessionStartTs;
   var writeScores = true;
+  var r0 = function (v) { return (v === null || v === undefined) ? null : Math.round(v); };
 
   RTStore.update(function (s) {
     var st = s.driver.stats;
     if (writeScores) {
       st.overallRating = rating;
-      st.grade = gradeFromRating(rating);
-      st.smoothness = Math.round(scores.smoothness);
-      st.stability = Math.round(scores.stability);
-      st.strafe = Math.round(scores.strafe);
-      st.turn = Math.round(scores.turn);
-      st.levelScore = Math.round(scores.levelScore);
-      st.recovery = Math.round(scores.recovery);
+      st.grade = rr.grade;
+      st.levelScore = rr.accuracyMean;
+      st.ratedLevels = rr.ratedLevels;
+      if (scores.sufficient) {
+        st.smoothness = r0(scores.smoothness);
+        st.stability = r0(scores.stability);
+        st.strafe = r0(scores.strafe);
+        st.turn = r0(scores.turn);
+        st.recovery = r0(scores.recovery);
+        st.turnOvershootDeg = scores.turnOvershootDeg === null ? null : Math.round(scores.turnOvershootDeg * 10) / 10;
+        st.atSpeedFraction = Math.round(scores.atSpeedFraction * 100) / 100;
+      }
       st.totalDistanceFt = distanceFt;
       st.lastUpdated = now;
     }
@@ -119,6 +141,7 @@ function saveCoachReport(report) {
         totalDistance: Math.round(driverMetrics.totalDistance || 0),
         totalInputs: driverMetrics.totalInputs || 0,
         levelsCompleted: driverMetrics.levelsCompleted || 0,
+        collisions: (driverMetrics.style && driverMetrics.style.collisions) || 0,
         sessionMs: Math.round(performance.now() - driverMetrics.sessionStart)
       }
     });

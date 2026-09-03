@@ -9,8 +9,8 @@
 (function () {
   'use strict';
 
-  var SCHEMA_VERSION = 1;
-  var APP_VERSION = '2.0.0';
+  var SCHEMA_VERSION = 2;
+  var APP_VERSION = '2.1.0';
 
   var PHASE_IDS = [
     'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5',
@@ -23,6 +23,7 @@
   var LIMITS = {
     coachReports: 20,
     sessions: 500,
+    runs: 600,            // per-run level records (driver.runs); ~50 per level
     attempts: 5000,
     reviewsPerPhase: 10,
     theoryHistoryPerSection: 10,
@@ -41,6 +42,9 @@
   function isScore(n) { return typeof n === 'number' && isFinite(n) && n >= 0 && n <= 100; }
   function isStars(n) { return isInt(n) && n >= 0 && n <= 3; }
   function isPlainObject(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  // Style diagnostics are null until enough of a session was driven at speed.
+  function isScoreOrNull(n) { return n === null || isScore(n); }
+  function isFraction(n) { return typeof n === 'number' && isFinite(n) && n >= 0 && n <= 1; }
 
   // ── Empty shapes ──────────────────────────────────────────────────────────
   function createEmptyPhase(phaseId) {
@@ -75,16 +79,22 @@
     };
   }
 
+  // overallRating/grade come from js/driver-rating.js (level runs against par).
+  // smoothness … recovery are style diagnostics sampled at speed; null = not enough
+  // time at speed to score them. levelScore = mean best path accuracy of rated levels.
   function createEmptyStats() {
     return {
       overallRating: 0,
       grade: 'F',
-      smoothness: 0,
-      stability: 0,
-      strafe: 0,
-      turn: 0,
+      smoothness: null,
+      stability: null,
+      strafe: null,
+      turn: null,
       levelScore: 0,
-      recovery: 0,
+      recovery: null,
+      turnOvershootDeg: null,
+      atSpeedFraction: 0,
+      ratedLevels: 0,
       totalPracticeMs: 0,
       levelsCompleted: 0,
       totalDistanceFt: 0,
@@ -110,7 +120,8 @@
         levels: {},          // "<levelId>": { bestStars, rating, bestTime, bestAccuracy, attempts, completions, firstCompletedAt, lastPlayed }
         stats: createEmptyStats(),
         coachReports: [],    // newest last
-        sessions: []         // newest last
+        sessions: [],        // newest last
+        runs: []             // newest last (v2): { levelId, sessionId, completed, timeMs, pathAccuracy, collisions, atSpeedFraction, styleMetrics, physics, rated, timestamp }
       },
       curriculum: {
         // Sparse: a phase entry is created lazily with createEmptyPhase() the first time it is touched.
@@ -145,6 +156,7 @@
     });
     if (!Array.isArray(out.driver.coachReports)) out.driver.coachReports = [];
     if (!Array.isArray(out.driver.sessions)) out.driver.sessions = [];
+    if (!Array.isArray(out.driver.runs)) out.driver.runs = [];
     if (!isPlainObject(out.curriculum.phases)) out.curriculum.phases = {};
     if (!out.curriculum.phases.phase0) out.curriculum.phases.phase0 = createEmptyPhase('phase0');
     if (!Array.isArray(out.curriculum.attempts)) out.curriculum.attempts = [];
@@ -154,8 +166,29 @@
     return out;
   }
 
-  // MIGRATIONS[n] upgrades a state from version n-1 to n. Empty at v1.
-  var MIGRATIONS = {};
+  // MIGRATIONS[n] upgrades a state from version n-1 to n.
+  var MIGRATIONS = {
+    // v2: the driver rating moved from a style average to per-run level records.
+    // Adds driver.runs (empty: v1 kept no per-run history) and the new stats fields.
+    // Nothing is removed — v1 aggregates (driver.levels, driver.stats, coachReports,
+    // sessions) stay as they were. The old style numbers were sampled at any speed,
+    // so they are cleared to null (not enough at-speed data) rather than trusted.
+    2: function (s) {
+      if (!isPlainObject(s.driver)) s.driver = {};
+      if (!Array.isArray(s.driver.runs)) s.driver.runs = [];
+      if (isPlainObject(s.driver.stats)) {
+        var st = s.driver.stats;
+        ['smoothness', 'stability', 'strafe', 'turn', 'recovery'].forEach(function (k) { st[k] = null; });
+        st.turnOvershootDeg = null;
+        st.atSpeedFraction = 0;
+        st.ratedLevels = 0;
+        // No runs to rate yet: a v1 rating was a style average and no longer means anything.
+        st.overallRating = 0;
+        st.grade = 'F';
+      }
+      return s;
+    }
+  };
 
   function migrate(state) {
     if (!isPlainObject(state)) throw new Error('State is not an object');
@@ -218,9 +251,35 @@
         }
         if (obj.driver.stats !== undefined) {
           if (!isPlainObject(obj.driver.stats)) err('driver.stats must be an object.');
-          else ['overallRating', 'smoothness', 'stability', 'strafe', 'turn', 'levelScore', 'recovery'].forEach(function (f) {
-            if (obj.driver.stats[f] !== undefined && !isScore(obj.driver.stats[f])) err('driver.stats.' + f + ' out of range.');
-          });
+          else {
+            ['overallRating', 'levelScore'].forEach(function (f) {
+              if (obj.driver.stats[f] !== undefined && !isScore(obj.driver.stats[f])) err('driver.stats.' + f + ' out of range.');
+            });
+            ['smoothness', 'stability', 'strafe', 'turn', 'recovery'].forEach(function (f) {
+              if (obj.driver.stats[f] !== undefined && !isScoreOrNull(obj.driver.stats[f])) err('driver.stats.' + f + ' out of range.');
+            });
+            var st = obj.driver.stats;
+            if (st.turnOvershootDeg !== undefined && st.turnOvershootDeg !== null && !(typeof st.turnOvershootDeg === 'number' && st.turnOvershootDeg >= 0)) err('driver.stats.turnOvershootDeg invalid.');
+            if (st.atSpeedFraction !== undefined && !isFraction(st.atSpeedFraction)) err('driver.stats.atSpeedFraction out of range.');
+          }
+        }
+        if (obj.driver.runs !== undefined) {
+          if (!Array.isArray(obj.driver.runs)) err('driver.runs must be an array.');
+          else {
+            if (obj.driver.runs.length > LIMITS.runs) { warnings.push('runs trimmed to ' + LIMITS.runs); obj.driver.runs = obj.driver.runs.slice(-LIMITS.runs); }
+            for (var ri = 0; ri < obj.driver.runs.length; ri++) {
+              var run = obj.driver.runs[ri];
+              if (!isPlainObject(run)) { err('driver.runs[' + ri + '] is invalid.'); break; }
+              if (!(isInt(run.levelId) && run.levelId >= 1 && run.levelId <= LIMITS.levelCount)) { err('driver.runs[' + ri + '].levelId invalid.'); break; }
+              if (typeof run.completed !== 'boolean') { err('driver.runs[' + ri + '].completed must be a boolean.'); break; }
+              if (!(typeof run.timeMs === 'number' && run.timeMs >= 0)) { err('driver.runs[' + ri + '].timeMs invalid.'); break; }
+              if (run.pathAccuracy !== undefined && !isScore(run.pathAccuracy)) { err('driver.runs[' + ri + '].pathAccuracy out of range.'); break; }
+              if (run.collisions !== undefined && !(isInt(run.collisions) && run.collisions >= 0)) { err('driver.runs[' + ri + '].collisions invalid.'); break; }
+              if (run.atSpeedFraction !== undefined && !isFraction(run.atSpeedFraction)) { err('driver.runs[' + ri + '].atSpeedFraction out of range.'); break; }
+              if (run.styleMetrics !== undefined && run.styleMetrics !== null && !isPlainObject(run.styleMetrics)) { err('driver.runs[' + ri + '].styleMetrics invalid.'); break; }
+              if (run.sessionId !== undefined && (typeof run.sessionId !== 'string' || run.sessionId.length > 40)) { err('driver.runs[' + ri + '].sessionId invalid.'); break; }
+            }
+          }
         }
         if (obj.driver.coachReports !== undefined && !Array.isArray(obj.driver.coachReports)) err('driver.coachReports must be an array.');
         if (Array.isArray(obj.driver.coachReports) && obj.driver.coachReports.length > LIMITS.coachReports) { warnings.push('coachReports trimmed to ' + LIMITS.coachReports); obj.driver.coachReports = obj.driver.coachReports.slice(-LIMITS.coachReports); }

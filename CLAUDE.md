@@ -107,6 +107,8 @@ query string and no body.
   `js/store.js` (`RTStore`: load/get/update/save/clear/export/import; backends: sessionStorage, memory).
 - **Grading:** `js/grader.js` (rubric grader for theory), `js/code-check.js` (structural code checker),
   `js/bkt.js` (Bayesian Knowledge Tracing), `js/report.js` + `js/report-templates.js` + `js/charts.js`.
+- **Driver rating:** `js/level-table.js` (par time, difficulty weight and focus per level) and
+  `js/driver-rating.js` (pure functions: run score, windowed difficulty-weighted rating, grade).
 - **Hosting:** any static host. `netlify.toml` has no build command and no functions.
 - **Testing:** Playwright (`tests/*.spec.js`, chromium) + Node's built-in test runner
   (`tests/*.test.js`) for grader fixtures.
@@ -129,6 +131,8 @@ R-Tracker/
 │   ├── grader.js               # gradeTheoryAnswer()  (Phase 4; stub until then)
 │   ├── code-check.js           # checkCode(), getPhaseRequirements()  (Phase 5; stub until then)
 │   ├── bkt.js / report.js / report-templates.js / charts.js   (Phase 3)
+│   ├── level-table.js          # per-level par time, difficulty weight, focus (rating input)
+│   ├── driver-rating.js        # RTDriverRating — run score, windowed rating, grade (pure)
 │   ├── sidebar.js              # Sidebar nav, theme toggle, Export/Import progress
 │   ├── curriculum/
 │   │   ├── lessons.js          # Lesson content (Phases 1-5, Advanced, Capstone) + renderer
@@ -144,9 +148,9 @@ R-Tracker/
 ├── tests/
 │   ├── serve.js                # zero-dependency static server used by playwright.config.js
 │   ├── helpers/state.js        # seed/read state, quiz helpers
-│   ├── *.spec.js               # Playwright: smoke, network-audit, persistence, report, curriculum
-│   ├── *.test.js               # node --test: grader / code-check fixtures
-│   └── fixtures/               # theory-samples.json, code-samples/
+│   ├── *.spec.js               # Playwright: smoke, network-audit, persistence, report, curriculum, teleop-rating
+│   ├── *.test.js               # node --test: grader / code-check / driver-rating fixtures
+│   └── fixtures/               # theory-samples.json, driver-runs.json, code-samples/
 ├── playwright.config.js
 ├── netlify.toml                # static publish + security headers incl. CSP
 ├── AUDIT.md                    # running log of every data flow and why it is safe
@@ -228,6 +232,23 @@ R-Tracker/
   `document`. 12 levels across 4 tiers with star ratings.
 - The driver coach is rule-based (`js/teleop/coach.js`), not an LLM. Reports persist to
   `driver.coachReports`.
+- **Driver rating measures outcomes, not style.** Every level attempt appends a run record to
+  `driver.runs` (`levelId, sessionId, completed, timeMs, pathAccuracy, collisions, atSpeedFraction,
+  styleMetrics, physics, rated, timestamp`). `js/driver-rating.js` scores a run from time against par
+  (`js/level-table.js`; par = 70, 1.5× par = 100, 0.5× par = 20), times `(pathAccuracy/100)^0.5`, minus
+  5 per wall hit; a failed run is 0. The Overall Rating is the difficulty-weighted mean of each level's
+  best 3 run scores over the last 5 sessions (`window.RT_RATING_SESSIONS` overrides), over levels with
+  at least one completed run. Grades: S 95, A 85, B 75, C 65, D 50. Runs driven at non-default physics
+  (the Free Drive sliders) are stored with `rated: false` and excluded. Par times are `estimated`
+  placeholders (1.2 × an expert estimate from path length); replace them with measured times.
+- **Style metrics are diagnostics.** Smoothness, stability, strafe, turn precision and recovery are
+  sampled only at ≥ 60% of max speed and weighted by speed/max (`js/teleop/metrics.js`). Under 20% of
+  moving time at speed they read "insufficient data" (`null` in `driver.stats`). Turn precision is
+  overshoot: degrees the driver corrects back within 1.2 s of releasing a ≥ 60% turn, capped at the
+  coast (0° → 100, 30°+ → 0). They appear under "Why" on the Report Card and never feed the rating.
+  Wall hits are detected in `metrics.js` from the boundary clamp (impact ≥ 1.5 ft/s, once per contact,
+  excused within reach of a checkpoint). `drive.js`, `robot.js`, `input.js`, `view3d.js` and the level
+  paths were not changed for this.
 
 ## Testing
 - `npm test` runs Playwright; `playwright.config.js` starts `tests/serve.js` on `http://127.0.0.1:5501` (its own port, so VS Code Live Server on 5500 never interferes).

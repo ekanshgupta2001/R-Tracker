@@ -21,9 +21,14 @@ export function makeSampleState() {
   s.profile.displayName = 'Test Driver';
   s.driver.levels['1'] = { bestStars: 3, rating: 'gold', bestTime: 6.5, bestAccuracy: 96, attempts: 4, completions: 3, firstCompletedAt: now - 86400000, lastPlayed: now };
   s.driver.levels['2'] = { bestStars: 1, rating: 'bronze', bestTime: 12.1, bestAccuracy: 80, attempts: 2, completions: 1, firstCompletedAt: now, lastPlayed: now };
-  Object.assign(s.driver.stats, { overallRating: 71, grade: 'B', smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 75, recovery: 68, totalPracticeMs: 1800000, levelsCompleted: 2, totalDistanceFt: 140, lastUpdated: now });
-  s.driver.coachReports.push({ generatedAt: now, overallScore: 71, letterGrade: 'B', percentile: 'Top 25% of drivers', driverProfile: 'The Technician — steady and precise', overallSummary: 'Solid session.', detailedAnalysis: '', strengths: ['Strafe'], weaknesses: ['Turn'], trainingPlan: ['Practice turns'], scores: { smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 75, recovery: 68 }, metricsSnapshot: {} });
+  Object.assign(s.driver.stats, { overallRating: 71, grade: 'C', smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 88, recovery: 68, turnOvershootDeg: 12.5, atSpeedFraction: 0.55, ratedLevels: 2, totalPracticeMs: 1800000, levelsCompleted: 2, totalDistanceFt: 140, lastUpdated: now });
+  s.driver.coachReports.push({ generatedAt: now, overallScore: 71, letterGrade: 'C', percentile: 'Around par', driverProfile: 'The Technician — steady and precise', overallSummary: 'Solid session.', detailedAnalysis: '', strengths: ['Strafe'], weaknesses: ['Turn'], trainingPlan: ['Practice turns'], scores: { smoothness: 70, stability: 65, strafe: 80, turn: 60, levelScore: 88, recovery: 68, turnOvershootDeg: 12.5, atSpeedFraction: 0.55 }, metricsSnapshot: {} });
   s.driver.sessions.push({ id: 's_1', startedAt: now - 600000, endedAt: now, durationMs: 600000, levelsAttempted: 3, levelsCompleted: 2, distanceFt: 140, ratingAtEnd: 71 });
+  s.driver.runs.push(
+    { levelId: 1, sessionId: 's_1', completed: true, timeMs: 1500, pathAccuracy: 96, collisions: 0, atSpeedFraction: 0.7, styleMetrics: { smoothness: 70, stability: 65, strafe: null, turn: 60, turnOvershootDeg: 12.5, recovery: 68, sufficient: true }, physics: { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 }, rated: true, timestamp: now - 500000 },
+    { levelId: 2, sessionId: 's_1', completed: false, timeMs: 5000, pathAccuracy: 60, collisions: 1, atSpeedFraction: 0.4, styleMetrics: { smoothness: 60, stability: 60, strafe: 70, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 }, rated: true, timestamp: now - 400000 },
+    { levelId: 2, sessionId: 's_1', completed: true, timeMs: 2100, pathAccuracy: 80, collisions: 0, atSpeedFraction: 0.5, styleMetrics: { smoothness: 62, stability: 61, strafe: 72, turn: null, turnOvershootDeg: null, recovery: null, sufficient: true }, physics: { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 }, rated: true, timestamp: now - 300000 }
+  );
   s.curriculum.phases.phase0 = Object.assign(S.createEmptyPhase('phase0'), { status: 'verified', score: 90, passed: true, attempts: 1, lastAttempt: now, verifiedAt: now, verifiedBy: 'auto' });
   s.curriculum.phases.phase1 = Object.assign(S.createEmptyPhase('phase1'), { status: 'in_progress', startedAt: now, lessonProgress: ['ftc-ecosystem'] });
   s.curriculum.attempts.push({ ts: now, phaseId: 'phase0', sectionId: 'q0', kind: 'mc', graded: true, correct: true, score: 100, attempt: 1 });
@@ -57,10 +62,21 @@ export function makeYearState() {
     const stars = lv <= 4 ? 3 : lv <= 7 ? 2 : 1;
     s.driver.levels[String(lv)] = { bestStars: stars, rating: stars === 3 ? 'gold' : stars === 2 ? 'silver' : 'bronze', bestTime: 5 + lv * 1.7, bestAccuracy: 70 + (12 - lv) * 2, attempts: 3 + lv, completions: 2, firstCompletedAt: now - (300 - lv * 20) * DAY, lastPlayed: now - lv * DAY };
   }
-  Object.assign(s.driver.stats, { overallRating: 74, grade: 'B', smoothness: 78, stability: 66, strafe: 82, turn: 61, levelScore: 77, recovery: 70, totalPracticeMs: 120 * 20 * 60000, levelsCompleted: 9, totalDistanceFt: 24000, lastUpdated: now - 3600000 });
+  Object.assign(s.driver.stats, { overallRating: 74, grade: 'C', smoothness: 78, stability: 66, strafe: 82, turn: 61, levelScore: 84, recovery: 70, turnOvershootDeg: 11.7, atSpeedFraction: 0.62, ratedLevels: 6, totalPracticeMs: 120 * 20 * 60000, levelsCompleted: 9, totalDistanceFt: 24000, lastUpdated: now - 3600000 });
   for (let r = 0; r < 10; r++) {
     const score = 55 + r * 2;
-    s.driver.coachReports.push({ generatedAt: now - (10 - r) * 30 * DAY, overallScore: score, letterGrade: score >= 70 ? 'B' : 'C', percentile: 'Top 25% of drivers', driverProfile: 'The Technician — steady and precise', overallSummary: 'Session ' + r, detailedAnalysis: 'Analysis ' + r, strengths: ['Strafe'], weaknesses: ['Turn control'], trainingPlan: ['Practice Level 5 turns'], scores: { smoothness: 70 + r, stability: 60 + r, strafe: 80, turn: 55 + r, levelScore: 75, recovery: 68 }, metricsSnapshot: {} });
+    s.driver.coachReports.push({ generatedAt: now - (10 - r) * 30 * DAY, overallScore: score, letterGrade: score >= 75 ? 'B' : score >= 65 ? 'C' : 'D', percentile: 'Around par', driverProfile: 'The Technician — steady and precise', overallSummary: 'Session ' + r, detailedAnalysis: 'Analysis ' + r, strengths: ['Strafe'], weaknesses: ['Turn precision'], trainingPlan: ['Practice Level 5 turns'], scores: { smoothness: 70 + r, stability: 60 + r, strafe: 80, turn: 55 + r, levelScore: 84, recovery: 68, turnOvershootDeg: 20 - r, atSpeedFraction: 0.5 }, metricsSnapshot: {} });
+  }
+  // Per-run level records over the last 6 sessions (levels 1–6, mixed results)
+  const PAR = { 1: 1600, 2: 1300, 3: 3000, 4: 6300, 5: 4300, 6: 5300 };
+  const PHYS = { maxSpd: 8, turnRate: 230, accel: 15, friction: 13 };
+  for (let sess = 0; sess < 6; sess++) {
+    const base = now - (6 - sess) * DAY - 3600000;
+    for (let lv = 1; lv <= 6; lv++) {
+      const completed = rnd() > 0.2;
+      const mult = 0.8 + rnd() * 0.8;
+      s.driver.runs.push({ levelId: lv, sessionId: 's_streak' + sess, completed, timeMs: Math.round(PAR[lv] * (completed ? mult : 2.5)), pathAccuracy: 70 + Math.floor(rnd() * 30), collisions: rnd() > 0.7 ? 1 : 0, atSpeedFraction: Math.round(rnd() * 100) / 100, styleMetrics: { smoothness: 60 + Math.floor(rnd() * 30), stability: 60 + Math.floor(rnd() * 30), strafe: null, turn: 50 + Math.floor(rnd() * 40), turnOvershootDeg: Math.round(rnd() * 200) / 10, recovery: null, sufficient: true }, physics: PHYS, rated: true, timestamp: base + lv * 90000 });
+    }
   }
   // Curriculum: phases 0–2 verified, 3 in progress with theory graded, MC attempts logged everywhere
   const verified = (id, extra) => Object.assign(S.createEmptyPhase(id), { status: 'verified', verifiedAt: now - 100 * DAY, verifiedBy: 'auto', passed: true, bestScore: 82 }, extra || {});

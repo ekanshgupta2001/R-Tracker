@@ -35,6 +35,8 @@ let lvl = {
   accInside: 0,
   accFrames: 0,
   ghostT: 0,
+  style: null,     // this attempt's style accumulator (metrics.js newStyleAcc)
+  physics: null,   // the physics the attempt was driven at
 };
 
 // ── Angle Helpers ─────────────────────────────────────────────────────────
@@ -260,6 +262,11 @@ function startCountdown(id) {
 
   prevRatingBeforeLevel = computeOverallRating();
   driverMetrics.pendingReactionTs = null;
+  // Per-run diagnostics (sampled once the attempt starts) and the physics the run
+  // was driven at: par times assume the defaults, so a run at other settings is
+  // stored but not rated (js/level-table.js).
+  lvl.style = newStyleAcc();
+  lvl.physics = { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, friction: cfg.friction };
 
   hideCards();
   document.getElementById('level-hud').style.display = 'block';
@@ -308,7 +315,7 @@ function updateLevel(dt) {
     const cpDist = Math.hypot(bot.x - cp.x, bot.y - cp.y);
     if (cpDist < LVL_CP_RADIUS) {
       if (driverMetrics.pendingReactionTs !== null) {
-        driverMetrics.reactionTimes.push(performance.now() - driverMetrics.pendingReactionTs);
+        recordReaction(performance.now() - driverMetrics.pendingReactionTs);
       }
       driverMetrics.pendingReactionTs = performance.now();
       const hitIdx = lvl.nextCp;
@@ -325,15 +332,40 @@ function updateLevel(dt) {
   if (lvl.elapsed >= def.timeLimit) finishLevel(false);
 }
 
+// The run record the rating reads (js/driver-rating.js). Built from this attempt's
+// own accumulator, so the session totals never leak into it.
+function buildRunRecord(success, avgAcc) {
+  flushTurnTracker();
+  const st = styleScores(lvl.style || newStyleAcc());
+  const r0 = v => (v === null || v === undefined) ? null : Math.round(v);
+  const physics = lvl.physics || { maxSpd: cfg.maxSpd, turnRate: cfg.turnRate, accel: cfg.accel, friction: cfg.friction };
+  return {
+    levelId: lvl.id,
+    completed: !!success,
+    timeMs: Math.round(lvl.elapsed * 1000),
+    pathAccuracy: Math.round(avgAcc * 100),
+    collisions: st.collisions,
+    atSpeedFraction: Math.round(st.atSpeedFraction * 100) / 100,
+    styleMetrics: {
+      smoothness: r0(st.smoothness), stability: r0(st.stability), strafe: r0(st.strafe),
+      turn: r0(st.turn), turnOvershootDeg: st.turnOvershootDeg === null ? null : Math.round(st.turnOvershootDeg * 10) / 10,
+      recovery: r0(st.recovery), sufficient: st.sufficient
+    },
+    physics: physics,
+    rated: RT_LEVEL_TABLE.isDefaultPhysics(physics)
+  };
+}
+
 function finishLevel(success) {
   const def = getLevelDef();
   const avgAcc = lvl.accFrames > 0 ? lvl.accInside / lvl.accFrames : 0;
   const timeFrac = lvl.elapsed / def.timeLimit;
+  const run = buildRunRecord(success, avgAcc);
 
-  console.log(`[Level ${lvl.id}] Finished: ${success ? 'PASSED' : 'FAILED (time out)'}. Waypoints hit: ${Math.max(0, lvl.nextCp - 1)}/${def.path.length - 1}. Accuracy: ${Math.round(avgAcc * 100)}%. Time: ${lvl.elapsed.toFixed(1)}s / ${def.timeLimit}s`);
+  console.log(`[Level ${lvl.id}] Finished: ${success ? 'PASSED' : 'FAILED (time out)'}. Waypoints hit: ${Math.max(0, lvl.nextCp - 1)}/${def.path.length - 1}. Accuracy: ${Math.round(avgAcc * 100)}%. Time: ${lvl.elapsed.toFixed(1)}s / ${def.timeLimit}s. Wall hits: ${run.collisions}`);
 
   if (!success) {
-    recordLevelAttempt(lvl.id, { success: false });
+    recordLevelAttempt(lvl.id, { success: false, run });
     lvl.phase = 'fail';
     showFailCard(def, avgAcc);
   } else {
@@ -351,17 +383,18 @@ function finishLevel(success) {
     driverMetrics.pathAccuracyHistory.push(avgAcc);
     driverMetrics.levelsCompleted++;
 
-    recordLevelAttempt(lvl.id, { success: true, stars: starCount, time: lvl.elapsed, accuracy: avgAcc });
+    recordLevelAttempt(lvl.id, { success: true, stars: starCount, time: lvl.elapsed, accuracy: avgAcc, run });
 
     lvl.phase = 'result';
-    showResultCard(stars, avgAcc, lvl.elapsed, def);
+    showResultCard(stars, avgAcc, lvl.elapsed, def, run);
   }
+  lvl.style = null;
 
   document.getElementById('level-hud').style.display = 'none';
   renderLevelsSidebar();
 }
 
-function showResultCard(stars, acc, time, def) {
+function showResultCard(stars, acc, time, def, run) {
   const starCount = stars.filter(Boolean).length;
   const medals     = ['', 'bronze', 'silver', 'gold'];
   const medalLabel = ['', 'Bronze!', 'Silver!', 'Gold!'];
@@ -372,8 +405,18 @@ function showResultCard(stars, acc, time, def) {
   document.getElementById('rc-medal').innerHTML = starCount && window.RT_ICONS ? window.RT_ICONS.medal : '';
   document.getElementById('rc-title').textContent = medalLabel[starCount];
   document.getElementById('rc-level').textContent = `Level ${def.id} — ${def.name}`;
-  document.getElementById('rc-stats').innerHTML =
-    `<b>${time.toFixed(1)}s</b> of ${def.timeLimit}s &nbsp;|&nbsp; Accuracy <b>${Math.round(acc * 100)}%</b>`;
+  // Time vs par and this run's score (js/driver-rating.js). All numbers are ours.
+  const tbl = RT_LEVEL_TABLE.get(def.id);
+  const parS = tbl ? (tbl.parTimeMs / 1000).toFixed(1) : null;
+  const runScore = (run && tbl) ? Math.round(RTDriverRating.runScore(run, tbl.parTimeMs)) : null;
+  let statsHtml = `<b>${time.toFixed(1)}s</b> of ${def.timeLimit}s` + (parS ? ` (par ${parS}s)` : '') +
+    ` &nbsp;|&nbsp; Accuracy <b>${Math.round(acc * 100)}%</b>`;
+  if (runScore !== null) {
+    statsHtml += `<br>Run score <b>${runScore}</b>`;
+    if (run.collisions > 0) statsHtml += ` &nbsp;|&nbsp; Wall hits <b>${run.collisions}</b>`;
+    if (run.rated === false) statsHtml += `<br><span class="rc-unrated">Custom physics settings: stored, not rated</span>`;
+  }
+  document.getElementById('rc-stats').innerHTML = statsHtml;
 
   ['rc-s1','rc-s2','rc-s3'].forEach((id, i) => {
     document.getElementById(id).className = 'rc-star' + (stars[i] ? ' lit' : '');
@@ -422,7 +465,7 @@ function hideCards() {
 function retryLevel()   { hideCards(); if (lvl.id) startCountdown(lvl.id); }
 function exitToSelect() {
   hideCards();
-  lvl.phase = 'select'; lvl.id = null;
+  lvl.phase = 'select'; lvl.id = null; lvl.style = null;
   document.getElementById('level-hud').style.display = 'none';
   document.getElementById('countdown-overlay').classList.remove('visible');
   if (_cdTimeout) { clearTimeout(_cdTimeout); _cdTimeout = null; }
@@ -451,7 +494,7 @@ function switchMode(mode) {
     document.getElementById('level-hud').style.display = 'none';
     document.getElementById('countdown-overlay').classList.remove('visible');
     if (_cdTimeout) { clearTimeout(_cdTimeout); _cdTimeout = null; }
-    lvl.phase = 'select'; lvl.id = null;
+    lvl.phase = 'select'; lvl.id = null; lvl.style = null;
   }
   resize();
 }

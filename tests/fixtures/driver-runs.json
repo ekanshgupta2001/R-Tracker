@@ -1,0 +1,47 @@
+{
+  "_comment": "Run-record fixtures for tests/driver-rating.test.js. timeMs values are expressed as multiples of each level's parTimeMs via parMultiple; the test resolves them against js/level-table.js so the fixtures survive par re-measurement.",
+  "sets": {
+    "slowSmooth": [
+      { "levelId": 4, "sessionId": "s1", "completed": true, "parMultiple": 2.0, "pathAccuracy": 100, "collisions": 0,
+        "atSpeedFraction": 0.05, "styleMetrics": { "smoothness": 100, "stability": 100, "strafe": 100, "turn": 100, "recovery": 90, "sufficient": false } }
+    ],
+    "fastJerky": [
+      { "levelId": 4, "sessionId": "s1", "completed": true, "parMultiple": 0.8333, "pathAccuracy": 85, "collisions": 0,
+        "atSpeedFraction": 0.85, "styleMetrics": { "smoothness": 45, "stability": 60, "strafe": 55, "turn": 50, "recovery": 80, "sufficient": true } }
+    ],
+    "fastJerkyThreeHits": [
+      { "levelId": 4, "sessionId": "s1", "completed": true, "parMultiple": 0.8333, "pathAccuracy": 85, "collisions": 3,
+        "atSpeedFraction": 0.85, "styleMetrics": { "smoothness": 45, "stability": 60, "strafe": 55, "turn": 50, "recovery": 80, "sufficient": true } }
+    ],
+    "expert": [
+      { "levelId": 1,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 2,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 3,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 4,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 5,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 6,  "sessionId": "e1", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 7,  "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 8,  "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 9,  "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 10, "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 11, "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 12, "sessionId": "e2", "completed": true, "parMultiple": 0.714, "pathAccuracy": 97, "collisions": 0 },
+      { "levelId": 1,  "sessionId": "e3", "completed": true, "parMultiple": 0.70,  "pathAccuracy": 98, "collisions": 0 },
+      { "levelId": 4,  "sessionId": "e3", "completed": true, "parMultiple": 0.70,  "pathAccuracy": 98, "collisions": 0 },
+      { "levelId": 12, "sessionId": "e3", "completed": true, "parMultiple": 0.70,  "pathAccuracy": 96, "collisions": 0 }
+    ],
+    "rookie": [
+      { "levelId": 1, "sessionId": "r1", "completed": false, "parMultiple": 3.1, "pathAccuracy": 60, "collisions": 1 },
+      { "levelId": 1, "sessionId": "r1", "completed": true,  "parMultiple": 1.5, "pathAccuracy": 85, "collisions": 0 },
+      { "levelId": 2, "sessionId": "r1", "completed": true,  "parMultiple": 1.5, "pathAccuracy": 85, "collisions": 1 },
+      { "levelId": 3, "sessionId": "r1", "completed": false, "parMultiple": 2.3, "pathAccuracy": 70, "collisions": 0 },
+      { "levelId": 3, "sessionId": "r1", "completed": true,  "parMultiple": 1.5, "pathAccuracy": 85, "collisions": 0 },
+      { "levelId": 4, "sessionId": "r1", "completed": false, "parMultiple": 1.6, "pathAccuracy": 65, "collisions": 2 }
+    ],
+    "rookieImprovedToPar": [
+      { "levelId": 1, "sessionId": "r2", "completed": true, "parMultiple": 1.0, "pathAccuracy": 85, "collisions": 0 },
+      { "levelId": 2, "sessionId": "r2", "completed": true, "parMultiple": 1.0, "pathAccuracy": 85, "collisions": 0 },
+      { "levelId": 3, "sessionId": "r2", "completed": true, "parMultiple": 1.0, "pathAccuracy": 85, "collisions": 0 }
+    ]
+  }
+}

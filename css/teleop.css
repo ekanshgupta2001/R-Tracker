@@ -654,6 +654,31 @@ input[type=range] {
   margin-bottom: 16px;
 }
 
+/* Level Performance + "Why" diagnostics (same look as the existing rows) */
+.an-section-sub  { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-faint); margin-left: 6px; }
+.an-section-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.5; margin: -2px 0 10px; }
+.an-lvl-head, .an-lvl-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 108px 40px;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+.an-lvl-head  { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; color: var(--text-muted); padding: 0 8px 4px; }
+.an-lvl-head span:not(:first-child), .an-lvl-row span:not(:first-child) { text-align: right; }
+.an-lvl-row   { background: var(--glass-inset); border: 1px solid var(--glass-border); border-radius: 6px; padding: 5px 8px; margin-bottom: 4px; color: var(--text-secondary); }
+.an-lvl-name  { color: var(--text); }
+.an-lvl-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+.an-lvl-score.good { color: var(--good); }
+.an-lvl-score.ok   { color: var(--warn); }
+.an-lvl-score.poor { color: var(--bad); }
+.an-lvl-score.na   { color: var(--text-faint); font-weight: 500; }
+.an-lvl-time, .an-lvl-runs { font-variant-numeric: tabular-nums; }
+.an-lvl-empty { font-size: 11.5px; color: var(--text-muted); padding: 4px 0 6px; line-height: 1.5; }
+.an-bar-fill.na { background: transparent; }
+.an-bar-pct.na  { color: var(--text-faint); font-weight: 500; }
+.rc-unrated     { color: var(--warn); font-size: 10.5px; }
+
 .an-footer { display: flex; gap: 8px; justify-content: flex-end; }
 
 /* ── Analytics Tab Bar ───────────────────────────────────────────────────── */

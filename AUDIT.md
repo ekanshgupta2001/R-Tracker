@@ -71,8 +71,8 @@ the app. It changes nothing in this document's claim, and the checks below were 
 
 ### Quota handling
 `sessionStorage` is ~5 MB per origin. If a save hits the quota, `RTStore.save()` drops the cached STL, then
-trims history (coach reports to 3, attempts to 1000, code checks to 3 per phase, theory history to 3), and
-if that still fails keeps the state in memory and shows "Storage full — export now".
+trims history (coach reports to 3, level runs to 200, attempts to 1000, code checks to 3 per phase, theory
+history to 3), and if that still fails keeps the state in memory and shows "Storage full — export now".
 
 ## Export / Import
 
@@ -138,6 +138,22 @@ team activity feeds, the coach dashboard and manage-team pages; Google Fonts and
   strategy module (`advanced_strategy`) is a written analysis and is kept as a mentor-review submission.
   A student can also mark any deliverable **submitted** for a mentor, which unlocks the next phase but is
   never displayed as verified.
+- **Driver rating** (`js/level-table.js` + `js/driver-rating.js`, 2026-09-03): every TeleOp level
+  attempt appends one run record to `driver.runs` inside `rt-state` — level id, a per-tab session id,
+  completed, time, path accuracy, wall hits, share of the run at speed, the style diagnostics for that
+  run, the physics sliders in effect, and a timestamp. Nothing else is recorded (no input traces, no
+  positions). The Overall Rating is a pure function of those records against a fixed par table:
+  time against par, path accuracy and wall hits, difficulty-weighted over the last 5 sessions. Style
+  numbers (smoothness, stability, strafe, turn overshoot, recovery) are sampled only at ≥ 60% of max
+  speed and are diagnostics on the Report Card; they do not feed the rating. Par times are estimated
+  placeholders marked `parSource: "estimated"` in the table. **Schema 2**: the migration adds the
+  empty `driver.runs` array and clears the v1 style numbers to `null` (they were sampled at any speed
+  and no longer mean anything); every v1 field is kept. `driver.runs` is capped at 600 records
+  (`RTSchema.LIMITS.runs`), validated on import (level id range, booleans, ranges), and trimmed to 200
+  by the quota chain. `tests/driver-rating.test.js` checks the formula against fixtures;
+  `tests/teleop-rating.spec.js` drives a level and checks the stored record, the Report Card and that
+  the on-screen rating equals the formula. This is student data: it lives only in the tab and the
+  export file, like everything else in `rt-state`.
 
 ## Third-party code shipped (vendored, read, no runtime network)
 

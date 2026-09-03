@@ -96,9 +96,15 @@
     var stats = ctx.stats;
     if (!stats || !stats.lastUpdated) { el.innerHTML = '<div class="rpt-empty">No skill data yet.</div>'; return; }
     var keys = window.RTReportText.SKILL_KEYS, labels = window.RTReportText.SKILL_LABELS;
+    // Style diagnostics are null until a TeleOp session had ≥ 20% of its driving at speed.
+    var missing = keys.filter(function (k) { return stats[k] === null || stats[k] === undefined; });
     var html = '<div class="sk-layout"><div class="sk-radar-wrap"><canvas id="skills-radar" aria-label="Skill radar chart"></canvas></div><div class="sk-list">';
-    keys.forEach(function (k) { html += bar(labels[k], Number(stats[k]) || 0); });
+    keys.forEach(function (k) {
+      var v = stats[k];
+      html += (v === null || v === undefined) ? bar(labels[k], 0, '—') : bar(labels[k], Number(v) || 0);
+    });
     html += '</div></div>';
+    if (missing.length) html += '<div class="rpt-detail">Style diagnostics are sampled at 60% of max speed or more and do not affect the rating. They appear after a session with enough driving at speed.</div>';
     el.innerHTML = html;
     var canvas = $('skills-radar');
     if (canvas && window.RTCharts) {

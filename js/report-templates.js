@@ -8,7 +8,7 @@
   'use strict';
 
   var DAY = 86400000;
-  var SKILL_LABELS = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn control', levelScore: 'Path accuracy', recovery: 'Recovery' };
+  var SKILL_LABELS = { smoothness: 'Smoothness', stability: 'Stability', strafe: 'Strafe', turn: 'Turn precision', levelScore: 'Path accuracy', recovery: 'Recovery' };
   var SKILL_KEYS = ['smoothness', 'stability', 'strafe', 'turn', 'levelScore', 'recovery'];
 
   function dayKey(ts) { var d = new Date(ts); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
@@ -18,14 +18,17 @@
   // ── Driver ────────────────────────────────────────────────────────────────
   function driverSummary(stats, lastReport, prevReport) {
     if (!stats || !stats.lastUpdated) return { headline: 'No driving data yet.', detail: 'Complete a level or a free-drive session in TeleOp Practice and open the driver report there.' };
+    // Style diagnostics are null until a session had enough time at speed; skip those.
     var best = null, worst = null;
     SKILL_KEYS.forEach(function (k) {
-      var v = Number(stats[k]) || 0;
+      var v = stats[k];
+      if (typeof v !== 'number' || !isFinite(v)) return;
       if (!best || v > best.v) best = { k: k, v: v };
       if (!worst || v < worst.v) worst = { k: k, v: v };
     });
     var headline = 'Overall driver rating ' + (stats.overallRating || 0) + ' (' + (stats.grade || 'F') + ').';
     var parts = [];
+    if (typeof stats.ratedLevels === 'number') parts.push(stats.ratedLevels ? 'Rated on ' + plural(stats.ratedLevels, 'level') + ' against par.' : 'No rated level runs yet.');
     if (best && worst && best.k !== worst.k) parts.push('Strongest skill: ' + SKILL_LABELS[best.k] + ' (' + best.v + '). Weakest: ' + SKILL_LABELS[worst.k] + ' (' + worst.v + ').');
     if (lastReport && prevReport && typeof lastReport.overallScore === 'number' && typeof prevReport.overallScore === 'number') {
       var d = lastReport.overallScore - prevReport.overallScore;
