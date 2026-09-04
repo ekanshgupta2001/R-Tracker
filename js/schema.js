@@ -3,6 +3,11 @@
 // by createEmptyState()/createEmptyPhase(), it is not stored. Bump SCHEMA_VERSION
 // and add a MIGRATIONS entry whenever the shape changes.
 //
+// meta carries two UI flags alongside the bookkeeping: firstRunDismissed (the home
+// page's welcome panel) and exportReminderDismissed (the ✕ on the unsaved-progress
+// banner, cleared again by every export/import). Both are plain booleans that
+// fillDefaults() supplies when missing, so adding one is not a schema bump.
+//
 // Loaded non-deferred in <head> before js/store.js on every page.
 // Exposes: window.RTSchema
 
@@ -37,7 +42,7 @@
     importMaxBytes: 4 * 1024 * 1024
   };
 
-  // ── Small validators (also re-exported by js/utils/validators.js) ─────────
+  // ── Small validators ──────────────────────────────────────────────────────
   function isInt(n) { return typeof n === 'number' && isFinite(n) && Math.floor(n) === n; }
   function isScore(n) { return typeof n === 'number' && isFinite(n) && n >= 0 && n <= 100; }
   function isStars(n) { return isInt(n) && n >= 0 && n <= 3; }
@@ -113,7 +118,8 @@
         updatedAt: now,
         lastExportedAt: null,
         dirtySinceExport: false,
-        firstRunDismissed: false
+        firstRunDismissed: false,        // home page welcome panel closed with "Start fresh"
+        exportReminderDismissed: false   // unsaved-progress banner closed; reset on export/import
       },
       profile: { displayName: '' },
       driver: {
@@ -166,7 +172,27 @@
     return out;
   }
 
-  // MIGRATIONS[n] upgrades a state from version n-1 to n.
+  // True when the state holds anything a student would mind losing: a level result,
+  // a run, a session or coach report, a graded attempt, a saved path or strategy, or
+  // a curriculum phase that has been started. The unsaved-progress banner and the
+  // home page's welcome panel both key off this.
+  function hasProgress(s) {
+    if (!isPlainObject(s)) return false;
+    var d = isPlainObject(s.driver) ? s.driver : {};
+    var c = isPlainObject(s.curriculum) ? s.curriculum : {};
+    if (Object.keys(d.levels || {}).length) return true;
+    if ((d.runs || []).length || (d.sessions || []).length || (d.coachReports || []).length) return true;
+    if ((c.attempts || []).length) return true;
+    if ((s.paths || []).length || (s.strategies || []).length) return true;
+    var phases = isPlainObject(c.phases) ? c.phases : {};
+    return Object.keys(phases).some(function (pid) {
+      var ph = phases[pid];
+      return !!(ph && ph.status && ph.status !== 'locked' && ph.status !== 'not_started');
+    });
+  }
+
+  // MIGRATIONS[n] upgrades a state from version n-1 to n. (Additive meta flags such
+  // as exportReminderDismissed need no entry: fillDefaults() supplies them.)
   var MIGRATIONS = {
     // v2: the driver rating moved from a style average to per-run level records.
     // Adds driver.runs (empty: v1 kept no per-run history) and the new stats fields.
@@ -364,6 +390,7 @@
     createEmptyState: createEmptyState,
     createEmptyPhase: createEmptyPhase,
     createEmptyStats: createEmptyStats,
+    hasProgress: hasProgress,
     migrate: migrate,
     validateImport: validateImport
   };

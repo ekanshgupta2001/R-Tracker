@@ -260,7 +260,7 @@
         if (!is3DInit) init3D();
         applySTL(buf);
         // Cache for this tab only (sessionStorage, key rt-stl-model). Not student data; not exported.
-        // Skipped for large models so the tab's storage stays free for progress (see AUDIT.md).
+        // Skipped for large models so the tab's storage stays free for progress.
         try {
           var bytes = new Uint8Array(buf);
           var bin = '';

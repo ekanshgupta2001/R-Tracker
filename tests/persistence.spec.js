@@ -2,7 +2,7 @@
 // identical state, the memory backend keeps nothing, and imported strings are untrusted.
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
-import { makeSampleState, seedState, readState, answerQuizCorrectly, openSidebar } from './helpers/state.js';
+import { loadSchema, makeSampleState, seedState, readState, answerQuizCorrectly, openSidebar } from './helpers/state.js';
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', d => d.accept());
@@ -30,6 +30,14 @@ test('progress survives reload and navigation within the tab (sessionStorage bac
   await page.reload({ waitUntil: 'load' });
   await page.evaluate(() => openPathModal('load'));
   await expect(page.locator('.ppc-path-name')).toContainText('keep me');
+
+  // A path name is user text: one that looks like markup is shown as text, not rendered as an element.
+  await page.evaluate(() => { addWaypointAtCenter(); addWaypointAtCenter(); openPathModal('save'); });
+  await page.fill('#ppc-name-input', '<b>bold</b> path');
+  await page.click('.ppc-save-btn');
+  await page.evaluate(() => openPathModal('load'));
+  await expect(page.locator('#ppc-path-list .ppc-path-name').first()).toHaveText('<b>bold</b> path');
+  expect(await page.locator('#ppc-path-list b').count()).toBe(0);
 
   const keys = await page.evaluate(() => Object.keys(sessionStorage));
   expect(keys).toContain('rt-state');
@@ -69,6 +77,100 @@ test('export → clear → import restores identical state; banner tracks unsave
   const strip = s => { const c = JSON.parse(JSON.stringify(s)); delete c.meta; return c; };
   expect(strip(after)).toEqual(strip(before));
   expect(after.meta.dirtySinceExport).toBe(false);
+});
+
+// The banner's ✕ is stored in state, so it holds on every page of the tab and comes back
+// only after an export starts a new cycle. Dismissing it is not itself an unsaved change.
+test('dismissing the unsaved banner holds across pages until the next export', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await seedState(page, makeSampleState());
+  await page.reload({ waitUntil: 'load' });
+  await openSidebar(page);
+
+  await page.evaluate(() => RTStore.update(s => { s.profile.displayName = 'Changed'; }));
+  await expect(page.locator('#rt-dirty-banner')).toBeVisible();
+  await page.click('#rt-dirty-banner .rt-dirty-close');
+  await expect(page.locator('#rt-dirty-banner')).toBeHidden();
+  let s = await readState(page);
+  expect(s.meta.exportReminderDismissed).toBe(true);
+  expect(s.meta.dirtySinceExport).toBe(true);
+  await expect(page.locator('#sb-progress-status')).toHaveText(/Unsaved/);
+
+  for (const path of ['/pages/report.html', '/pages/curriculum.html', '/pages/teleop.html']) {
+    await page.goto(path, { waitUntil: 'load' });
+    await page.waitForFunction(() => !!document.getElementById('rt-dirty-banner'));
+    await page.evaluate(() => RTStore.update(s => { s.profile.displayName = 'Changed again'; }));
+    await expect(page.locator('#rt-dirty-banner'), path).toBeHidden();
+  }
+
+  // Export starts a new cycle: the next change shows the banner once more.
+  await page.goto('/', { waitUntil: 'load' });
+  await openSidebar(page);
+  await Promise.all([page.waitForEvent('download'), page.click('#sb-export-btn')]);
+  s = await readState(page);
+  expect(s.meta.exportReminderDismissed).toBe(false);
+  await expect(page.locator('#rt-dirty-banner')).toBeHidden();
+  await page.evaluate(() => RTStore.update(s => { s.profile.displayName = 'After export'; }));
+  await expect(page.locator('#rt-dirty-banner')).toBeVisible();
+
+  // An imported file never carries a dismissal into the new tab.
+  const dismissed = makeSampleState();
+  dismissed.meta.exportReminderDismissed = true;
+  await seedState(page, dismissed);
+  expect((await readState(page)).meta.exportReminderDismissed).toBe(false);
+});
+
+test('the milestone toast fires once per page, not on every milestone', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await seedState(page, makeSampleState());
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => !!document.getElementById('rt-toast'));
+
+  await page.evaluate(() => RTStore.update(s => { s.profile.displayName = 'Changed'; }));
+  await page.evaluate(() => rtDismissBanner());          // the toast is skipped while the banner is up
+  await page.evaluate(() => rtNudgeExport('first'));
+  await expect(page.locator('#rt-toast')).toBeVisible();
+  await expect(page.locator('#rt-toast')).toContainText('first');
+
+  await page.evaluate(() => { document.getElementById('rt-toast').hidden = true; });
+  await page.evaluate(() => rtNudgeExport('second'));
+  await expect(page.locator('#rt-toast')).toBeHidden();
+  await expect(page.locator('#rt-toast')).not.toContainText('second');
+});
+
+test('the welcome panel hides once the tab holds progress or an opened file', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await expect(page.locator('#rt-first-run')).toBeVisible();      // fresh tab
+
+  await seedState(page, makeSampleState());                        // progress
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await expect(page.locator('#rt-first-run')).toBeHidden();
+
+  const S = loadSchema();
+  const emptyExport = S.createEmptyState();                        // an opened file with nothing in it yet
+  emptyExport.meta.lastExportedAt = Date.now();
+  await seedState(page, emptyExport);
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await expect(page.locator('#rt-first-run')).toBeHidden();
+
+  await page.evaluate(() => RTStore.clear());                      // back to a fresh tab
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await expect(page.locator('#rt-first-run')).toBeVisible();
+  await page.fill('#rt-first-run-name', 'Sam');
+  await page.click('#rt-first-run .first-run-btn.primary');
+  await expect(page.locator('#rt-first-run')).toBeHidden();
+  const s = await readState(page);
+  expect(s.meta.firstRunDismissed).toBe(true);
+  expect(s.profile.displayName).toBe('Sam');
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('#sidebar');
+  await expect(page.locator('#rt-first-run')).toBeHidden();
 });
 
 test('MemoryBackend keeps nothing across a reload (the one-constant fallback)', async ({ page, context }) => {

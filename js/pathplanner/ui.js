@@ -1,4 +1,13 @@
-// ── R-Tracker Path Planner — UI, Cloud Modal & Init ──────────────────────
+// ── R-Tracker Path Planner — UI, Saved-Paths Modal & Init ────────────────
+
+// Escapes a string for innerHTML. Path ids and names come from the student's own
+// state or imported progress file, so they are user-provided text, never markup.
+function escapeHTML(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
 
 // ── Waypoint Editor ───────────────────────────────────────────────────────
 function refreshUI() {
@@ -277,11 +286,11 @@ function renderSavedPaths() {
     const row = document.createElement('div');
     row.className = 'ppc-path-item';
     row.innerHTML = `
-      <div onclick="loadSavedPath('${sanitizeHTML(d.id)}')" style="flex:1;min-width:0">
-        <div class="ppc-path-name">${sanitizeHTML(d.name)}</div>
-        <div class="ppc-path-meta">${(d.waypoints||[]).length} waypoints &middot; ${sanitizeHTML(updated)}</div>
+      <div onclick="loadSavedPath('${escapeHTML(d.id)}')" style="flex:1;min-width:0">
+        <div class="ppc-path-name">${escapeHTML(d.name)}</div>
+        <div class="ppc-path-meta">${(d.waypoints||[]).length} waypoints &middot; ${escapeHTML(updated)}</div>
       </div>
-      <button class="ppc-path-del" onclick="deleteSavedPath('${sanitizeHTML(d.id)}',event)" title="Delete">&#128465;</button>`;
+      <button class="ppc-path-del" onclick="deleteSavedPath('${escapeHTML(d.id)}',event)" title="Delete">&#128465;</button>`;
     container.appendChild(row);
   });
 }

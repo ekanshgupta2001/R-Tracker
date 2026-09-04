@@ -48,7 +48,8 @@
         <div class="home-tagline">Rundle Robotics personally designed visualizer</div>
       </header>
 
-      <!-- First-run panel: progress lives in this tab and in an exported file -->
+      <!-- First-run panel: progress lives in this tab and in an exported file.
+           Shown only while the tab holds no progress, no imported file, and "Start fresh" was never pressed. -->
       <div class="first-run" id="rt-first-run" hidden>
         <div class="first-run-title">Welcome to R-Tracker</div>
         <div class="first-run-text">Your progress stays in this browser tab and in a file you export from the sidebar. Nothing is sent anywhere. Start fresh, or open a progress file you exported earlier.</div>
@@ -115,7 +116,6 @@
     </div>
   </main>
 
-  <script defer src="js/utils/validators.js"></script>
   <script>
     /* ── Report Bar Stats (from local progress) ───────────────────────────── */
     function scoreToGrade(s) {
@@ -373,7 +373,9 @@
       var panel = document.getElementById('rt-first-run');
       if (!panel) return;
       var s = RTStore.get();
-      panel.hidden = !!s.meta.firstRunDismissed;
+      // Gone once "Start fresh" was pressed, once anything has been done in this tab, or
+      // once a progress file was opened (every exported file carries lastExportedAt).
+      panel.hidden = !!(s.meta.firstRunDismissed || s.meta.lastExportedAt || RTSchema.hasProgress(s));
     }
     window.rtFirstRunStart = function() {
       var nameEl = document.getElementById('rt-first-run-name');

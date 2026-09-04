@@ -1,8 +1,9 @@
 // Zero-dependency static server for local use and Playwright.
 //   node tests/serve.js            → http://127.0.0.1:5500
 //   PORT=8080 node tests/serve.js
-// Serves the repo root. GET/HEAD only. Sends the same Content-Security-Policy as
-// netlify.toml so local runs enforce what production enforces.
+// Serves the repo root. GET/HEAD only. Sends the Content-Security-Policy from the
+// <meta> on index.html as a response header too, so local runs enforce the same
+// policy every page carries (there is no server-side header layer in production).
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -37,8 +38,8 @@ const MIME = {
 
 export function readCsp() {
   try {
-    const toml = fs.readFileSync(path.join(ROOT, 'netlify.toml'), 'utf8');
-    const m = toml.match(/Content-Security-Policy\s*=\s*"([^"]+)"/);
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const m = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/);
     if (m) return m[1];
   } catch (e) { /* fall through */ }
   return "default-src 'self'";

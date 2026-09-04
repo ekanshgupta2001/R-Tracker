@@ -205,7 +205,8 @@ a:hover { color: var(--link-hover); }
    transitioning a filter re-rasterises it every frame. Every frame of this
    crossfade also re-blurs every backdrop-filtered surface on the page, which is
    why page stylesheets keep blur to a handful of top-level sheets/cards and give
-   repeated inner elements flat fills (see CLAUDE.md, "blur budget"). */
+   repeated inner elements flat fills (the "blur budget": a few backdrop-filters
+   per page, never one per list item). */
 html.rt-theming *, html.rt-theming *::before, html.rt-theming *::after {
   transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease, box-shadow 0.45s ease, opacity 0.45s ease !important;
 }

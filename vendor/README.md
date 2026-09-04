@@ -17,7 +17,7 @@ Verify with `shasum -a 256 -c vendor/three/SHA256SUMS` (run from `vendor/three/`
 Network note for the audit: `three.min.js` contains `XMLHttpRequest` (inside `FileLoader`) and
 `STLLoader.js` has a `load(url)` method that uses it. Neither path is reachable in R-Tracker:
 `js/teleop/view3d.js` reads the student's STL file with a `FileReader` and calls
-`STLLoader.parse(arrayBuffer)` only. Grep gate 2 therefore excludes `vendor/`.
+`STLLoader.parse(arrayBuffer)` only, so a grep for network calls can exclude `vendor/`.
 
 License: MIT — Copyright 2010-2021 Three.js Authors (header retained in `three.min.js`).
 

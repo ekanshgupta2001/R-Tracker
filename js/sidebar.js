@@ -145,7 +145,7 @@
   }
 
   // ── Theme ──────────────────────────────────────────────────────────────────
-  // The only localStorage key in the app: a UI preference, not student data (see AUDIT.md).
+  // The only localStorage key in the app: a UI preference, not student data.
   // `light` on <html> is light glass and is what the boot script sets by default;
   // removing it gives dark glass. Stored value is 'light' | 'dark'.
   let isDark = !document.documentElement.classList.contains('light');
@@ -217,7 +217,11 @@
   // ── Progress: Export / Import + unsaved banner ─────────────────────────────
   // Progress lives in this tab (sessionStorage) and in the file the student exports.
   // Export builds a Blob and clicks a detached <a download>; nothing is uploaded.
-  let bannerDismissed = false;
+  // The banner's ✕ is remembered in state (meta.exportReminderDismissed) so it holds
+  // across every page in the tab; export/import clear it, so the banner shows at most
+  // once per export cycle. The milestone toast is throttled per page load.
+  const NUDGE_MIN_INTERVAL_MS = 10 * 60 * 1000;
+  let lastNudgeAt = 0;
   let toastTimer = null;
 
   function $(id) { return document.getElementById(id); }
@@ -228,19 +232,6 @@
     if (d < 3600000) return Math.round(d / 60000) + ' min ago';
     if (d < 86400000) return Math.round(d / 3600000) + ' h ago';
     return new Date(ts).toLocaleDateString();
-  }
-
-  function hasAnyProgress(s) {
-    if (!s) return false;
-    if (Object.keys(s.driver.levels || {}).length) return true;
-    if ((s.driver.sessions || []).length || (s.driver.coachReports || []).length) return true;
-    if ((s.curriculum.attempts || []).length) return true;
-    if ((s.paths || []).length || (s.strategies || []).length) return true;
-    const phases = s.curriculum.phases || {};
-    return Object.keys(phases).some(pid => {
-      const ph = phases[pid];
-      return ph && ph.status && ph.status !== 'locked' && ph.status !== 'not_started';
-    });
   }
 
   function describeState(s) {
@@ -290,7 +281,8 @@
     }
     const banner = $('rt-dirty-banner');
     if (banner) {
-      const show = quota || (dirty && !bannerDismissed && hasAnyProgress(s));
+      // A dismissal holds tab-wide until the next export; a full store is never muted.
+      const show = quota || (dirty && !s.meta.exportReminderDismissed && RTSchema.hasProgress(s));
       banner.hidden = !show;
       const txt = $('rt-dirty-text');
       if (txt) txt.textContent = quota
@@ -326,7 +318,6 @@
     a.download = 'rtracker-progress-' + new Date().toISOString().slice(0, 10) + '.json';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    bannerDismissed = false;
     updateProgressUI();
   };
 
@@ -336,7 +327,9 @@
   };
 
   window.rtDismissBanner = function () {
-    bannerDismissed = true;
+    if (!window.RTStore) return;
+    // silent: closing a reminder must not itself count as an unsaved change.
+    RTStore.update(s => { s.meta.exportReminderDismissed = true; }, { silent: true });
     updateProgressUI();
   };
 
@@ -345,6 +338,10 @@
     ensureBanner();
     const t = $('rt-toast');
     if (!t) return;
+    const banner = $('rt-dirty-banner');
+    if (banner && !banner.hidden) return;                          // the banner already says it
+    if (Date.now() - lastNudgeAt < NUDGE_MIN_INTERVAL_MS) return;  // one nudge per 10 min per page
+    lastNudgeAt = Date.now();
     t.innerHTML = '<span>' + window.escSidebar(msg || 'Nice — export your progress so you don\'t lose it.') + '</span>' +
       '<button class="rt-dirty-btn" onclick="rtExportProgress()">Export</button>';
     t.hidden = false;
@@ -366,7 +363,7 @@
       if (!v.ok) { alert('This file cannot be imported:\n• ' + v.errors.slice(0, 3).join('\n• ')); return; }
       const cur = RTStore.get();
       let msg = 'Replace your current progress with "' + file.name + '"?\n\n' + describeState(parsed);
-      if (hasAnyProgress(cur) && cur.meta.dirtySinceExport) msg += '\n\nYour current progress has unsaved changes — cancel and export first if you want to keep it.';
+      if (RTSchema.hasProgress(cur) && cur.meta.dirtySinceExport) msg += '\n\nYour current progress has unsaved changes — cancel and export first if you want to keep it.';
       msg += '\n\nThis cannot be undone.';
       if (!confirm(msg)) return;
       const r = RTStore.importJSON(text);

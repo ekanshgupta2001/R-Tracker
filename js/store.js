@@ -170,6 +170,7 @@
     update(function (s) {
       s.meta.lastExportedAt = Date.now();
       s.meta.dirtySinceExport = false;
+      s.meta.exportReminderDismissed = false;   // a new export cycle: the banner may show once more
       s.meta.appVersion = window.RTSchema.APP_VERSION;
     }, { silent: true });
     return JSON.stringify(state, null, 2);
@@ -185,6 +186,7 @@
     get();
     state = migrated;
     state.meta.dirtySinceExport = false;
+    state.meta.exportReminderDismissed = false;   // never inherit a dismissal from the file
     save();
     notify('import');
     return { ok: true, state: state, warnings: v.warnings };

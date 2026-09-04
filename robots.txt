@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: /pages/
-Allow: /index.html
-Allow: /pages/about.html

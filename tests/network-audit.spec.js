@@ -1,6 +1,7 @@
 // The proof for the school: a full scripted student session during which every
 // request the browser makes is a same-origin GET for a static file, with no query
-// string and no body. Also checks the CSP header and the per-page <meta> copy match.
+// string and no body. Also checks the CSP header is sent and every page's <meta> CSP
+// is identical to the one on index.html.
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,10 +11,11 @@ import { answerQuizCorrectly, unlockPhase, readState, openSidebar } from './help
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ALLOWED_EXT = ['.html', '.js', '.css', '.svg', '.webp', '.png', '.woff2', '.json', '.ico'];
 
-function tomlCsp() {
-  const toml = fs.readFileSync(path.join(ROOT, 'netlify.toml'), 'utf8');
-  const m = toml.match(/Content-Security-Policy\s*=\s*"([^"]+)"/);
-  if (!m) throw new Error('CSP not found in netlify.toml');
+// The policy on index.html is the reference copy; every other page must carry the same string.
+function pageCsp() {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const m = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/);
+  if (!m) throw new Error('CSP meta not found in index.html');
   return m[1];
 }
 
@@ -41,7 +43,7 @@ test('full student session makes only same-origin static GETs', async ({ page, c
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   page.on('dialog', d => d.accept());
 
-  const expectedMeta = tomlCsp().replace(/;\s*frame-ancestors[^;]*/, '');
+  const expectedMeta = pageCsp();
   const visited = [];
   async function visit(p) {
     await page.goto(p, { waitUntil: 'load' });

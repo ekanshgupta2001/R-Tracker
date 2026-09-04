@@ -1,5 +1,5 @@
 {
-  "_readme": "Hand-labelable regression set for the rubric grader (PLAN.md Phase 0 step 5, used by Phase 4). Drafted by Claude on 2026-09-01 from the theory questions in js/curriculum/lessons.js; PLEASE SPOT-CHECK the labels. label: correct = should pass; partial = names some required ideas but misses or misstates key ones (should not pass, score in the middle band); incorrect = should fail. note = why it was labeled that way.",
+  "_readme": "Hand-labelable regression set for the rubric grader (read by tests/grader.test.js and tests/curriculum.spec.js). Drafted by Claude on 2026-09-01 from the theory questions in js/curriculum/lessons.js; PLEASE SPOT-CHECK the labels. label: correct = should pass; partial = names some required ideas but misses or misstates key ones (should not pass, score in the middle band); incorrect = should fail. note = why it was labeled that way.",
   "samples": [
     {
       "sectionId": "theory-sensor-physics",
